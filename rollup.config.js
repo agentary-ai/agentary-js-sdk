@@ -6,7 +6,6 @@ import terser from '@rollup/plugin-terser';
 const isProduction = process.env.NODE_ENV === 'production';
 
 const baseConfig = {
-  input: 'src/index.js',
   plugins: [
     resolve({
       browser: true,
@@ -29,10 +28,34 @@ const baseConfig = {
   external: []
 };
 
+// Worker configuration
+const workerConfig = {
+  ...baseConfig,
+  input: 'src/core/webllm-worker.js',
+  output: {
+    file: 'dist/webllm-worker.js',
+    format: 'es',
+    sourcemap: true
+  },
+  plugins: [
+    ...baseConfig.plugins,
+    ...(isProduction ? [terser()] : [])
+  ]
+};
+
+// Main SDK configurations
+const mainConfig = {
+  ...baseConfig,
+  input: 'src/index.js'
+};
+
 const configs = [
+  // Web Worker build (must come first)
+  workerConfig,
+  
   // ES Module build
   {
-    ...baseConfig,
+    ...mainConfig,
     output: {
       file: 'dist/agentary.esm.js',
       format: 'es',
@@ -46,7 +69,7 @@ const configs = [
   
   // CommonJS build
   {
-    ...baseConfig,
+    ...mainConfig,
     output: {
       file: 'dist/agentary.js',
       format: 'cjs',
@@ -61,7 +84,7 @@ const configs = [
   
   // UMD build for browsers
   {
-    ...baseConfig,
+    ...mainConfig,
     output: {
       file: 'dist/agentary.umd.js',
       format: 'umd',

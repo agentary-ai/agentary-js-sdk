@@ -213,3 +213,46 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📧 Email: support@agentary.com
 - 📖 Documentation: [https://docs.agentary.com](https://docs.agentary.com)
 - 🐛 Issues: [GitHub Issues](https://github.com/yourusername/agentary-js-sdk/issues) 
+
+const agentary = new Agentary.AgentarySDK({ loadModel: true })
+
+// Quick test of the improved worker creation
+(async function() {
+  console.log("🔧 Testing Improved Worker Creation...");
+  
+  // Test if Agentary SDK is available
+  if (typeof Agentary !== 'undefined') {
+    console.log("✅ Agentary SDK detected");
+    
+    // Create SDK instance
+    const sdk = new Agentary.AgentarySDK({ loadModel: false });
+    console.log("✅ SDK instance created");
+    
+    // Check initial worker status
+    console.log("📊 Initial worker status:", sdk.webLLMClient.getWorkerStatus());
+    
+    // Test engine creation (this will use the improved worker creation)
+    try {
+      console.log("🔄 Testing engine creation with improved worker strategies...");
+      await sdk.webLLMClient.createEngine();
+      console.log("✅ Engine created successfully!");
+      
+      // Check final worker status
+      const finalStatus = sdk.webLLMClient.getWorkerStatus();
+      console.log("📊 Final worker status:", finalStatus);
+      
+      if (finalStatus.hasWorker && finalStatus.workerVerified) {
+        console.log("🎉 SUCCESS: Worker created and verified!");
+      } else if (!finalStatus.hasWorker) {
+        console.log("ℹ️ INFO: Fell back to main thread (no worker)");
+      } else {
+        console.log("⚠️ WARNING: Worker created but not verified");
+      }
+      
+    } catch (error) {
+      console.log("❌ Engine creation failed:", error.message);
+    }
+  } else {
+    console.log("❌ Agentary SDK not found. Load it first!");
+  }
+})();
