@@ -220,4 +220,32 @@ export class WebLLMClient {
       blobUrl: this.workerBlobUrl
     };
   }
+
+  async chatCompletion(
+    messages,
+    options
+  ) {
+    await this.createEngine();
+    if (options.stream) {
+      return this.streamingChatCompletion(messages, options);
+    }
+    return this.engine.chat.completions.create({
+      messages,
+      temperature: options.temperature,
+      response_format: options.response_format
+    });
+  }
+
+  async streamingChatCompletion(
+    messages,
+    options = {}
+  ) {
+    await this.createEngine();
+    return this.engine.chat.completions.create({
+      messages,
+      temperature: options.temperature,
+      stream: true,
+      stream_options: options.stream_options
+    });
+  }
 }
