@@ -1,8 +1,8 @@
 {
   "name": "agentary-js-sdk",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "type": "module",
-  "description": "JavaScript SDK for Agentary - designed for web browsers",
+  "description": "JavaScript SDK for Agentary",
   "main": "dist/agentary.js",
   "module": "dist/agentary.esm.js",
   "browser": "dist/agentary.umd.js",
@@ -35,7 +35,7 @@
     "browser",
     "web"
   ],
-  "author": "Your Name",
+  "author": "Declan Healey",
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -23,14 +23,14 @@ npm install agentary-js-sdk
 ### Via CDN (UMD)
 
 ```html
-<script src="https://unpkg.com/agentary-js-sdk/dist/agentary.umd.js"></script>
+<script src="https://cdn.agentary.ai/latest/agentary.umd.js"></script>
 ```
 
 ### ES Modules
 
 ```html
 <script type="module">
-  import { Agentary } from 'https://unpkg.com/agentary-js-sdk/dist/agentary.esm.js';
+  import { Agentary } from 'https://cdn.agentary.ai/latest/agentary.esm.js';
 </script>
 ```
 
@@ -72,10 +72,6 @@ agentary.on('request', (details) => {
 agentary.emit('custom-event', { data: 'example' });
 ```
 
-### Browser Example
-
-See the [basic usage example](examples/basic-usage.html) for a complete HTML implementation.
-
 ## API Reference
 
 ### Constructor
@@ -114,10 +110,10 @@ The SDK extends EventEmitter, so you can use:
 # Install dependencies
 npm install
 
-# Run tests
+# Run tests (TODO)
 npm test
 
-# Run tests in watch mode
+# Run tests in watch mode (TODO)
 npm run test:watch
 
 # Build the SDK
@@ -213,6 +209,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📧 Email: support@agentary.com
 - 📖 Documentation: [https://docs.agentary.com](https://docs.agentary.com)
 - 🐛 Issues: [GitHub Issues](https://github.com/yourusername/agentary-js-sdk/issues) 
+
+
+// In the browser console:
+const script = document.createElement('script');
+script.src = 'https://cdn.agentary.ai/latest/agentary.umd.js';
+document.head.appendChild(script);
+
 
 const agentary = new Agentary.AgentarySDK({ loadModel: true })
 

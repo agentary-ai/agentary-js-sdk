@@ -17,6 +17,8 @@ export class WebLLMClient {
     this.modelLoadingProgress = 0;
     this.onModelLoadingChange = undefined;
     this.workerVerified = false;
+    this.workerBlobUrl = null;
+    this.workerCreationStrategy = null;
   }
 
   setModelLoadingCallback(callback) {
@@ -24,21 +26,124 @@ export class WebLLMClient {
   }
 
   /**
-   * Create a worker using multiple strategies
-   * @returns {Worker|null} Created worker or null
+   * Clean up resources including blob URLs
    */
-  createWorker() {
-    try {
-      console.log("Attempting to create worker with relative URL...");
-      const workerUrl = new URL('./webllm-worker.js', import.meta.url);
-      console.log("Worker URL resolved to:", workerUrl.href);
-      
-      const worker = new Worker(workerUrl);
-      console.log("Worker created with URL strategy:", worker);
-      return worker;
-    } catch (error) {
-      console.warn("URL strategy failed:", error);
+  cleanup() {
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
     }
+    
+    if (this.workerBlobUrl) {
+      URL.revokeObjectURL(this.workerBlobUrl);
+      this.workerBlobUrl = null;
+    }
+    
+    this.workerVerified = false;
+    this.workerCreationStrategy = null;
+  }
+
+  /**
+   * Create a worker using multiple strategies
+   * @returns {Promise<Worker|null>} Created worker or null
+   */
+  async createWorker() {
+    const strategies = [
+      // Strategy 1: Try relative URL (works when SDK and worker are same-origin)
+      () => {
+        console.log("Strategy 1: Attempting to create worker with relative URL...");
+        const workerUrl = new URL('./webllm-worker.js', import.meta.url);
+        console.log("Worker URL resolved to:", workerUrl.href);
+        return new Worker(workerUrl);
+      },
+      
+      // Strategy 2: Try fetching worker code and create blob URL (CORS-safe)
+      async () => {
+        console.log("Strategy 2: Attempting to create worker with blob URL...");
+        const workerUrl = new URL('./webllm-worker.js', import.meta.url);
+        
+        try {
+          const response = await fetch(workerUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch worker: ${response.status}`);
+          }
+          
+          const workerCode = await response.text();
+          const blob = new Blob([workerCode], { type: 'application/javascript' });
+          const blobUrl = URL.createObjectURL(blob);
+          
+          console.log("Worker blob URL created:", blobUrl);
+          const worker = new Worker(blobUrl);
+          
+          // Store blob URL for cleanup
+          this.workerBlobUrl = blobUrl;
+          
+          return worker;
+        } catch (fetchError) {
+          console.warn("Failed to fetch worker for blob creation:", fetchError);
+          throw fetchError;
+        }
+      },
+      
+      // Strategy 3: Create inline worker (fallback for CORS issues)
+      () => {
+        console.log("Strategy 3: Creating inline worker as fallback...");
+        
+        // Inline worker code that imports the WebLLM handler
+        const inlineWorkerCode = `
+          import { WebWorkerMLCEngineHandler } from "@mlc-ai/web-llm";
+          
+          const handler = new WebWorkerMLCEngineHandler();
+          
+          self.onmessage = (msg) => {
+            // Handle verification ping messages
+            if (msg.data && msg.data.type === 'ping') {
+              console.log("Worker received ping, sending pong");
+              self.postMessage({ 
+                type: 'pong', 
+                timestamp: Date.now(),
+                originalTimestamp: msg.data.timestamp 
+              });
+              return;
+            }
+            
+            // Handle regular WebLLM messages
+            handler.onmessage(msg);
+          };
+        `;
+        
+        const blob = new Blob([inlineWorkerCode], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        console.log("Inline worker blob URL created:", blobUrl);
+        this.workerBlobUrl = blobUrl;
+        
+        return new Worker(blobUrl, { type: 'module' });
+      }
+    ];
+
+    // Try each strategy in order
+    for (let i = 0; i < strategies.length; i++) {
+      try {
+        const strategy = strategies[i];
+        // Check if this is the async strategy (strategy 2)
+        const worker = i === 1 ? await strategy() : strategy();
+        
+        if (worker) {
+          console.log(`✅ Worker created successfully with strategy ${i + 1}`);
+          this.workerCreationStrategy = i + 1;
+          return worker;
+        }
+      } catch (error) {
+        console.warn(`Strategy ${i + 1} failed:`, error);
+        if (i === strategies.length - 1) {
+          console.error("All worker creation strategies failed");
+          return null;
+        }
+      }
+    }
+    
+    return null;
   }
 
   /**
@@ -113,7 +218,7 @@ export class WebLLMClient {
             console.log("Attempting to create web worker engine");
             
             // Create worker using blob URL strategy
-            const worker = this.createWorker();
+            const worker = await this.createWorker();
             
             if (!worker) {
               throw new Error('Failed to create worker');
@@ -142,11 +247,7 @@ export class WebLLMClient {
           } catch (workerError) {
             console.warn("Failed to create web worker engine, falling back to main thread:", workerError);
             // Clean up any partially created worker
-            if (this.worker) {
-              this.worker.terminate();
-              this.worker = null;
-            }
-            this.workerVerified = false;
+            this.cleanup();
             // Fall back to main thread engine
             this.engine = await CreateMLCEngine(this.modelPath, {
               initProgressCallback: this.initProgressCallback
@@ -181,8 +282,15 @@ export class WebLLMClient {
       hasWorker: !!this.worker,
       workerVerified: this.workerVerified,
       useWorker: this.useWorker,
-      workerUrl: this.workerUrl,
-      workerType: this.worker ? this.worker.constructor.name : null
+      workerType: this.worker ? this.worker.constructor.name : null,
+      workerCreationStrategy: this.workerCreationStrategy,
+      strategyNames: {
+        1: 'Relative URL',
+        2: 'Blob URL from fetch',
+        3: 'Inline worker'
+      },
+      hasBlobUrl: !!this.workerBlobUrl,
+      blobUrl: this.workerBlobUrl
     };
   }
 }
