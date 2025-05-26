@@ -1,6 +1,7 @@
 {
   "name": "agentary-js-sdk",
   "version": "1.0.0",
+  "type": "module",
   "description": "JavaScript SDK for Agentary - designed for web browsers",
   "main": "dist/agentary.js",
   "module": "dist/agentary.esm.js",
