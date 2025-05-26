@@ -3,7 +3,7 @@
  * Main entry point for the SDK
  */
 
-import { ApiClient } from './core/ApiClient.js';
+// import { ApiClient } from './core/ApiClient.js';
 import { EventEmitter } from './utils/EventEmitter.js';
 import { Logger } from './utils/Logger.js';
 import { WebLLMClient } from './core/WebLLMClient.js';
@@ -77,8 +77,8 @@ export class AgentarySDK extends EventEmitter {
 }
 
 // Export default instance creator
-export default AgentarySDK;
+// export default AgentarySDK;
 
-// Export all modules for advanced usage
-export * from './core/index.js';
-export * from './utils/index.js'; 
+// // Export all modules for advanced usage
+// export * from './core/index.js';
+// export * from './utils/index.js'; 
