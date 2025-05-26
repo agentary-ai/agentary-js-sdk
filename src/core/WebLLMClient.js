@@ -44,106 +44,38 @@ export class WebLLMClient {
   }
 
   /**
-   * Create a worker using multiple strategies
+   * Create a worker using blob URL strategy (CORS-safe)
    * @returns {Promise<Worker|null>} Created worker or null
    */
   async createWorker() {
-    const strategies = [
-      // Strategy 1: Try relative URL (works when SDK and worker are same-origin)
-      () => {
-        console.log("Strategy 1: Attempting to create worker with relative URL...");
-        const workerUrl = new URL('./webllm-worker.js', import.meta.url);
-        console.log("Worker URL resolved to:", workerUrl.href);
-        return new Worker(workerUrl);
-      },
+    try {
+      console.log("Creating worker with blob URL strategy...");
+      const workerUrl = new URL('./webllm-worker.js', import.meta.url);
       
-      // Strategy 2: Try fetching worker code and create blob URL (CORS-safe)
-      async () => {
-        console.log("Strategy 2: Attempting to create worker with blob URL...");
-        const workerUrl = new URL('./webllm-worker.js', import.meta.url);
-        
-        try {
-          const response = await fetch(workerUrl);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch worker: ${response.status}`);
-          }
-          
-          const workerCode = await response.text();
-          const blob = new Blob([workerCode], { type: 'application/javascript' });
-          const blobUrl = URL.createObjectURL(blob);
-          
-          console.log("Worker blob URL created:", blobUrl);
-          const worker = new Worker(blobUrl);
-          
-          // Store blob URL for cleanup
-          this.workerBlobUrl = blobUrl;
-          
-          return worker;
-        } catch (fetchError) {
-          console.warn("Failed to fetch worker for blob creation:", fetchError);
-          throw fetchError;
-        }
-      },
+      // Fetch the worker code
+      const response = await fetch(workerUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch worker: ${response.status} ${response.statusText}`);
+      }
       
-      // Strategy 3: Create inline worker (fallback for CORS issues)
-      () => {
-        console.log("Strategy 3: Creating inline worker as fallback...");
-        
-        // Inline worker code that imports the WebLLM handler
-        const inlineWorkerCode = `
-          import { WebWorkerMLCEngineHandler } from "@mlc-ai/web-llm";
-          
-          const handler = new WebWorkerMLCEngineHandler();
-          
-          self.onmessage = (msg) => {
-            // Handle verification ping messages
-            if (msg.data && msg.data.type === 'ping') {
-              console.log("Worker received ping, sending pong");
-              self.postMessage({ 
-                type: 'pong', 
-                timestamp: Date.now(),
-                originalTimestamp: msg.data.timestamp 
-              });
-              return;
-            }
-            
-            // Handle regular WebLLM messages
-            handler.onmessage(msg);
-          };
-        `;
-        
-        const blob = new Blob([inlineWorkerCode], { type: 'application/javascript' });
-        const blobUrl = URL.createObjectURL(blob);
-        
-        console.log("Inline worker blob URL created:", blobUrl);
-        this.workerBlobUrl = blobUrl;
-        
-        return new Worker(blobUrl, { type: 'module' });
-      }
-    ];
-
-    // Try each strategy in order
-    for (let i = 0; i < strategies.length; i++) {
-      try {
-        const strategy = strategies[i];
-        // Check if this is the async strategy (strategy 2)
-        const worker = i === 1 ? await strategy() : strategy();
-        
-        if (worker) {
-          console.log(`✅ Worker created successfully with strategy ${i + 1}`);
-          this.workerCreationStrategy = i + 1;
-          return worker;
-        }
-      } catch (error) {
-        console.warn(`Strategy ${i + 1} failed:`, error);
-        if (i === strategies.length - 1) {
-          console.error("All worker creation strategies failed");
-          return null;
-        }
-      }
+      const workerCode = await response.text();
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      console.log("Worker blob URL created:", blobUrl);
+      const worker = new Worker(blobUrl);
+      
+      // Store blob URL for cleanup
+      this.workerBlobUrl = blobUrl;
+      this.workerCreationStrategy = 'blob';
+      
+      console.log("✅ Worker created successfully with blob URL strategy");
+      return worker;
+      
+    } catch (error) {
+      console.error("Failed to create worker:", error);
+      return null;
     }
-    
-    return null;
   }
 
   /**
@@ -284,11 +216,6 @@ export class WebLLMClient {
       useWorker: this.useWorker,
       workerType: this.worker ? this.worker.constructor.name : null,
       workerCreationStrategy: this.workerCreationStrategy,
-      strategyNames: {
-        1: 'Relative URL',
-        2: 'Blob URL from fetch',
-        3: 'Inline worker'
-      },
       hasBlobUrl: !!this.workerBlobUrl,
       blobUrl: this.workerBlobUrl
     };
