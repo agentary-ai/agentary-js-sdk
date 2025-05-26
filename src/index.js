@@ -11,7 +11,7 @@ import { WebLLMClient } from './core/WebLLMClient.js';
 /**
  * Main Agentary SDK class
  */
-export class AgentarySDK extends EventEmitter {
+class AgentaryClient extends EventEmitter {
   /**
    * Create an Agentary SDK instance
    * @param {Object} config - Configuration options
@@ -82,3 +82,7 @@ export class AgentarySDK extends EventEmitter {
 // // Export all modules for advanced usage
 // export * from './core/index.js';
 // export * from './utils/index.js'; 
+
+export const init = (config) => {
+  return new AgentaryClient(config);
+}
