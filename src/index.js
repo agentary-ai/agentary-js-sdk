@@ -34,7 +34,6 @@ export class AgentarySDK extends EventEmitter {
       // baseUrl: 'https://api.agentary.com',
       debug: false,
       loadModel: false,
-      workerUrl: null,
       ...config
     };
 
@@ -46,8 +45,7 @@ export class AgentarySDK extends EventEmitter {
     this.webLLMClient = new WebLLMClient(
       "Llama-3.2-1B-Instruct-q4f16_1-MLC", // modelPath
       (p) => { console.log(p); }, // initProgressCallback
-      true, // useWorker
-      this.config.workerUrl // workerUrl
+      true // useWorker
     );
 
     if (this.config.loadModel) {

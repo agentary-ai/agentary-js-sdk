@@ -16,4 +16,4 @@ self.onmessage = (msg) => {
   
   // Handle regular WebLLM messages
   handler.onmessage(msg);
-}; 
+};

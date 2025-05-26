@@ -7,12 +7,10 @@ export class WebLLMClient {
       console.log(p);
     },
     useWorker = true,
-    workerUrl = null
   ) {
     this.modelPath = modelPath;
     this.initProgressCallback = initProgressCallback;
     this.useWorker = useWorker;
-    this.workerUrl = workerUrl;
     this.engine = null;
     this.worker = null;
     this.isModelLoading = false;
@@ -26,124 +24,21 @@ export class WebLLMClient {
   }
 
   /**
-   * Create a worker URL using different strategies
-   * @returns {string} Worker URL
-   */
-  createWorkerUrl() {
-    // Strategy 1: Use provided workerUrl
-    if (this.workerUrl) {
-      console.log("Using provided worker URL:", this.workerUrl);
-      return this.workerUrl;
-    }
-
-    // Strategy 2: Try to detect built worker script
-    const possibleWorkerUrls = [
-      './dist/webllm-worker.js',
-      './webllm-worker.js',
-      '/dist/webllm-worker.js',
-      '/webllm-worker.js'
-    ];
-
-    // Strategy 3: Create inline worker using blob URL
-    console.log("Creating inline worker using blob URL");
-    const workerCode = `
-      // Inline WebLLM Worker
-      import { WebWorkerMLCEngineHandler } from "@mlc-ai/web-llm";
-
-      const handler = new WebWorkerMLCEngineHandler();
-
-      self.onmessage = (msg) => {
-        // Handle verification ping messages
-        if (msg.data && msg.data.type === 'ping') {
-          console.log("Worker received ping, sending pong");
-          self.postMessage({ 
-            type: 'pong', 
-            timestamp: Date.now(),
-            originalTimestamp: msg.data.timestamp 
-          });
-          return;
-        }
-        
-        // Handle regular WebLLM messages
-        handler.onmessage(msg);
-      };
-    `;
-
-    const blob = new Blob([workerCode], { type: 'application/javascript' });
-    const blobUrl = URL.createObjectURL(blob);
-    console.log("Created blob worker URL:", blobUrl);
-    return blobUrl;
-  }
-
-  /**
-   * Create worker with fallback strategies
+   * Create a worker using multiple strategies
    * @returns {Worker|null} Created worker or null
    */
-  async createWorkerWithFallback() {
-    const strategies = [
-      {
-        name: "Blob URL Module Worker",
-        create: () => {
-          const workerUrl = this.createWorkerUrl();
-          return new Worker(workerUrl, { type: 'module' });
-        }
-      },
-      {
-        name: "Blob URL Regular Worker", 
-        create: () => {
-          const workerCode = `
-            // Simple worker without ES modules
-            console.log("Simple worker started");
-            
-            self.onmessage = function(msg) {
-              // Handle verification ping messages
-              if (msg.data && msg.data.type === 'ping') {
-                console.log("Worker received ping, sending pong");
-                self.postMessage({ 
-                  type: 'pong', 
-                  timestamp: Date.now(),
-                  originalTimestamp: msg.data.timestamp 
-                });
-                return;
-              }
-              
-              // For now, just echo back - WebLLM handler would go here
-              console.log("Worker received message:", msg.data);
-              self.postMessage({ type: 'echo', data: msg.data });
-            };
-          `;
-          
-          const blob = new Blob([workerCode], { type: 'application/javascript' });
-          const blobUrl = URL.createObjectURL(blob);
-          return new Worker(blobUrl);
-        }
-      }
-    ];
-
-    for (const strategy of strategies) {
-      try {
-        console.log(`Trying strategy: ${strategy.name}`);
-        const worker = strategy.create();
-        
-        if (worker) {
-          console.log(`✅ ${strategy.name} - Worker created`);
-          
-          // Verify the worker
-          const verified = await this.verifyWorker(worker);
-          if (verified) {
-            console.log(`✅ ${strategy.name} - Worker verified`);
-            return worker;
-          } else {
-            console.log(`❌ ${strategy.name} - Worker verification failed`);
-            worker.terminate();
-          }
-        }
-      } catch (error) {
-        console.log(`❌ ${strategy.name} - Error: ${error.message}`);
-      }
+  createWorker() {
+    try {
+      console.log("Attempting to create worker with relative URL...");
+      const workerUrl = new URL('./webllm-worker.js', import.meta.url);
+      console.log("Worker URL resolved to:", workerUrl.href);
+      
+      const worker = new Worker(workerUrl);
+      console.log("Worker created with URL strategy:", worker);
+      return worker;
+    } catch (error) {
+      console.warn("URL strategy failed:", error);
     }
-
-    return null;
   }
 
   /**
@@ -156,9 +51,8 @@ export class WebLLMClient {
       const timeout = setTimeout(() => {
         console.warn("Worker verification timeout");
         resolve(false);
-      }, 5000); // 5 second timeout
+      }, 5000);
 
-      // Check if worker exists and has expected properties
       if (!worker) {
         console.error("Worker is null or undefined");
         clearTimeout(timeout);
@@ -166,28 +60,23 @@ export class WebLLMClient {
         return;
       }
 
-      // Check worker state
-      console.log("Worker verification - checking properties:");
-      console.log("- Worker object:", worker);
-      console.log("- Worker constructor:", worker.constructor.name);
-      console.log("- Worker prototype:", Object.getPrototypeOf(worker));
+      console.log("Verifying worker communication...");
 
-      // Test worker communication
       const testMessage = { type: 'ping', timestamp: Date.now() };
       
       const messageHandler = (event) => {
-        console.log("Worker verification - received message:", event.data);
+        console.log("Worker verification - received:", event.data);
         if (event.data && (event.data.type === 'pong' || event.data.type === 'echo')) {
           worker.removeEventListener('message', messageHandler);
           worker.removeEventListener('error', errorHandler);
           clearTimeout(timeout);
-          console.log("✅ Worker verification successful - communication established");
+          console.log("✅ Worker verification successful");
           resolve(true);
         }
       };
 
       const errorHandler = (error) => {
-        console.error("Worker verification - error during communication test:", error);
+        console.error("Worker verification error:", error);
         worker.removeEventListener('message', messageHandler);
         worker.removeEventListener('error', errorHandler);
         clearTimeout(timeout);
@@ -199,9 +88,9 @@ export class WebLLMClient {
 
       try {
         worker.postMessage(testMessage);
-        console.log("Worker verification - test message sent:", testMessage);
+        console.log("Worker verification - test message sent");
       } catch (error) {
-        console.error("Worker verification - failed to send test message:", error);
+        console.error("Failed to send verification message:", error);
         worker.removeEventListener('message', messageHandler);
         worker.removeEventListener('error', errorHandler);
         clearTimeout(timeout);
@@ -223,17 +112,25 @@ export class WebLLMClient {
           try {
             console.log("Attempting to create web worker engine");
             
-            // Create worker with fallback strategies
-            const worker = await this.createWorkerWithFallback();
+            // Create worker using blob URL strategy
+            const worker = this.createWorker();
             
             if (!worker) {
-              throw new Error('All worker creation strategies failed');
+              throw new Error('Failed to create worker');
+            }
+
+            console.log("Worker created successfully: ", worker);
+
+            // Verify the worker
+            this.workerVerified = await this.verifyWorker(worker);
+            if (!this.workerVerified) {
+              worker.terminate();
+              throw new Error('Worker verification failed');
             }
 
             this.worker = worker;
-            this.workerVerified = true;
 
-            console.log("Creating web worker engine from verified worker: ", this.worker);
+            console.log("Creating web worker engine from verified worker");
             this.engine = await CreateWebWorkerMLCEngine(
               this.worker,
               this.modelPath,
@@ -257,7 +154,7 @@ export class WebLLMClient {
             console.log("✅ Main thread engine created successfully");
           }
         } else {
-          console.log("Creating main thread engine (worker disabled or unavailable)");
+          console.log("Creating main thread engine (worker disabled)");
           this.engine = await CreateMLCEngine(this.modelPath, {
             initProgressCallback: this.initProgressCallback
           });
