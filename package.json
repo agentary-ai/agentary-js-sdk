@@ -22,7 +22,10 @@
     "lint:fix": "eslint src/**/*.js --fix",
     "docs": "jsdoc -c jsdoc.conf.json",
     "clean": "rimraf dist",
-    "prepublishOnly": "npm run clean && npm run build:prod"
+    "prepublishOnly": "npm run clean && npm run build:prod",
+    "cdn:build": "npm run build:prod && node cloudflare/build.js",
+    "cdn:deploy": "bash cloudflare/deploy.sh",
+    "cdn:deploy:prod": "bash cloudflare/deploy.sh production"
   },
   "keywords": [
     "agentary",

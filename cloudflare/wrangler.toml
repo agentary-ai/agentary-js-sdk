@@ -1,0 +1,20 @@
+name = "agentary-js-sdk"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "agentary-js-sdk"
+
+[env.staging]
+name = "agentary-js-sdk-staging"
+
+# Pages configuration
+pages_build_output_dir = "public"
+
+# Custom domains (update these with your actual domains)
+# [env.production.routes]
+# pattern = "sdk.agentary.com/*"
+# zone_name = "agentary.com"
+
+# [env.staging.routes]
+# pattern = "sdk-staging.agentary.com/*"
+# zone_name = "agentary.com" 

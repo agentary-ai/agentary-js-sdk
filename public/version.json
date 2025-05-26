@@ -1,0 +1,70 @@
+{
+  "version": "1.0.0",
+  "files": [
+    {
+      "name": "agentary.umd.js",
+      "size": 5519298,
+      "urls": {
+        "latest": "/latest/agentary.umd.js",
+        "versioned": "/v1.0.0/agentary.umd.js"
+      }
+    },
+    {
+      "name": "agentary.umd.js.map",
+      "size": 6534066,
+      "urls": {
+        "latest": "/latest/agentary.umd.js.map",
+        "versioned": "/v1.0.0/agentary.umd.js.map"
+      }
+    },
+    {
+      "name": "agentary.esm.js",
+      "size": 5518677,
+      "urls": {
+        "latest": "/latest/agentary.esm.js",
+        "versioned": "/v1.0.0/agentary.esm.js"
+      }
+    },
+    {
+      "name": "agentary.esm.js.map",
+      "size": 6533960,
+      "urls": {
+        "latest": "/latest/agentary.esm.js.map",
+        "versioned": "/v1.0.0/agentary.esm.js.map"
+      }
+    },
+    {
+      "name": "agentary.js",
+      "size": 5518973,
+      "urls": {
+        "latest": "/latest/agentary.js",
+        "versioned": "/v1.0.0/agentary.js"
+      }
+    },
+    {
+      "name": "agentary.js.map",
+      "size": 6533899,
+      "urls": {
+        "latest": "/latest/agentary.js.map",
+        "versioned": "/v1.0.0/agentary.js.map"
+      }
+    },
+    {
+      "name": "webllm-worker.js",
+      "size": 5512828,
+      "urls": {
+        "latest": "/latest/webllm-worker.js",
+        "versioned": "/v1.0.0/webllm-worker.js"
+      }
+    },
+    {
+      "name": "webllm-worker.js.map",
+      "size": 6513166,
+      "urls": {
+        "latest": "/latest/webllm-worker.js.map",
+        "versioned": "/v1.0.0/webllm-worker.js.map"
+      }
+    }
+  ],
+  "timestamp": "2025-05-26T02:35:23.864Z"
+}
