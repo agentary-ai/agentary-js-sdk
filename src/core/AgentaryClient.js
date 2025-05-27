@@ -4,6 +4,9 @@ import { EventEmitter } from '../utils/EventEmitter.js';
 import { Logger } from '../utils/Logger.js';
 import { WebLLMClient } from './WebLLMClient.js';
 import { summarizeContent } from '../summarize/index.js';
+import { explainSelectedText } from '../explain/index.js';
+import { generatePagePrompts } from '../questions/index.js';
+import { postMessage } from '../chat/index.js';
 
 /**
  * Main Agentary SDK class
@@ -60,6 +63,18 @@ export class AgentaryClient extends EventEmitter {
 
   summarizeContent() {
     return summarizeContent(this.webLLMClient);
+  }
+
+  explainSelectedText(text = null, options = {}) {
+    return explainSelectedText(this.webLLMClient, text, options);
+  }
+
+  generatePagePrompts(options = {}) {
+    return generatePagePrompts(this.webLLMClient, options);
+  }
+
+  postMessage(message, options = {}) {
+    return postMessage(this.webLLMClient, message, options);
   }
 
   /**
