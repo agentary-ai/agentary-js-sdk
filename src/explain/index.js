@@ -1,5 +1,4 @@
-import { WebLLMClient } from "../core/WebLLMClient.js";
-import { extractPageContent } from "../utils/content-extraction.js";
+import { extractPageContent } from "../utils/index.js";
 
 /**
  * Gets the currently selected text on the page

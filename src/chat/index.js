@@ -1,10 +1,10 @@
-import { extractPageContent } from "../utils/index.js";
+import { extractPageContent } from "../utils/content-extraction.js";
 
 /**
  * Post a chat message and return a streaming response
  */
 export async function postMessage(
-  llm, 
+  llm,
   message,
   onToken,
   previousMessages = []
