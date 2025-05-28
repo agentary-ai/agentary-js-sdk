@@ -461,7 +461,7 @@ export function createContextMenu(client) {
   });
   
   // Add keyboard shortcut for selected text
-  const keydownHandler = (e: KeyboardEvent) => {
+  const keydownHandler = (e) => {
     // Check for Ctrl+E or Cmd+E (on Mac)
     if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
       e.preventDefault();

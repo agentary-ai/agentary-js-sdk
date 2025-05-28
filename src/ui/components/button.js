@@ -2,9 +2,9 @@
  * Creates the floating chat button
  */
 export function createButton(
-  corner: "bottom-right" | "bottom-left",
-  onClick: () => void
-): HTMLButtonElement {
+  corner,
+  onClick
+) {
   const btn = document.createElement("button");
   
   // Create icon element
