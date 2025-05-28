@@ -1,4 +1,4 @@
-import { extractPageContent } from "../utils/content-extraction.js";
+import { extractPageContent } from "../utils/index.js";
 
 /**
  * Summarizes the content of the current webpage or given content

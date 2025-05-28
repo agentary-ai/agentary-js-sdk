@@ -5,7 +5,7 @@ import { Logger } from '../utils/Logger.js';
 import { WebLLMClient } from './WebLLMClient.js';
 import { summarizeContent } from '../summarize/index.js';
 import { explainSelectedText } from '../explain/index.js';
-import { generatePagePrompts } from '../questions/index.js';
+import { generatePagePrompts } from '../prompts/index.js';
 import { postMessage } from '../chat/index.js';
 
 /**

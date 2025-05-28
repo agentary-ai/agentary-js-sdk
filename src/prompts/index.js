@@ -1,4 +1,4 @@
-import { extractPageContent } from "../utils/content-extraction.js";
+import { extractPageContent } from "../utils/index.js";
 
 /**
  * Generates relevant questions about the current page content

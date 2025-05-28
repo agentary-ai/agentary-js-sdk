@@ -60,7 +60,8 @@
     "rollup": "^3.25.0"
   },
   "dependencies": {
-    "@mlc-ai/web-llm": "^0.2.79"
+    "@mlc-ai/web-llm": "^0.2.79",
+    "marked": "^15.0.12"
   },
   "browserslist": [
     "> 1%",

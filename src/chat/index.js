@@ -1,4 +1,4 @@
-import { extractPageContent } from "../utils/content-extraction.js";
+import { extractPageContent } from "../utils/index.js";
 
 /**
  * Post a chat message and return a streaming response
