@@ -54,6 +54,7 @@ export class AgentaryClient extends EventEmitter {
     }
     
     if (this.config.showWidget) {
+      this.logger.info('Mounting widget');
       mountWidget(
         this.webLLMClient, 
         "bottom-right",

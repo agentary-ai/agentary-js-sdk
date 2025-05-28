@@ -217,7 +217,7 @@ script.src = 'https://cdn.agentary.ai/latest/agentary.umd.js';
 document.head.appendChild(script);
 
 
-const agentary = new Agentary.AgentarySDK({ loadModel: true })
+const a = window.Agentary.init({ loadModel: true, showWidget: true })
 
 // Quick test of the improved worker creation
 (async function() {
