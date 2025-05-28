@@ -7,6 +7,7 @@ import { summarizeContent } from '../summarize/index.js';
 import { explainSelectedText } from '../explain/index.js';
 import { generatePagePrompts } from '../prompts/index.js';
 import { postMessage } from '../chat/index.js';
+import { mountWidget } from '../ui/widget.js';
 
 /**
  * Main Agentary SDK class
@@ -50,6 +51,17 @@ export class AgentaryClient extends EventEmitter {
 
     if (this.config.loadModel) {
       this.webLLMClient.createEngine();
+    }
+    
+    if (this.config.showWidget) {
+      mountWidget(
+        this.webLLMClient, 
+        "bottom-right",
+        {
+          generateQuestions: true,
+          maxQuestions: 5
+        }
+      );
     }
   }
 
