@@ -1,4 +1,4 @@
-import { processMessage } from "../../chat/index.js";
+import { postMessage } from "../../chat/index.js";
 import { summarizeContent } from "../../summarize/index.js";
 import { explainSelectedText } from "../../explain/index.js";
 import { getSelectedText } from "../../utils/index.js";
@@ -394,7 +394,7 @@ export function createDialog(
           let responseText = "";
           
           // Process the question with the LLM
-          await processMessage(
+          await postMessage(
             llm, 
             question,
             (token) => {
@@ -847,7 +847,7 @@ function setupChatInput(
       let responseText = "";
       
       // Process the message with the LLM
-      await processMessage(
+      await postMessage(
         webLLMClient, 
         message,
         (token) => {
