@@ -3,6 +3,7 @@ import { summarizeContent } from "../../summarize/index.js";
 import { explainSelectedText } from "../../explain/index.js";
 import { getSelectedText } from "../../utils/index.js";
 import { marked } from "marked";
+import { generatePagePrompts } from "../../prompts/index.js";
 
 // Global variable to store generated questions for the page lifetime
 let cachedQuestions = null;
@@ -282,7 +283,7 @@ export function createDialog(
       
       try {
         // Generate questions
-        questions = await webLLMClient.generatePagePrompts({ 
+        questions = await generatePagePrompts(webLLMClient, { 
           maxQuestions: uiOptions.maxQuestions || 5 
         });
         
