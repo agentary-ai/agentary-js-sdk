@@ -50,7 +50,7 @@ export class WebLLMClient {
   async createWebWorker() {
     try {
       console.log("Creating worker with blob URL strategy...");
-      const workerUrl = new URL('./webllm-web-worker.js', import.meta.url);
+      const workerUrl = new URL('./webllm-worker.js', import.meta.url);
       
       // Fetch the worker code
       const response = await fetch(workerUrl);

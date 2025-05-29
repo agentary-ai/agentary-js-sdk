@@ -13,7 +13,7 @@ export async function generatePagePrompts(
     maxContentTokens = 1500 // Leave room for prompt overhead
   } = options;
   
-  const pageContent = extractPageContent({ maxTokens: maxContentTokens });
+  const pageContent = extractPageContent();
   
   if (!pageContent.trim()) {
     return ["What is this page about?", "Can you explain the main topic?"];
@@ -24,29 +24,31 @@ export async function generatePagePrompts(
     : '';
   
   // Optimized, more concise prompt
-  const prompt = `Generate ${maxQuestions} educational questions about this content. Requirements:
-- Max 15 words per question
-- Specific to the content
-- Varied scope (broad to detailed)
-- Return JSON array of strings only
+  const prompt = `
+    Generate ${maxQuestions} educational questions about this content. Requirements:
+      - Max 15 words per question
+      - Specific to the content
+      - Varied scope (broad to detailed)
+      - Return JSON array of strings only
 
-${focusAreasText}
+    ${focusAreasText}
 
-Content:
-${pageContent}`;
+    Content:
+    ${pageContent}
+  `;
 
   try {    
     const messages = [
       { role: "user", content: prompt }
     ];
 
-    // Rough token estimation for logging (4 characters per token)
-    const estimatedTokens = Math.ceil(prompt.length / 4);
-    console.log(`Estimated prompt tokens: ${estimatedTokens}`);
+    // // Rough token estimation for logging (4 characters per token)
+    // const estimatedTokens = Math.ceil(prompt.length / 4);
+    // console.log(`Estimated prompt tokens: ${estimatedTokens}`);
     
-    if (estimatedTokens > 3800) { // Leave buffer for response
-      console.warn(`Prompt may be too long (${estimatedTokens} tokens), consider reducing maxContentTokens`);
-    }
+    // if (estimatedTokens > 3800) { // Leave buffer for response
+    //   console.warn(`Prompt may be too long (${estimatedTokens} tokens), consider reducing maxContentTokens`);
+    // }
     
     const startTime = performance.now();
     const response = await llm.chatCompletion(messages, {

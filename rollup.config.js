@@ -29,11 +29,11 @@ const baseConfig = {
 };
 
 // Web worker configuration
-const webWorkerConfig = {
+const workerConfig = {
   ...baseConfig,
-  input: 'src/core/webllm-web-worker.js',
+  input: 'src/core/webllm-worker.js',
   output: {
-    file: 'dist/webllm-web-worker.js',
+    file: 'dist/webllm-worker.js',
     format: 'es',
     sourcemap: true
   },
@@ -65,7 +65,7 @@ const mainConfig = {
 };
 
 const configs = [
-  webWorkerConfig,
+  workerConfig,
   serviceWorkerConfig,
   
   // ES Module build
