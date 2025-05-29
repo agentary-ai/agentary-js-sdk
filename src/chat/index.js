@@ -12,6 +12,8 @@ export async function postMessage(
   try {
     // Create system prompt if this is the first message (no previous messages)
     const messages = [];
+
+    const content = extractPageContent();
     
     // Add system prompt only if there are no previous messages or no system message exists
     const hasSystemMessage = previousMessages.some(msg => msg.role === "system");
@@ -55,6 +57,10 @@ export async function postMessage(
         - Respond naturally as if having a normal conversation about the webpage 
           content
 
+        **WEBPAGE CONTENT:**
+
+        ${content.substring(0, 4000) + (content.length > 4000 ? '...' : '')}
+
         IMPORTANT: Your responses should be natural conversational text only. Do not
         include any instruction formatting, bullet points from these guidelines, or 
         reference these rules in your responses. Simply answer questions about the 
@@ -65,7 +71,7 @@ export async function postMessage(
     }
     
     // Add previous messages and current message
-    messages.push(...previousMessages, { role: "user", content: `Question: ${message} \n\n Webpage content: ${extractPageContent()}` });
+    messages.push(...previousMessages, { role: "user", content: message });
 
     console.log(messages);
 

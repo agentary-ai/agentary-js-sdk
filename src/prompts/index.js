@@ -34,7 +34,7 @@ export async function generatePagePrompts(
     ${focusAreasText}
 
     Content:
-    ${pageContent}
+    ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
   `;
 
   try {    
