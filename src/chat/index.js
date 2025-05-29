@@ -55,10 +55,6 @@ export async function postMessage(
         - Respond naturally as if having a normal conversation about the webpage 
           content
 
-        **WEBPAGE CONTENT:**
-
-        ${extractPageContent()}
-
         IMPORTANT: Your responses should be natural conversational text only. Do not
         include any instruction formatting, bullet points from these guidelines, or 
         reference these rules in your responses. Simply answer questions about the 
@@ -69,7 +65,7 @@ export async function postMessage(
     }
     
     // Add previous messages and current message
-    messages.push(...previousMessages, { role: "user", content: message });
+    messages.push(...previousMessages, { role: "user", content: `Question: ${message} \n\n Webpage content: ${extractPageContent()}` });
 
     console.log(messages);
 
