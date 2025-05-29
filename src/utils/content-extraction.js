@@ -43,7 +43,7 @@ function truncateContent(content, maxTokens) {
  * @returns The extracted text content
  */
 export function extractPageContent(options = {}) {
-    const { maxTokens } = options;
+    const { maxTokens = 1500 } = options;
     
     // Get the page title
     const title = document.title;
