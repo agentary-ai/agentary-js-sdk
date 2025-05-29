@@ -26,12 +26,16 @@ function injectFontAwesome() {
  * @param webLLMClient - The Agentary client instance
  * @param position - Button position (bottom-right or bottom-left)
  * @param uiOptions - UI configuration options
+ * @param uiOptions.autoOpenOnLoad - Whether to automatically open the dialog when model loads (default: false)
  */
 export function mountWidget(
   webLLMClient, 
   position = "bottom-right",
   uiOptions = {}
 ) {
+  // Extract autoOpenOnLoad option with default value
+  const { autoOpenOnLoad = false, ...otherOptions } = uiOptions;
+
   // Inject Font Awesome CSS
   injectFontAwesome();
 
@@ -78,10 +82,13 @@ export function mountWidget(
   });
   
   // Create dialog and get show function
-  const { dialog, showDialog } = createDialog(webLLMClient, position, uiOptions);
+  const { dialog, showDialog } = createDialog(webLLMClient, position, otherOptions);
   
   // Track dialog visibility state
   let isDialogVisible = false;
+  
+  // Track if this is the first time the model finishes loading
+  let hasModelLoadedOnce = false;
   
   // Function to toggle dialog visibility
   const toggleDialog = () => {
@@ -134,6 +141,17 @@ export function mountWidget(
       button.innerHTML = isDialogVisible ? 
         '<i class="fas fa-times"></i>' : 
         '<i class="fas fa-robot"></i>';
+      
+      // Auto-open dialog when model finishes loading for the first time
+      if (autoOpenOnLoad && !hasModelLoadedOnce && !isDialogVisible) {
+        hasModelLoadedOnce = true;
+        // Add a small delay to ensure the button state update is complete
+        setTimeout(() => {
+          toggleDialog();
+        }, 100);
+      } else if (!hasModelLoadedOnce) {
+        hasModelLoadedOnce = true;
+      }
     }
   };
 

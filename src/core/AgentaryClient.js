@@ -59,6 +59,7 @@ export class AgentaryClient extends EventEmitter {
         this.webLLMClient, 
         "bottom-right",
         {
+          autoOpenOnLoad: true,
           generateQuestions: false,
           // maxQuestions: 5
         }

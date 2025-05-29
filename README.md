@@ -211,13 +211,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 Issues: [GitHub Issues](https://github.com/yourusername/agentary-js-sdk/issues) 
 
 
-// In the browser console:
+----
+
 const script = document.createElement('script');
 script.src = 'https://cdn.agentary.ai/latest/agentary.umd.js';
 document.head.appendChild(script);
 
-
 const a = window.Agentary.init({ loadModel: true, showWidget: true })
+
+----
 
 // Quick test of the improved worker creation
 (async function() {
