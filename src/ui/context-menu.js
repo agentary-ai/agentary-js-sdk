@@ -451,7 +451,7 @@ export function createContextMenu(webLLMClient) {
   
   // Set up selection monitoring using our helper
   const cleanup = addSelectionMonitor((text, rect) => {
-    if (text && !client.isModelLoading) {
+    if (text && !webLLMClient.isModelLoading) {
       currentSelectedText = text;
       positionButton(rect);
       console.log("Text selected:", text.substring(0, 30) + (text.length > 30 ? '...' : ''));
