@@ -60,6 +60,7 @@
     "rollup": "^3.25.0"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
     "@mlc-ai/web-llm": "^0.2.79",
     "marked": "^15.0.12"
   },
