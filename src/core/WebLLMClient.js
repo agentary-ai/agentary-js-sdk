@@ -47,10 +47,10 @@ export class WebLLMClient {
    * Create a worker using blob URL strategy (CORS-safe)
    * @returns {Promise<Worker|null>} Created worker or null
    */
-  async createWorker() {
+  async createWebWorker() {
     try {
       console.log("Creating worker with blob URL strategy...");
-      const workerUrl = new URL('./webllm-worker.js', import.meta.url);
+      const workerUrl = new URL('./webllm-web-worker.js', import.meta.url);
       
       // Fetch the worker code
       const response = await fetch(workerUrl);
@@ -150,7 +150,7 @@ export class WebLLMClient {
             console.log("Attempting to create web worker engine");
             
             // Create worker using blob URL strategy
-            const worker = await this.createWorker();
+            const worker = await this.createWebWorker();
             
             if (!worker) {
               throw new Error('Failed to create worker');

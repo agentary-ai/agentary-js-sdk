@@ -28,12 +28,27 @@ const baseConfig = {
   external: []
 };
 
-// Worker configuration
-const workerConfig = {
+// Web worker configuration
+const webWorkerConfig = {
   ...baseConfig,
-  input: 'src/core/webllm-worker.js',
+  input: 'src/core/webllm-web-worker.js',
   output: {
-    file: 'dist/webllm-worker.js',
+    file: 'dist/webllm-web-worker.js',
+    format: 'es',
+    sourcemap: true
+  },
+  plugins: [
+    ...baseConfig.plugins,
+    ...(isProduction ? [terser()] : [])
+  ]
+};
+
+// Service worker configuration
+const serviceWorkerConfig = {
+  ...baseConfig,
+  input: 'src/core/webllm-service-worker.js',
+  output: {
+    file: 'dist/webllm-service-worker.js',
     format: 'es',
     sourcemap: true
   },
@@ -50,8 +65,8 @@ const mainConfig = {
 };
 
 const configs = [
-  // Web Worker build (must come first)
-  workerConfig,
+  webWorkerConfig,
+  serviceWorkerConfig,
   
   // ES Module build
   {
