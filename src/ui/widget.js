@@ -55,7 +55,7 @@ export function mountWidget(
   });
   
   // Create dialog and get show function
-  const { dialog, showDialog } = createDialog(client, position, uiOptions);
+  const { dialog, showDialog } = createDialog(webLLMClient, position, uiOptions);
   
   // Track dialog visibility state
   let isDialogVisible = false;
@@ -94,7 +94,7 @@ export function mountWidget(
   document.body.appendChild(button);
   
   // Set up context menu for text selection
-  createContextMenu(client);
+  createContextMenu(webLLMClient);
 
   // Function to update button state based on loading status
   const updateButtonState = (isLoading) => {

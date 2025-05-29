@@ -1,8 +1,9 @@
 import { addSelectionMonitor } from "./selection-helper.js";
 import { marked } from "marked";
 import { getSelectedText } from "../utils/index.js";
+import { explainSelectedText } from "../explain/index.js";
 
-/**
+/** 
  * Configure marked for safe HTML rendering
  */
 marked.setOptions({
@@ -24,10 +25,10 @@ function renderMarkdown(content) {
 
 /**
  * Creates a context menu for selected text
- * @param client - The Agentary client instance
+ * @param webLLMClient - The WebLLM client instance
  * @returns A cleanup function to remove the context menu event listeners
  */
-export function createContextMenu(client) {
+export function createContextMenu(webLLMClient) {
   // Create a floating button that appears when text is selected
   const contextButton = document.createElement("div");
   contextButton.style.cssText = `
@@ -399,7 +400,7 @@ export function createContextMenu(client) {
       // Call the explain function with streaming
       let explanationText = "";
       
-      await client.explainSelectedText(selectedText, {
+      await explainSelectedText(webLLMClient, selectedText, {
         onToken: (token) => {
           // Remove typing indicator when first token arrives
           if (explanationText === "") {
