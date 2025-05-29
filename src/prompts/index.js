@@ -1,6 +1,40 @@
 import { extractPageContent } from "../utils/index.js";
 
 /**
+ * Rough token estimation (approximately 4 characters per token)
+ */
+function estimateTokens(text) {
+  return Math.ceil(text.length / 4);
+}
+
+/**
+ * Truncate content to fit within token limits
+ */
+function truncateContent(content, maxTokens = 2500) {
+  const tokens = estimateTokens(content);
+  if (tokens <= maxTokens) {
+    return content;
+  }
+  
+  // Truncate to approximate character limit (maxTokens * 4 characters per token)
+  const maxChars = maxTokens * 4;
+  const truncated = content.substring(0, maxChars);
+  
+  // Try to truncate at a sentence boundary to maintain readability
+  const lastSentenceEnd = Math.max(
+    truncated.lastIndexOf('.'),
+    truncated.lastIndexOf('!'),
+    truncated.lastIndexOf('?')
+  );
+  
+  if (lastSentenceEnd > maxChars * 0.8) {
+    return truncated.substring(0, lastSentenceEnd + 1);
+  }
+  
+  return truncated + '...';
+}
+
+/**
  * Generates relevant questions about the current page content
  */
 export async function generatePagePrompts(
@@ -9,43 +43,47 @@ export async function generatePagePrompts(
 ) {
   const {
     maxQuestions = 5,
-    focusAreas = []
+    focusAreas = [],
+    maxContentTokens = 2500 // Leave room for prompt overhead
   } = options;
   
-  const pageContent = extractPageContent();
+  const rawPageContent = extractPageContent();
   
-  if (!pageContent.trim()) {
+  if (!rawPageContent.trim()) {
     return ["What is this page about?", "Can you explain the main topic?"];
   }
 
+  // Truncate content to prevent token limit issues
+  const pageContent = truncateContent(rawPageContent, maxContentTokens);
+  
   const focusAreasText = focusAreas.length > 0 
-    ? `\n\nFocus particularly on these areas: ${focusAreas.join(', ')}`
+    ? `Focus on: ${focusAreas.join(', ')}`
     : '';
   
-  const prompt = `
-    Based on the following webpage content, generate ${maxQuestions} thoughtful and 
-    relevant questions that would help a user learn more about the topic. The 
-    questions should be:
-    - Specific to the content
-    - Educational and insightful
-    - Varied in scope (some broad, some detailed)
-    - Engaging and thought-provoking
+  // Optimized, more concise prompt
+  const prompt = `Generate ${maxQuestions} educational questions about this content. Requirements:
+- Max 15 words per question
+- Specific to the content
+- Varied scope (broad to detailed)
+- Return JSON array of strings only
 
-    **Guidelines:**
-    - No longer than 15 words
-    - Do not include numbering, bullet points, or other formatting
-    - Return a JSON array of strings, each representing a question
+${focusAreasText}
 
-    **Webpage content:**
-    ${pageContent} ${focusAreasText}
-  `;
+Content:
+${pageContent}`;
 
   try {    
     const messages = [
       { role: "user", content: prompt }
     ];
 
-    console.log(messages);
+    // Check estimated token count before sending
+    const estimatedTokens = estimateTokens(prompt);
+    console.log(`Estimated prompt tokens: ${estimatedTokens}`);
+    
+    if (estimatedTokens > 3800) { // Leave buffer for response
+      console.warn(`Prompt may be too long (${estimatedTokens} tokens), consider reducing maxContentTokens`);
+    }
     
     const startTime = performance.now();
     const response = await llm.chatCompletion(messages, {
@@ -53,7 +91,6 @@ export async function generatePagePrompts(
     });
     const endTime = performance.now();
     console.log(`Chat completion took ${endTime - startTime}ms`);
-    console.log(response);
 
     let questions = [];
 
