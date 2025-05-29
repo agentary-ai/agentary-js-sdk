@@ -1,40 +1,6 @@
 import { extractPageContent } from "../utils/index.js";
 
 /**
- * Rough token estimation (approximately 4 characters per token)
- */
-function estimateTokens(text) {
-  return Math.ceil(text.length / 4);
-}
-
-/**
- * Truncate content to fit within token limits
- */
-function truncateContent(content, maxTokens = 2500) {
-  const tokens = estimateTokens(content);
-  if (tokens <= maxTokens) {
-    return content;
-  }
-  
-  // Truncate to approximate character limit (maxTokens * 4 characters per token)
-  const maxChars = maxTokens * 4;
-  const truncated = content.substring(0, maxChars);
-  
-  // Try to truncate at a sentence boundary to maintain readability
-  const lastSentenceEnd = Math.max(
-    truncated.lastIndexOf('.'),
-    truncated.lastIndexOf('!'),
-    truncated.lastIndexOf('?')
-  );
-  
-  if (lastSentenceEnd > maxChars * 0.8) {
-    return truncated.substring(0, lastSentenceEnd + 1);
-  }
-  
-  return truncated + '...';
-}
-
-/**
  * Generates relevant questions about the current page content
  */
 export async function generatePagePrompts(
@@ -44,18 +10,15 @@ export async function generatePagePrompts(
   const {
     maxQuestions = 5,
     focusAreas = [],
-    maxContentTokens = 2500 // Leave room for prompt overhead
+    maxContentTokens = 1500 // Leave room for prompt overhead
   } = options;
   
-  const rawPageContent = extractPageContent();
+  const pageContent = extractPageContent({ maxTokens: maxContentTokens });
   
-  if (!rawPageContent.trim()) {
+  if (!pageContent.trim()) {
     return ["What is this page about?", "Can you explain the main topic?"];
   }
 
-  // Truncate content to prevent token limit issues
-  const pageContent = truncateContent(rawPageContent, maxContentTokens);
-  
   const focusAreasText = focusAreas.length > 0 
     ? `Focus on: ${focusAreas.join(', ')}`
     : '';
@@ -77,8 +40,8 @@ ${pageContent}`;
       { role: "user", content: prompt }
     ];
 
-    // Check estimated token count before sending
-    const estimatedTokens = estimateTokens(prompt);
+    // Rough token estimation for logging (4 characters per token)
+    const estimatedTokens = Math.ceil(prompt.length / 4);
     console.log(`Estimated prompt tokens: ${estimatedTokens}`);
     
     if (estimatedTokens > 3800) { // Leave buffer for response

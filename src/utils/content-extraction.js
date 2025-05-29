@@ -3,10 +3,48 @@
  */
 
 /**
+ * Rough token estimation (approximately 4 characters per token)
+ */
+function estimateTokens(text) {
+  return Math.ceil(text.length / 4);
+}
+
+/**
+ * Truncate content to fit within token limits
+ */
+function truncateContent(content, maxTokens) {
+  const tokens = estimateTokens(content);
+  if (tokens <= maxTokens) {
+    return content;
+  }
+  
+  // Truncate to approximate character limit (maxTokens * 4 characters per token)
+  const maxChars = maxTokens * 4;
+  const truncated = content.substring(0, maxChars);
+  
+  // Try to truncate at a sentence boundary to maintain readability
+  const lastSentenceEnd = Math.max(
+    truncated.lastIndexOf('.'),
+    truncated.lastIndexOf('!'),
+    truncated.lastIndexOf('?')
+  );
+  
+  if (lastSentenceEnd > maxChars * 0.8) {
+    return truncated.substring(0, lastSentenceEnd + 1);
+  }
+  
+  return truncated + '...';
+}
+
+/**
  * Extract the main content from the current webpage
+ * @param {Object} options - Configuration options
+ * @param {number} options.maxTokens - Maximum number of tokens to return (default: no limit)
  * @returns The extracted text content
  */
-export function extractPageContent() {
+export function extractPageContent(options = {}) {
+    const { maxTokens } = options;
+    
     // Get the page title
     const title = document.title;
     
@@ -44,5 +82,12 @@ export function extractPageContent() {
       mainContent = body.textContent?.trim() || '';
     }
     
-    return `${title}\n\n${mainContent}`;
+    const fullContent = `${title}\n\n${mainContent}`;
+    
+    // Apply truncation if maxTokens is specified
+    if (maxTokens) {
+      return truncateContent(fullContent, maxTokens);
+    }
+    
+    return fullContent;
   }
