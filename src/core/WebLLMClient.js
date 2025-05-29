@@ -183,6 +183,8 @@ export class WebLLMClient {
             // Fall back to main thread engine
             this.engine = await CreateMLCEngine(this.modelPath, {
               initProgressCallback: this.initProgressCallback
+            }, {
+              context_window_size: 8192
             });
             console.log("✅ Main thread engine created successfully");
           }

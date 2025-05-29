@@ -1,1 +1,6 @@
-console.log("Hello, World from service worker");
+import { ServiceWorkerMLCEngineHandler } from "@mlc-ai/web-llm";
+
+self.addEventListener("activate", () => {
+    const handler = new ServiceWorkerMLCEngineHandler();
+    console.log("Service Worker activated!");
+});
