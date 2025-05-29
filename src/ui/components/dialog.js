@@ -395,7 +395,7 @@ export function createDialog(
           
           // Process the question with the LLM
           await postMessage(
-            llm, 
+            webLLMClient, 
             question,
             (token) => {
               // Remove typing indicator when first token arrives
@@ -412,7 +412,7 @@ export function createDialog(
           );
           
           // Setup and show chat input after response
-          setupChatInput(chatInputContainer, llm, dialogContent, setChatInputDisabled);
+          setupChatInput(chatInputContainer, webLLMClient, dialogContent, setChatInputDisabled);
           showChatInput(true);
           
         } catch (error) {
@@ -431,7 +431,7 @@ export function createDialog(
   };
   
   // Create dialog actions section with buttons for different functionalities
-  const { actionsContainer } = createDialogActions(llm, dialogContent, showHomeScreen, chatInputContainer, showChatInput, setChatInputDisabled);
+  const { actionsContainer } = createDialogActions(webLLMClient, dialogContent, showHomeScreen, chatInputContainer, showChatInput, setChatInputDisabled);
   actionsContainer.classList.add('actions-container');
   dialog.appendChild(actionsContainer);
   
@@ -562,7 +562,7 @@ function createDialogActions(
     addChatMessage(dialogContent, "I'm ready to help! Ask me anything.", "assistant");
     
     // Setup and show chat input
-    setupChatInput(chatInputContainer, llm, dialogContent, setChatInputDisabled);
+    setupChatInput(chatInputContainer, webLLMClient, dialogContent, setChatInputDisabled);
     showChatInput(true);
   };
   
