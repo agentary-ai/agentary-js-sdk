@@ -1,5 +1,7 @@
 import { createDialog } from "./components/dialog.js";
 import { createContextMenu } from "./context-menu.js";
+// Import Font Awesome CSS for icons
+import '@fortawesome/fontawesome-free/css/all.css';
 
 /**
  * Mounts the UI widget and sets up the context menu
