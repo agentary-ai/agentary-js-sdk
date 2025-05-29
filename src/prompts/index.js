@@ -37,13 +37,15 @@ export async function generatePagePrompts(
     - Return a JSON array of strings, each representing a question
 
     **Webpage content:**
-    ${pageContent}${focusAreasText}
+    ${pageContent} ${focusAreasText}
   `;
 
   try {    
     const messages = [
       { role: "user", content: prompt }
     ];
+
+    console.log(messages);
     
     const startTime = performance.now();
     const response = await llm.chatCompletion(messages, {
