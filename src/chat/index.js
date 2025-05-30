@@ -6,14 +6,17 @@ import { extractPageContent } from "../utils/index.js";
 export async function postMessage(
   llm,
   message,
-  onToken,
-  previousMessages = []
+  options = {}
 ) {
   try {
+    const { onToken, previousMessages = [], articleSelector } = options;
+    
     // Create system prompt if this is the first message (no previous messages)
     const messages = [];
 
-    const content = extractPageContent();
+    const content = extractPageContent({
+      articleSelector
+    });
     
     // Add system prompt only if there are no previous messages or no system message exists
     const hasSystemMessage = previousMessages.some(msg => msg.role === "system");

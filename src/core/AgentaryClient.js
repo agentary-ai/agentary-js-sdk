@@ -1,4 +1,3 @@
-
 // import { ApiClient } from './core/ApiClient.js';
 import { EventEmitter } from '../utils/EventEmitter.js';
 import { Logger } from '../utils/Logger.js';
@@ -21,6 +20,7 @@ export class AgentaryClient extends EventEmitter {
    * @param {boolean} [config.debug=false] - Enable debug logging
    * @param {boolean} [config.loadModel=false] - Whether to load the model immediately
    * @param {string} [config.workerUrl] - Custom URL for the WebLLM worker script
+   * @param {string} [config.articleSelector] - Custom CSS selector for extracting article content
    */
   constructor(config = {
     loadModel: false,
@@ -75,20 +75,32 @@ export class AgentaryClient extends EventEmitter {
     return '1.0.0';
   }
 
-  summarizeContent() {
-    return summarizeContent(this.webLLMClient);
+  summarizeContent(options = {}) {
+    return summarizeContent(this.webLLMClient, {
+      articleSelector: this.config.articleSelector,
+      ...options
+    });
   }
 
   explainSelectedText(text = null, options = {}) {
-    return explainSelectedText(this.webLLMClient, text, options);
+    return explainSelectedText(this.webLLMClient, text, {
+      articleSelector: this.config.articleSelector,
+      ...options
+    });
   }
 
   generatePagePrompts(options = {}) {
-    return generatePagePrompts(this.webLLMClient, options);
+    return generatePagePrompts(this.webLLMClient, {
+      articleSelector: this.config.articleSelector,
+      ...options
+    });
   }
 
   postMessage(message, options = {}) {
-    return postMessage(this.webLLMClient, message, options);
+    return postMessage(this.webLLMClient, message, {
+      articleSelector: this.config.articleSelector,
+      ...options
+    });
   }
 
   /**

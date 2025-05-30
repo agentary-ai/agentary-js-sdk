@@ -15,6 +15,8 @@ export async function explainSelectedText(
   options = {}
 ) {
   try {
+    const { articleSelector } = options;
+    
     // Get selected text if not provided
     const selectedText = text || getSelectedText();
     
@@ -40,7 +42,9 @@ export async function explainSelectedText(
 
       **Webpage Content**
       
-      ${extractPageContent()}
+      ${extractPageContent({
+        articleSelector
+      })}
       
     `;
     
