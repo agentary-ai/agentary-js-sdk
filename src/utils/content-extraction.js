@@ -40,20 +40,24 @@ function truncateContent(content, maxTokens) {
  * Extract the main content from the current webpage
  * @param {Object} options - Configuration options
  * @param {number} options.maxTokens - Maximum number of tokens to return (default: no limit)
- * @param {string} options.articleSelector - Custom CSS selector for the main content container
  * @returns The extracted text content
  */
 export function extractPageContent(options = {}) {
-    const { maxTokens, articleSelector } = options;
+    const { maxTokens } = options;
     
     // Get the page title
     const title = document.title;
     
     // Try to find the main content container
-    // If a custom articleSelector is provided, try that first
-    const mainContentSelectors = articleSelector 
-      ? [articleSelector, 'main', 'article', '[role="main"]', '#content', '.content', '.main-content']
-      : ['main', 'article', '[role="main"]', '#content', '.content', '.main-content'];
+    // Attempt to find the main content by common selectors
+    const mainContentSelectors = [
+      'main', 
+      'article', 
+      '[role="main"]',
+      '#content',
+      '.content',
+      '.main-content'
+    ];
     
     let mainContent = '';
     

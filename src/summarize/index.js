@@ -13,9 +13,7 @@ export async function summarizeContent(
 ) {
   try {
     // Extract content if not provided
-    const content = options.content || extractPageContent({
-      articleSelector: options.articleSelector
-    });
+    const content = options.content || extractPageContent();
     
     // Create prompt for summarization
     const systemPrompt = `

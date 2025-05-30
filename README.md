@@ -45,8 +45,7 @@ import { Agentary } from 'agentary-js-sdk';
 const agentary = new Agentary({
   apiKey: 'your-api-key',
   baseUrl: 'https://api.agentary.com', // optional
-  debug: false, // optional
-  articleSelector: '.a-featured-article' // optional
+  debug: false // optional
 });
 
 // Test the connection
@@ -86,7 +85,6 @@ new Agentary(config)
   - `apiKey` (string): Your Agentary API key (required)
   - `baseUrl` (string): Base URL for the API (optional, defaults to 'https://api.agentary.com')
   - `debug` (boolean): Enable debug logging (optional, defaults to false)
-  - `articleSelector` (string): Custom CSS selector for extracting article content (optional, e.g., '.a-featured-article')
 
 ### Methods
 

@@ -10,13 +10,10 @@ export async function generatePagePrompts(
   const {
     maxQuestions = 5,
     focusAreas = [],
-    maxContentTokens = 1500, // Leave room for prompt overhead
-    articleSelector
+    maxContentTokens = 1500 // Leave room for prompt overhead
   } = options;
   
-  const pageContent = extractPageContent({
-    articleSelector
-  });
+  const pageContent = extractPageContent();
   
   if (!pageContent.trim()) {
     return ["What is this page about?", "Can you explain the main topic?"];
