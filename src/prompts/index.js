@@ -19,22 +19,48 @@ export async function generatePagePrompts(
     contentSelector
   } = options;
   
-  const pageContent = extractPageContent({ contentSelector });
+  console.log("Starting prompt generation with options:", options);
   
-  if (!pageContent.trim()) {
-    return ["What is this page about?", "Can you explain the main topic?"];
+  const pageContent = extractPageContent({ 
+    contentSelector,
+    maxTokens: maxContentTokens 
+  });
+  
+  console.log("Extracted page content length:", pageContent.length);
+  console.log("Page content preview:", pageContent.substring(0, 200) + "...");
+  
+  if (!pageContent.trim() || pageContent.length < 50) {
+    console.log("Insufficient content found, returning fallback questions");
+    return [
+      "What is this page about?", 
+      "Can you explain the main topic?",
+      "What are the key points discussed here?",
+      "How can I learn more about this subject?",
+      "What questions might someone new to this topic have?"
+    ].slice(0, maxQuestions);
   }
   
   const systemPrompt = `
-    You are an educational assistant that generates 
-    ${maxQuestions} questions to help 
-    users learn about a piece of content you will be 
-    provided.
+    You are an educational assistant that generates thoughtful, engaging questions to help users learn about content they're reading.
+
+    Your task is to analyze the provided content and generate ${maxQuestions} relevant questions that would help someone understand and engage with the material better.
+
+    The questions should be:
+    - Specific to the content provided
+    - Educational and thought-provoking
+    - Clear and well-formed
+    - Varied in type (comprehension, analysis, application, etc.)
+
+    Return your response as an array containing the ${maxQuestions} questions as strings.
   `;
 
-  const userPrompt = `Generate ${maxQuestions} questions about this content:
+  const userPrompt = `
+    Generate ${maxQuestions} educational questions about this content:
 
-${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
+    CONTENT:
+    ${pageContent}
+
+    Remember to return an array of questions.
 `;
 
   try {    
@@ -43,7 +69,11 @@ ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
       { role: "user", content: userPrompt }
     ];
 
-    console.log(messages);
+    console.log("Sending messages to LLM:", {
+      systemPromptLength: systemPrompt.length,
+      userPromptLength: userPrompt.length,
+      contentLength: pageContent.length
+    });
     
     const startTime = performance.now();
     const response = await llm.chatCompletion(messages, {
@@ -52,41 +82,76 @@ ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
     const endTime = performance.now();
     console.log(`Chat completion took ${endTime - startTime}ms`);
 
-    console.log(`Prompt generation response: ${JSON.stringify(response)}`);
+    console.log(`Prompt generation response:`, response);
 
     let questions = [];
 
-    if (response.choices[0].message.content) {
+    if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
       try {
-        console.log(response.choices[0].message.content);
+        const content = response.choices[0].message.content;
+        console.log("Raw response content:", content);
 
-        questions = JSON.parse(response.choices[0].message.content);
+        const parsed = JSON.parse(content);
+        console.log("Parsed response:", parsed);
 
-        console.log(`Questions parsed: ${JSON.stringify(questions)}`);
-
-        // Ensure questions is an array and contains valid question strings
-        if (Array.isArray(questions)) {
-          questions = questions
-            .filter(q => typeof q === 'string' && q.trim().length > 0)
-            .slice(0, maxQuestions);
+        // Handle different possible response formats
+        if (parsed.questions && Array.isArray(parsed.questions)) {
+          questions = parsed.questions;
+        } else if (Array.isArray(parsed)) {
+          questions = parsed;
         } else {
+          console.warn("Unexpected response format:", parsed);
           questions = [];
         }
+
+        // Validate and clean questions
+        questions = questions
+          .filter(q => typeof q === 'string' && q.trim().length > 0)
+          .map(q => q.trim())
+          .slice(0, maxQuestions);
+
+        console.log("Final processed questions:", questions);
+
       } catch (e) {
         console.error("Error parsing JSON response:", e);
+        console.error("Raw content that failed to parse:", response.choices[0].message.content);
         questions = [];
       }
+    } else {
+      console.error("Unexpected response structure:", response);
     }
     
     // Fallback questions if parsing fails or no valid questions returned
     if (questions.length === 0) {
-      return [
-        "What is the main topic of this page?",
+      console.log("No valid questions generated, using content-aware fallbacks");
+      
+      // Try to create more content-aware fallback questions
+      const contentLower = pageContent.toLowerCase();
+      const fallbackQuestions = [];
+      
+      if (contentLower.includes('how') || contentLower.includes('tutorial') || contentLower.includes('guide')) {
+        fallbackQuestions.push("What are the main steps or process described here?");
+      }
+      if (contentLower.includes('why') || contentLower.includes('reason') || contentLower.includes('because')) {
+        fallbackQuestions.push("What are the key reasons or explanations provided?");
+      }
+      if (contentLower.includes('benefit') || contentLower.includes('advantage') || contentLower.includes('important')) {
+        fallbackQuestions.push("What are the main benefits or advantages discussed?");
+      }
+      if (contentLower.includes('problem') || contentLower.includes('challenge') || contentLower.includes('issue')) {
+        fallbackQuestions.push("What problems or challenges are being addressed?");
+      }
+      
+      // Add generic fallbacks
+      fallbackQuestions.push(
+        "What is the main topic of this content?",
         "What are the key points discussed here?",
         "How does this information relate to current trends?",
         "What practical applications does this have?",
         "What questions might someone new to this topic have?"
-      ].slice(0, maxQuestions);
+      );
+      
+      return fallbackQuestions.slice(0, maxQuestions);
     }
     
     return questions.slice(0, maxQuestions);
