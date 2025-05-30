@@ -25,10 +25,12 @@ export async function generatePagePrompts(
     return ["What is this page about?", "Can you explain the main topic?"];
   }
   
-  const systemPrompt = `You are an educational assistant that generates questions to help users understand the content of a page.
+  const systemPrompt = `You are an educational assistant that generates exactly 
+  ${maxQuestions} questions to help users understand the content of a page.
 
   You MUST return exactly this JSON structure with ONLY questions:
-  ["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
+  
+  `;
 
   // Split into system and user prompts for better structure
 //   const systemPrompt = `You are a question generator that creates QUESTIONS (not statements) about content.
