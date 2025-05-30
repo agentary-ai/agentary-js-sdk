@@ -217,7 +217,7 @@ const script = document.createElement('script');
 script.src = 'https://cdn.agentary.ai/latest/agentary.umd.js';
 document.head.appendChild(script);
 
-const a = window.Agentary.init({ loadModel: true, showWidget: true, generateQuestions: true, maxQuestions: 5, contentSelector: 'test' })
+const a = window.Agentary.init({ loadModel: true, showWidget: true, generateQuestions: true, maxQuestions: 5, contentSelector: '.a-content' })
 
 ----
 

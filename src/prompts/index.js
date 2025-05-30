@@ -49,6 +49,8 @@ export async function generatePagePrompts(
       { role: "user", content: prompt }
     ];
 
+    console.log(messages);
+
     // // Rough token estimation for logging (4 characters per token)
     // const estimatedTokens = Math.ceil(prompt.length / 4);
     // console.log(`Estimated prompt tokens: ${estimatedTokens}`);
