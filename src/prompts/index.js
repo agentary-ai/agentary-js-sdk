@@ -26,20 +26,25 @@ export async function generatePagePrompts(
   }
   
   // Split into system and user prompts for better structure
-  const systemPrompt = `You are an educational question generator. Your task is to create relevant, engaging questions about provided content.
+  const systemPrompt = `
+    You are an educational question generator. Your task is to create relevant, 
+    engaging questions about provided content.
 
-Guidelines:
-- Generate exactly ${maxQuestions} questions
-- Keep each question under 15 words
-- Make questions specific to the actual content provided
-- Vary the scope from broad overview to specific details
-- Focus on educational value and comprehension
-- Return only a JSON array of strings
-- No additional text or formatting outside the JSON`;
+    Guidelines:
+    - Generate exactly ${maxQuestions} questions
+    - Each question must be under 15 words
+    - Make questions specific to the actual content provided
+    - Vary the scope from broad overview to specific details
+    - Focus on educational value and comprehension
+    - Return only a JSON array of strings
+    - No additional text or formatting outside the JSON
+  `;
 
-  const userPrompt = `Generate educational questions for this content:
+  const userPrompt = `
+    Generate questions for this content:
 
-${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}`;
+    ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
+  `;
 
   try {    
     const messages = [
