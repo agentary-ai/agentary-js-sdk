@@ -67,7 +67,7 @@ Remember: Generate QUESTIONS, not statements. Each must end with "?".`;
     
     const startTime = performance.now();
     const response = await llm.chatCompletion(messages, {
-      response_format: { type: "json_object", schema: `{ "type": "array", "items": { "type": "string", "pattern": "^.+\\?$" } }` }
+      response_format: { type: "json_object", schema: `{ "type": "array", "items": { "type": "string" } }` }
     });
     const endTime = performance.now();
     console.log(`Chat completion took ${endTime - startTime}ms`);
