@@ -60,8 +60,8 @@ export class AgentaryClient extends EventEmitter {
         "bottom-right",
         {
           autoOpenOnLoad: true,
-          generateQuestions: true,
-          maxQuestions: 5
+          generateQuestions: this.config.generateQuestions,
+          maxQuestions: this.config.maxQuestions
         }
       );
     }
