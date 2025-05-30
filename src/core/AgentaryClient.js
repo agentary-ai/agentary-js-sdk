@@ -1,4 +1,3 @@
-
 // import { ApiClient } from './core/ApiClient.js';
 import { EventEmitter } from '../utils/EventEmitter.js';
 import { Logger } from '../utils/Logger.js';
@@ -21,6 +20,7 @@ export class AgentaryClient extends EventEmitter {
    * @param {boolean} [config.debug=false] - Enable debug logging
    * @param {boolean} [config.loadModel=false] - Whether to load the model immediately
    * @param {string} [config.workerUrl] - Custom URL for the WebLLM worker script
+   * @param {string} [config.contentSelector] - CSS selector for extracting article content from the page
    */
   constructor(config = {
     loadModel: false,
@@ -35,11 +35,12 @@ export class AgentaryClient extends EventEmitter {
       // baseUrl: 'https://api.agentary.com',
       debug: false,
       loadModel: false,
+      contentSelector: null, // Will use default selectors if not provided
       ...config
     };
 
     this.logger = new Logger(this.config.debug);
-    this.logger.info(`Initializing Agentary SDK: ${this.config}`);
+    this.logger.info(`Initializing Agentary SDK: ${JSON.stringify(this.config)}`);
 
     // this.apiClient = new ApiClient(this.config, this.logger);
     
@@ -60,7 +61,8 @@ export class AgentaryClient extends EventEmitter {
         {
           autoOpenOnLoad: true,
           generateQuestions: this.config.generateQuestions,
-          maxQuestions: this.config.maxQuestions
+          maxQuestions: this.config.maxQuestions,
+          contentSelector: this.config.contentSelector
         }
       );
     }
@@ -74,20 +76,32 @@ export class AgentaryClient extends EventEmitter {
     return '1.0.0';
   }
 
-  summarizeContent() {
-    return summarizeContent(this.webLLMClient);
+  summarizeContent(options = {}) {
+    return summarizeContent(this.webLLMClient, {
+      contentSelector: this.config.contentSelector,
+      ...options
+    });
   }
 
   explainSelectedText(text = null, options = {}) {
-    return explainSelectedText(this.webLLMClient, text, options);
+    return explainSelectedText(this.webLLMClient, text, {
+      contentSelector: this.config.contentSelector,
+      ...options
+    });
   }
 
   generatePagePrompts(options = {}) {
-    return generatePagePrompts(this.webLLMClient, options);
+    return generatePagePrompts(this.webLLMClient, {
+      contentSelector: this.config.contentSelector,
+      ...options
+    });
   }
 
-  postMessage(message, options = {}) {
-    return postMessage(this.webLLMClient, message, options);
+  postMessage(message, onToken, previousMessages = [], options = {}) {
+    return postMessage(this.webLLMClient, message, onToken, previousMessages, {
+      contentSelector: this.config.contentSelector,
+      ...options
+    });
   }
 
   /**

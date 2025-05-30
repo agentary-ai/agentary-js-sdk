@@ -7,6 +7,8 @@ import { getSelectedText } from "../utils/index.js";
  * @param llm - The WebLLM client instance
  * @param text - The text to explain (if not provided, will use current selection)
  * @param options - Configuration options
+ * @param options.contentSelector - CSS selector for extracting article content
+ * @param options.onToken - Callback for streaming tokens
  * @returns A promise that resolves to the generated explanation
  */
 export async function explainSelectedText(
@@ -40,7 +42,7 @@ export async function explainSelectedText(
 
       **Webpage Content**
       
-      ${extractPageContent()}
+      ${extractPageContent({ contentSelector: options.contentSelector })}
       
     `;
     

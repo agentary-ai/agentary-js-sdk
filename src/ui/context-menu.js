@@ -26,9 +26,10 @@ function renderMarkdown(content) {
 /**
  * Creates a context menu for selected text
  * @param webLLMClient - The WebLLM client instance
+ * @param options - Configuration options including contentSelector
  * @returns A cleanup function to remove the context menu event listeners
  */
-export function createContextMenu(webLLMClient) {
+export function createContextMenu(webLLMClient, options = {}) {
   // Create a floating button that appears when text is selected
   const contextButton = document.createElement("div");
   contextButton.style.cssText = `
@@ -401,6 +402,7 @@ export function createContextMenu(webLLMClient) {
       let explanationText = "";
       
       await explainSelectedText(webLLMClient, selectedText, {
+        contentSelector: options.contentSelector,
         onToken: (token) => {
           // Remove typing indicator when first token arrives
           if (explanationText === "") {

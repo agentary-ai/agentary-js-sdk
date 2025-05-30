@@ -2,18 +2,24 @@ import { extractPageContent } from "../utils/index.js";
 
 /**
  * Post a chat message and return a streaming response
+ * @param llm - The WebLLM client instance
+ * @param message - The user's message
+ * @param onToken - Callback for streaming tokens
+ * @param previousMessages - Array of previous chat messages
+ * @param options - Configuration options including contentSelector
  */
 export async function postMessage(
   llm,
   message,
   onToken,
-  previousMessages = []
+  previousMessages = [],
+  options = {}
 ) {
   try {
     // Create system prompt if this is the first message (no previous messages)
     const messages = [];
 
-    const content = extractPageContent();
+    const content = extractPageContent({ contentSelector: options.contentSelector });
     
     // Add system prompt only if there are no previous messages or no system message exists
     const hasSystemMessage = previousMessages.some(msg => msg.role === "system");

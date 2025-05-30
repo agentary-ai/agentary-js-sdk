@@ -2,6 +2,12 @@ import { extractPageContent } from "../utils/index.js";
 
 /**
  * Generates relevant questions about the current page content
+ * @param llm - The WebLLM client instance
+ * @param options - Configuration options
+ * @param options.maxQuestions - Maximum number of questions to generate
+ * @param options.focusAreas - Array of focus areas for questions
+ * @param options.maxContentTokens - Maximum tokens for content extraction
+ * @param options.contentSelector - CSS selector for extracting article content
  */
 export async function generatePagePrompts(
   llm,
@@ -10,10 +16,11 @@ export async function generatePagePrompts(
   const {
     maxQuestions = 5,
     focusAreas = [],
-    maxContentTokens = 1500 // Leave room for prompt overhead
+    maxContentTokens = 1500, // Leave room for prompt overhead
+    contentSelector
   } = options;
   
-  const pageContent = extractPageContent();
+  const pageContent = extractPageContent({ contentSelector });
   
   if (!pageContent.trim()) {
     return ["What is this page about?", "Can you explain the main topic?"];

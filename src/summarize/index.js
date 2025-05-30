@@ -5,6 +5,9 @@ import { extractPageContent } from "../utils/index.js";
  * 
  * @param llm - The WebLLM client instance
  * @param options - Configuration options for summarization
+ * @param options.content - Pre-extracted content (if not provided, will extract from page)
+ * @param options.contentSelector - CSS selector for extracting article content
+ * @param options.onToken - Callback for streaming tokens
  * @returns A promise that resolves to the generated summary
  */
 export async function summarizeContent(
@@ -13,7 +16,7 @@ export async function summarizeContent(
 ) {
   try {
     // Extract content if not provided
-    const content = options.content || extractPageContent();
+    const content = options.content || extractPageContent({ contentSelector: options.contentSelector });
     
     // Create prompt for summarization
     const systemPrompt = `

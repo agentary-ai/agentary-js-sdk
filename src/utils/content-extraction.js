@@ -40,35 +40,50 @@ function truncateContent(content, maxTokens) {
  * Extract the main content from the current webpage
  * @param {Object} options - Configuration options
  * @param {number} options.maxTokens - Maximum number of tokens to return (default: no limit)
+ * @param {string} options.contentSelector - CSS selector for extracting article content
  * @returns The extracted text content
  */
 export function extractPageContent(options = {}) {
-    const { maxTokens } = options;
+    const { maxTokens, contentSelector } = options;
     
     // Get the page title
     const title = document.title;
     
-    // Try to find the main content container
-    // Attempt to find the main content by common selectors
-    const mainContentSelectors = [
-      'main', 
-      'article', 
-      '[role="main"]',
-      '#content',
-      '.content',
-      '.main-content'
-    ];
-    
     let mainContent = '';
     
-    // Try each selector until we find content
-    for (const selector of mainContentSelectors) {
-      const element = document.querySelector(selector);
-      if (element && element.textContent && element.textContent.trim().length > 100) {
-        mainContent = element.textContent.trim();
-        console.log("Found main content using selector:", selector);
-        break;
-      }
+    // If a specific contentSelector is provided, use it
+    if (contentSelector) {
+        const element = document.querySelector(contentSelector);
+        if (element && element.textContent) {
+            mainContent = element.textContent.trim();
+            console.log("Found content using provided selector:", contentSelector);
+        } else {
+            console.warn("No content found using provided selector:", contentSelector);
+        }
+    }
+    
+    // If no contentSelector provided or it didn't find content, use default selectors
+    if (!mainContent) {
+        // Try to find the main content container
+        // Attempt to find the main content by common selectors
+        const mainContentSelectors = [
+          'main', 
+          'article', 
+          '[role="main"]',
+          '#content',
+          '.content',
+          '.main-content'
+        ];
+        
+        // Try each selector until we find content
+        for (const selector of mainContentSelectors) {
+          const element = document.querySelector(selector);
+          if (element && element.textContent && element.textContent.trim().length > 100) {
+            mainContent = element.textContent.trim();
+            console.log("Found main content using selector:", selector);
+            break;
+          }
+        }
     }
     
     // If no main content found using selectors, use the whole body but exclude scripts, styles, etc.

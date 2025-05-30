@@ -124,7 +124,7 @@ export function mountWidget(
   document.body.appendChild(button);
   
   // Set up context menu for text selection
-  createContextMenu(webLLMClient);
+  createContextMenu(webLLMClient, { contentSelector: otherOptions.contentSelector });
 
   // Function to update button state based on loading status
   const updateButtonState = (isLoading) => {
