@@ -33,10 +33,10 @@ export async function generatePagePrompts(
     **IMPORTANT**
     - You MUST return the result as a list of strings.
     - Each question must be 15 words or less.
-    - You MUST generate exactly ${maxQuestions} questions.
+    - You MUST generate EXACTLY ${maxQuestions} questions.
   `;
 
-  const userPrompt = `Generate ${maxQuestions} questions about this content:
+  const userPrompt = `Generate EXACTLY ${maxQuestions} questions about this content:
 
 ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
 `;
