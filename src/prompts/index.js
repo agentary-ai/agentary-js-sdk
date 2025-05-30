@@ -66,6 +66,8 @@ export async function generatePagePrompts(
     const endTime = performance.now();
     console.log(`Chat completion took ${endTime - startTime}ms`);
 
+    console.log(`Prompt generation response: ${response}`);
+
     let questions = [];
 
     if (response.choices[0].message.content) {
