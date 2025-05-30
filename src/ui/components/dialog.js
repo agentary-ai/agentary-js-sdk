@@ -284,7 +284,8 @@ export function createDialog(
       try {
         // Generate questions
         questions = await generatePagePrompts(webLLMClient, { 
-          maxQuestions: uiOptions.maxQuestions || 5 
+          maxQuestions: uiOptions.maxQuestions || 5,
+          contentSelector: uiOptions.contentSelector || null
         });
         
         // Cache the questions for the page lifetime
