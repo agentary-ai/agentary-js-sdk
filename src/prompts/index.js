@@ -25,37 +25,41 @@ export async function generatePagePrompts(
     return ["What is this page about?", "Can you explain the main topic?"];
   }
   
+  const systemPrompt = `You are an educational assistant that generates questions to help users understand the content of a page.
+
+  You MUST return exactly this JSON structure with ONLY questions:
+  ["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
+
   // Split into system and user prompts for better structure
-  const systemPrompt = `You are a question generator that creates QUESTIONS (not statements) about content.
+//   const systemPrompt = `You are a question generator that creates QUESTIONS (not statements) about content.
 
-CRITICAL REQUIREMENTS:
-- Generate EXACTLY ${maxQuestions} questions
-- Each question MUST start with a question word (What, How, Why, When, Where, Who, Which, etc.)
-- Each question MUST end with a question mark (?)
-- Each question MUST be under 15 words
-- Questions must be SPECIFIC to the actual content provided
-- NO statements, summaries, or declarative sentences
-- Return ONLY a JSON array of question strings
+// CRITICAL REQUIREMENTS:
+// - Generate EXACTLY ${maxQuestions} questions
+// - Each question MUST start with a question word (What, How, Why, When, Where, Who, Which, etc.)
+// - Each question MUST end with a question mark (?)
+// - Each question MUST be under 15 words
+// - Questions must be SPECIFIC to the actual content provided
+// - NO statements, summaries, or declarative sentences
+// - Return ONLY a JSON array of question strings
 
-GOOD EXAMPLES:
-- "What company did Taylor Swift buy her music catalog from?"
-- "How much did the acquisition cost?"
-- "Why was this purchase significant for Swift?"
-- "When did the original sale controversy begin?"
+// GOOD EXAMPLES:
+// - "What company did Taylor Swift buy her music catalog from?"
+// - "How much did the acquisition cost?"
+// - "Why was this purchase significant for Swift?"
+// - "When did the original sale controversy begin?"
 
-BAD EXAMPLES (DO NOT DO THIS):
-- "Taylor Swift buys back her music catalog" (This is a statement, not a question)
-- "The singer acquired her albums for a nine-figure sum" (This is a statement)
-- "Taylor Swift announces new series and renews albums" (Too long and a statement)
+// BAD EXAMPLES (DO NOT DO THIS):
+// - "Taylor Swift buys back her music catalog" (This is a statement, not a question)
+// - "The singer acquired her albums for a nine-figure sum" (This is a statement)
+// - "Taylor Swift announces new series and renews albums" (Too long and a statement)
 
-You MUST return exactly this JSON structure with ONLY questions:
-["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
+// You MUST return exactly this JSON structure with ONLY questions:
+// ["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
 
-  const userPrompt = `Generate ${maxQuestions} questions about this content. Each must be a question (start with question word, end with ?), under 15 words:
+  const userPrompt = `Generate ${maxQuestions} questions about this content, under 15 words:
 
 ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
-
-Remember: Generate QUESTIONS, not statements. Each must end with "?".`;
+`;
 
   try {    
     const messages = [
