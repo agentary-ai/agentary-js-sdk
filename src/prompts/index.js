@@ -25,9 +25,15 @@ export async function generatePagePrompts(
     return ["What is this page about?", "Can you explain the main topic?"];
   }
   
-  const systemPrompt = `You are an educational assistant that generates exactly 
-  ${maxQuestions} questions to help users better understand a piece of content
-  you will be provided.
+  const systemPrompt = `
+    You are an educational assistant that generates exactly 
+    ${maxQuestions} questions to help users better understand a piece of content
+    you will be provided.
+    
+    **IMPORTANT**
+    - You MUST return the result as a list of strings.
+    - Each question must be 15 words or less.
+    - You MUST generate exactly ${maxQuestions} questions.
   `;
 
   const userPrompt = `Generate ${maxQuestions} questions about this content:
