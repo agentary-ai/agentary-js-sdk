@@ -26,25 +26,36 @@ export async function generatePagePrompts(
   }
   
   // Split into system and user prompts for better structure
-  const systemPrompt = `
-    You are an educational question generator. Your task is to create relevant, 
-    engaging questions about provided content.
+  const systemPrompt = `You are a question generator that creates QUESTIONS (not statements) about content.
 
-    Guidelines:
-    - Generate exactly ${maxQuestions} questions
-    - Each question must be under 15 words
-    - Make questions specific to the actual content provided
-    - Vary the scope from broad overview to specific details
-    - Focus on educational value and comprehension
-    - Return only a JSON array of strings
-    - No additional text or formatting outside the JSON
-  `;
+CRITICAL REQUIREMENTS:
+- Generate EXACTLY ${maxQuestions} questions
+- Each question MUST start with a question word (What, How, Why, When, Where, Who, Which, etc.)
+- Each question MUST end with a question mark (?)
+- Each question MUST be under 15 words
+- Questions must be SPECIFIC to the actual content provided
+- NO statements, summaries, or declarative sentences
+- Return ONLY a JSON array of question strings
 
-  const userPrompt = `
-    Generate questions for this content:
+GOOD EXAMPLES:
+- "What company did Taylor Swift buy her music catalog from?"
+- "How much did the acquisition cost?"
+- "Why was this purchase significant for Swift?"
+- "When did the original sale controversy begin?"
 
-    ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
-  `;
+BAD EXAMPLES (DO NOT DO THIS):
+- "Taylor Swift buys back her music catalog" (This is a statement, not a question)
+- "The singer acquired her albums for a nine-figure sum" (This is a statement)
+- "Taylor Swift announces new series and renews albums" (Too long and a statement)
+
+You MUST return exactly this JSON structure with ONLY questions:
+["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
+
+  const userPrompt = `Generate ${maxQuestions} questions about this content. Each must be a question (start with question word, end with ?), under 15 words:
+
+${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
+
+Remember: Generate QUESTIONS, not statements. Each must end with "?".`;
 
   try {    
     const messages = [
@@ -56,7 +67,7 @@ export async function generatePagePrompts(
     
     const startTime = performance.now();
     const response = await llm.chatCompletion(messages, {
-      response_format: { type: "json_object", schema: `{ "type": "array", "items": { "type": "string" } }` }
+      response_format: { type: "json_object", schema: `{ "type": "array", "items": { "type": "string", "pattern": "^.+\\?$" } }` }
     });
     const endTime = performance.now();
     console.log(`Chat completion took ${endTime - startTime}ms`);
@@ -68,8 +79,12 @@ export async function generatePagePrompts(
     if (response.choices[0].message.content) {
       try {
         questions = JSON.parse(response.choices[0].message.content);
-        // Ensure questions is an array and contains valid strings
-        if (!Array.isArray(questions) || questions.some(q => typeof q !== 'string')) {
+        // Ensure questions is an array and contains valid question strings
+        if (Array.isArray(questions)) {
+          questions = questions
+            .filter(q => typeof q === 'string' && q.trim().endsWith('?') && q.trim().length > 0)
+            .slice(0, maxQuestions);
+        } else {
           questions = [];
         }
       } catch (e) {
