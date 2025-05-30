@@ -2,7 +2,7 @@ import { CreateMLCEngine, CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 
 export class WebLLMClient {
   constructor(
-    modelPath = "Llama-3.2-1B-Instruct-q4f16_1-MLC",
+    modelPath,
     initProgressCallback = (p) => {
       console.log(p);
     },
@@ -167,7 +167,7 @@ export class WebLLMClient {
 
             this.worker = worker;
 
-            console.log("Creating web worker engine from verified worker");
+            console.log("Creating web worker engine from verified worker for model: ", this.modelPath);
             this.engine = await CreateWebWorkerMLCEngine(
               this.worker,
               this.modelPath,
