@@ -47,8 +47,7 @@ export class AgentaryClient extends EventEmitter {
     this.webLLMClient = new WebLLMClient(
       // "Llama-3.2-1B-Instruct-q4f32_1-MLC", // modelPath
       // "Llama-3.2-1B-Instruct-q4f16_1-MLC", // modelPath
-      "Llama-3.2-1B-Instruct-q0f16-MLC"
-
+      "Llama-3.2-1B-Instruct-q0f16-MLC", // modelPath
       // "Llama-3.1-8B-Instruct-q4f32_1-MLC-1k", // modelPath
       // "Qwen2-0.5B-Instruct-q4f16_1-MLC", // modelPath
       // "Hermes-3-Llama-3.2-3B-q4f16_1-MLC", // modelPath
