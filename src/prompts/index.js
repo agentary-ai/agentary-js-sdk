@@ -26,7 +26,8 @@ export async function generatePagePrompts(
   }
   
   const systemPrompt = `You are an educational assistant that generates exactly 
-  ${maxQuestions} questions to help users understand the content of a page.
+  ${maxQuestions} questions to help users better understand a piece of content
+  you will be given. Each question must be 15 words or less.
 
   You MUST return the result as a list of strings.
   `;
@@ -57,7 +58,7 @@ export async function generatePagePrompts(
 // You MUST return exactly this JSON structure with ONLY questions:
 // ["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
 
-  const userPrompt = `Generate ${maxQuestions} questions about this content, under 15 words:
+  const userPrompt = `Generate ${maxQuestions} questions about this content:
 
 ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
 `;
