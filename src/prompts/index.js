@@ -25,46 +25,33 @@ export async function generatePagePrompts(
     return ["What is this page about?", "Can you explain the main topic?"];
   }
   
-  // Optimized, more concise prompt
-  const prompt = `You are an educational content assistant. Based on the content below, generate exactly ${maxQuestions} educational questions.
+  // Split into system and user prompts for better structure
+  const systemPrompt = `You are an educational question generator. Your task is to create relevant, engaging questions about provided content.
 
-STRICT REQUIREMENTS:
-1. Generate exactly ${maxQuestions} questions (no more, no less)
-2. Each question must be 15 words or fewer
-3. Questions must be specific to the actual content provided
-4. Include a mix of: overview questions, detail questions, and analytical questions
-5. Return ONLY a valid JSON array of strings, no other text
+Guidelines:
+- Generate exactly ${maxQuestions} questions
+- Keep each question under 15 words
+- Make questions specific to the actual content provided
+- Vary the scope from broad overview to specific details
+- Focus on educational value and comprehension
+- Return only a JSON array of strings
+- No additional text or formatting outside the JSON`;
 
-CONTENT TO ANALYZE:
-${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
+  const userPrompt = `Generate educational questions for this content:
 
-RESPONSE FORMAT (example):
-["What is the main topic discussed?", "Who are the key people mentioned?", "What specific details are highlighted?"]
-
-Your response (JSON array only):`;
+${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}`;
 
   try {    
     const messages = [
-      { role: "user", content: prompt }
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
     ];
 
     console.log(messages);
     
     const startTime = performance.now();
     const response = await llm.chatCompletion(messages, {
-      response_format: { 
-        type: "json_object", 
-        schema: `{
-          type: "object",
-          properties: {
-            questions: {
-              type: "array",
-              items: { type: "string" },
-            }
-          },
-          required: ["questions"]
-        }`
-      }
+      response_format: { type: "json_object", schema: `{ "type": "array", "items": { "type": "string" } }` }
     });
     const endTime = performance.now();
     console.log(`Chat completion took ${endTime - startTime}ms`);
