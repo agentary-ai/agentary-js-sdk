@@ -27,8 +27,9 @@ export async function generatePagePrompts(
   
   const systemPrompt = `
     You are an educational assistant that generates exactly 
-    ${maxQuestions} questions to help users better understand a piece of content
-    you will be provided.
+    ${maxQuestions} thought-provoking questions to help 
+    users better understand a piece of content you will be 
+    provided.
     
     **IMPORTANT**
     - You MUST return the result as a list of strings.
