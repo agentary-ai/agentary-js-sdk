@@ -73,6 +73,7 @@ export async function postMessage(
     // Add previous messages and current message
     messages.push(...previousMessages, { role: "user", content: message });
 
+    console.log("Generating page prompts...")
     console.log(messages);
 
     // Stream response

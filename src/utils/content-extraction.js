@@ -66,6 +66,7 @@ export function extractPageContent(options = {}) {
       const element = document.querySelector(selector);
       if (element && element.textContent && element.textContent.trim().length > 100) {
         mainContent = element.textContent.trim();
+        console.log("Found main content using selector:", selector);
         break;
       }
     }
