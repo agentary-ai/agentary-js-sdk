@@ -15,7 +15,6 @@ export async function generatePagePrompts(
 ) {
   const {
     maxQuestions = 5,
-    focusAreas = [],
     maxContentTokens = 1500, // Leave room for prompt overhead
     contentSelector
   } = options;
@@ -25,24 +24,30 @@ export async function generatePagePrompts(
   if (!pageContent.trim()) {
     return ["What is this page about?", "Can you explain the main topic?"];
   }
-
-  const focusAreasText = focusAreas.length > 0 
-    ? `Focus on: ${focusAreas.join(', ')}`
-    : '';
   
   // Optimized, more concise prompt
-  const prompt = `
-    Generate ${maxQuestions} educational questions about this content. Requirements:
-      - Max 15 words per question
-      - Specific to the content
-      - Varied scope (broad to detailed)
-      - Return JSON array of strings only
+  const prompt = `You are an educational content assistant. Based on the content below, generate exactly ${maxQuestions} educational questions.
 
-    ${focusAreasText}
+STRICT REQUIREMENTS:
+1. Generate exactly ${maxQuestions} questions (no more, no less)
+2. Each question must be 15 words or fewer
+3. Questions must be specific to the actual content provided
+4. Include a mix of: overview questions, detail questions, and analytical questions
+5. Return ONLY a valid JSON object with a "questions" array
 
-    Content:
-    ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
-  `;
+CONTENT TO ANALYZE:
+${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
+
+RESPONSE FORMAT (exact structure required):
+{
+  "questions": [
+    "What is the main topic discussed?",
+    "Who are the key people mentioned?",
+    "What specific details are highlighted?"
+  ]
+}
+
+Your response:`;
 
   try {    
     const messages = [
@@ -50,18 +55,24 @@ export async function generatePagePrompts(
     ];
 
     console.log(messages);
-
-    // // Rough token estimation for logging (4 characters per token)
-    // const estimatedTokens = Math.ceil(prompt.length / 4);
-    // console.log(`Estimated prompt tokens: ${estimatedTokens}`);
-    
-    // if (estimatedTokens > 3800) { // Leave buffer for response
-    //   console.warn(`Prompt may be too long (${estimatedTokens} tokens), consider reducing maxContentTokens`);
-    // }
     
     const startTime = performance.now();
     const response = await llm.chatCompletion(messages, {
-      response_format: { type: "json_object", schema: `{ "type": "array", "items": { "type": "string" } }` }
+      response_format: { 
+        type: "json_object", 
+        schema: {
+          type: "object",
+          properties: {
+            questions: {
+              type: "array",
+              items: { type: "string" },
+              minItems: maxQuestions,
+              maxItems: maxQuestions
+            }
+          },
+          required: ["questions"]
+        }
+      }
     });
     const endTime = performance.now();
     console.log(`Chat completion took ${endTime - startTime}ms`);
@@ -72,7 +83,8 @@ export async function generatePagePrompts(
 
     if (response.choices[0].message.content) {
       try {
-        questions = JSON.parse(response.choices[0].message.content);
+        const parsedResponse = JSON.parse(response.choices[0].message.content);
+        questions = parsedResponse.questions || [];
         // Ensure questions is an array and contains valid strings
         if (!Array.isArray(questions) || questions.some(q => typeof q !== 'string')) {
           questions = [];
