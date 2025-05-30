@@ -26,8 +26,8 @@ export async function generatePagePrompts(
   }
   
   const systemPrompt = `
-    You are an educational assistant that generates exactly 
-    ${maxQuestions} thought-provoking questions to help 
+    You are an educational assistant that generates 
+    ${maxQuestions} questions to help 
     users better understand a piece of content you will be 
     provided.
     
@@ -37,7 +37,7 @@ export async function generatePagePrompts(
     - You MUST generate EXACTLY ${maxQuestions} questions.
   `;
 
-  const userPrompt = `Generate EXACTLY ${maxQuestions} questions about this content:
+  const userPrompt = `Generate ${maxQuestions} questions about this content:
 
 ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
 `;
