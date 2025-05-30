@@ -26,35 +26,26 @@ export async function generatePagePrompts(
   }
   
   // Optimized, more concise prompt
-  // const systemPrompt = `You are an educational content assistant that generates questions to help users learn from web content.
+  const prompt = `You are an educational content assistant. Based on the content below, generate exactly ${maxQuestions} educational questions.
 
-  //   STRICT REQUIREMENTS:
-  //   1. Generate exactly the requested number of questions (no more, no less)
-  //   2. Each question must be 15 words or fewer
-  //   3. Questions must be specific to the actual content provided
-  //   4. Include a mix of: overview questions, detail questions, and analytical questions
-  //   5. Return ONLY a valid JSON object with a "questions" array
+STRICT REQUIREMENTS:
+1. Generate exactly ${maxQuestions} questions (no more, no less)
+2. Each question must be 15 words or fewer
+3. Questions must be specific to the actual content provided
+4. Include a mix of: overview questions, detail questions, and analytical questions
+5. Return ONLY a valid JSON array of strings, no other text
 
-  //   RESPONSE FORMAT (exact structure required):
-  //   {
-  //     "questions": [
-  //       "What is the main topic discussed?",
-  //       "Who are the key people mentioned?",
-  //       "What specific details are highlighted?"
-  //     ]
-  //   }
-  // `;
+CONTENT TO ANALYZE:
+${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
 
-  const systemPrompt = `You are an educational content assistant that generates questions to help users learn from web content.`;
+RESPONSE FORMAT (example):
+["What is the main topic discussed?", "Who are the key people mentioned?", "What specific details are highlighted?"]
 
-  const userPrompt = `Generate exactly ${maxQuestions} educational questions for the following content:
-
-${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}`;
+Your response (JSON array only):`;
 
   try {    
     const messages = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
+      { role: "user", content: prompt }
     ];
 
     console.log(messages);
@@ -63,7 +54,7 @@ ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}`;
     const response = await llm.chatCompletion(messages, {
       response_format: { 
         type: "json_object", 
-        schema: {
+        schema: `{
           type: "object",
           properties: {
             questions: {
@@ -74,7 +65,7 @@ ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}`;
             }
           },
           required: ["questions"]
-        }
+        }`
       }
     });
     const endTime = performance.now();
@@ -86,8 +77,7 @@ ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}`;
 
     if (response.choices[0].message.content) {
       try {
-        const parsedResponse = JSON.parse(response.choices[0].message.content);
-        questions = parsedResponse.questions || [];
+        questions = JSON.parse(response.choices[0].message.content);
         // Ensure questions is an array and contains valid strings
         if (!Array.isArray(questions) || questions.some(q => typeof q !== 'string')) {
           questions = [];
