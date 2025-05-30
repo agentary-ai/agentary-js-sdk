@@ -169,6 +169,8 @@ export function extractPageContent(options = {}) {
     if (maxTokens) {
       return truncateContent(cleanedContent, maxTokens);
     }
+
+    console.log("Extracted content:", cleanedContent);
     
     return cleanedContent;
   }
