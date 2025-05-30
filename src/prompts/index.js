@@ -28,13 +28,8 @@ export async function generatePagePrompts(
   const systemPrompt = `
     You are an educational assistant that generates 
     ${maxQuestions} questions to help 
-    users better understand a piece of content you will be 
+    users learn about a piece of content you will be 
     provided.
-    
-    **IMPORTANT**
-    - You MUST return the result as a list of strings.
-    - Each question must be 15 words or less.
-    - You MUST generate EXACTLY ${maxQuestions} questions.
   `;
 
   const userPrompt = `Generate ${maxQuestions} questions about this content:
