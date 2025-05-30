@@ -26,24 +26,26 @@ export async function generatePagePrompts(
   }
   
   // Optimized, more concise prompt
-  const systemPrompt = `You are an educational content assistant that generates questions to help users learn from web content.
+  // const systemPrompt = `You are an educational content assistant that generates questions to help users learn from web content.
 
-    STRICT REQUIREMENTS:
-    1. Generate exactly the requested number of questions (no more, no less)
-    2. Each question must be 15 words or fewer
-    3. Questions must be specific to the actual content provided
-    4. Include a mix of: overview questions, detail questions, and analytical questions
-    5. Return ONLY a valid JSON object with a "questions" array
+  //   STRICT REQUIREMENTS:
+  //   1. Generate exactly the requested number of questions (no more, no less)
+  //   2. Each question must be 15 words or fewer
+  //   3. Questions must be specific to the actual content provided
+  //   4. Include a mix of: overview questions, detail questions, and analytical questions
+  //   5. Return ONLY a valid JSON object with a "questions" array
 
-    RESPONSE FORMAT (exact structure required):
-    {
-      "questions": [
-        "What is the main topic discussed?",
-        "Who are the key people mentioned?",
-        "What specific details are highlighted?"
-      ]
-    }
-  `;
+  //   RESPONSE FORMAT (exact structure required):
+  //   {
+  //     "questions": [
+  //       "What is the main topic discussed?",
+  //       "Who are the key people mentioned?",
+  //       "What specific details are highlighted?"
+  //     ]
+  //   }
+  // `;
+
+  const systemPrompt = `You are an educational content assistant that generates questions to help users learn from web content.`;
 
   const userPrompt = `Generate exactly ${maxQuestions} educational questions for the following content:
 
