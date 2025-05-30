@@ -39,7 +39,7 @@ export class AgentaryClient extends EventEmitter {
     };
 
     this.logger = new Logger(this.config.debug);
-    this.logger.info('Initializing Agentary SDK');
+    this.logger.info(`Initializing Agentary SDK: ${this.config}`);
 
     // this.apiClient = new ApiClient(this.config, this.logger);
     
@@ -54,7 +54,6 @@ export class AgentaryClient extends EventEmitter {
     }
     
     if (this.config.showWidget) {
-      this.logger.info('Mounting widget');
       mountWidget(
         this.webLLMClient, 
         "bottom-right",
