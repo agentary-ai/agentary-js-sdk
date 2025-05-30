@@ -45,7 +45,7 @@ export class AgentaryClient extends EventEmitter {
     // this.apiClient = new ApiClient(this.config, this.logger);
     
     this.webLLMClient = new WebLLMClient(
-      "Llama-3.2-1B-Instruct-q4f16_1-MLC", // modelPath
+      "Qwen2-0.5B-Instruct-q4f16_1-MLC", // modelPath
       (p) => { console.log(p); }, // initProgressCallback
       true // useWorker
     );
