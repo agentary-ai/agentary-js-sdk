@@ -28,8 +28,7 @@ export async function generatePagePrompts(
   const systemPrompt = `You are an educational assistant that generates exactly 
   ${maxQuestions} questions to help users understand the content of a page.
 
-  You MUST return exactly this JSON structure with ONLY questions:
-  
+  You MUST return the result as a list of strings.
   `;
 
   // Split into system and user prompts for better structure
