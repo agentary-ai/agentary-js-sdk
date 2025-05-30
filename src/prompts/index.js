@@ -26,37 +26,14 @@ export async function generatePagePrompts(
   }
   
   const systemPrompt = `You are an educational assistant that generates exactly 
-  ${maxQuestions} questions (not statements) to help users better understand a piece of content
-  you will be given. Each question must be 15 words or less.
+  ${maxQuestions} questions to help users better understand a piece of content
+  you will be provided.
 
-  You MUST return the result as a list of strings.
+  **IMPORTANT**
+  - You MUST return the result as a list of strings.
+  - Each question MUST be 15 words or less.
+  - You MUST generate questions, not statements.
   `;
-
-  // Split into system and user prompts for better structure
-//   const systemPrompt = `You are a question generator that creates QUESTIONS (not statements) about content.
-
-// CRITICAL REQUIREMENTS:
-// - Generate EXACTLY ${maxQuestions} questions
-// - Each question MUST start with a question word (What, How, Why, When, Where, Who, Which, etc.)
-// - Each question MUST end with a question mark (?)
-// - Each question MUST be under 15 words
-// - Questions must be SPECIFIC to the actual content provided
-// - NO statements, summaries, or declarative sentences
-// - Return ONLY a JSON array of question strings
-
-// GOOD EXAMPLES:
-// - "What company did Taylor Swift buy her music catalog from?"
-// - "How much did the acquisition cost?"
-// - "Why was this purchase significant for Swift?"
-// - "When did the original sale controversy begin?"
-
-// BAD EXAMPLES (DO NOT DO THIS):
-// - "Taylor Swift buys back her music catalog" (This is a statement, not a question)
-// - "The singer acquired her albums for a nine-figure sum" (This is a statement)
-// - "Taylor Swift announces new series and renews albums" (Too long and a statement)
-
-// You MUST return exactly this JSON structure with ONLY questions:
-// ["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]`;
 
   const userPrompt = `Generate ${maxQuestions} questions about this content:
 
@@ -93,7 +70,7 @@ ${pageContent.substring(0, 4000) + (pageContent.length > 4000 ? '...' : '')}
         // Ensure questions is an array and contains valid question strings
         if (Array.isArray(questions)) {
           questions = questions
-            .filter(q => typeof q === 'string' && q.trim().endsWith('?') && q.trim().length > 0)
+            .filter(q => typeof q === 'string' && q.trim().length > 0)
             .slice(0, maxQuestions);
         } else {
           questions = [];
