@@ -60,8 +60,6 @@ Your response (JSON array only):`;
             questions: {
               type: "array",
               items: { type: "string" },
-              minItems: maxQuestions,
-              maxItems: maxQuestions
             }
           },
           required: ["questions"]
