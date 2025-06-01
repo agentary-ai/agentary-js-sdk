@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentary SDK Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 15px 40px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        .status-dot.loading {
+            background: #ffc107;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #007bff;
+        }
+
+        .test-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .input-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .output-area {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sample-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .sample-content h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .sample-content p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .log-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .log-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .log-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .log-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Agentary SDK Test Suite</h1>
+            <p>Interactive testing environment for the Agentary JavaScript SDK</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Initializing SDK...</span>
+            </div>
+            <div id="modelProgress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <small id="progressText">Loading model...</small>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- SDK Initialization Test -->
+            <div class="test-section">
+                <h2>🚀 SDK Initialization</h2>
+                <div class="test-controls">
+                    <button class="btn btn-primary" onclick="initializeSDK()">Initialize SDK</button>
+                    <button class="btn btn-warning" onclick="reinitializeSDK()">Reinitialize</button>
+                </div>
+                <div class="output-area" id="initOutput">SDK not initialized yet...</div>
+            </div>
+
+            <!-- Content Summarization Test -->
+            <div class="test-section">
+                <h2>📝 Content Summarization</h2>
+                <div class="sample-content">
+                    <h3>Sample Article: The Future of AI</h3>
+                    <p>Artificial Intelligence (AI) has rapidly evolved from a concept in science fiction to a transformative technology reshaping industries worldwide. Machine learning algorithms now power everything from recommendation systems to autonomous vehicles, fundamentally changing how we interact with technology.</p>
+                    <p>The integration of AI into daily life has accelerated dramatically, with applications spanning healthcare diagnostics, financial fraud detection, and personalized education platforms. Natural language processing has enabled more intuitive human-computer interactions, while computer vision has revolutionized fields like medical imaging and quality control in manufacturing.</p>
+                    <p>Looking ahead, the convergence of AI with other emerging technologies like quantum computing and edge computing promises even more significant breakthroughs. However, this rapid advancement also raises important questions about ethics, privacy, and the future of work that society must address thoughtfully.</p>
+                </div>
+                <div class="input-group">
+                    <label for="customContent">Or enter your own content to summarize:</label>
+                    <textarea id="customContent" placeholder="Paste your content here..."></textarea>
+                </div>
+                <div class="test-controls">
+                    <button class="btn btn-primary" onclick="summarizeSampleContent()">Summarize Sample</button>
+                    <button class="btn btn-success" onclick="summarizeCustomContent()">Summarize Custom</button>
+                </div>
+                <div class="output-area" id="summarizeOutput">No summarization performed yet...</div>
+            </div>
+
+            <!-- Event Handling Test -->
+            <div class="test-section">
+                <h2>📡 Event Handling</h2>
+                <div class="test-controls">
+                    <button class="btn btn-primary" onclick="testEvents()">Test Event Listeners</button>
+                    <button class="btn btn-warning" onclick="clearEventLog()">Clear Log</button>
+                </div>
+                <div class="output-area" id="eventOutput">No events captured yet...</div>
+            </div>
+
+            <!-- Configuration Test -->
+            <div class="test-section">
+                <h2>⚙️ Configuration Testing</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Current Config</h3>
+                        <div class="output-area" id="configOutput" style="max-height: 200px;">Loading configuration...</div>
+                    </div>
+                    <div class="card">
+                        <h3>Test Different Configs</h3>
+                        <div class="test-controls">
+                            <button class="btn btn-primary" onclick="testDebugMode()">Toggle Debug</button>
+                            <button class="btn btn-success" onclick="testModelLoading()">Test Model Loading</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="test-section">
+                <h2>📊 Performance Metrics</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Timing Metrics</h3>
+                        <div id="timingMetrics">
+                            <p><strong>SDK Init Time:</strong> <span id="initTime">-</span></p>
+                            <p><strong>Model Load Time:</strong> <span id="modelLoadTime">-</span></p>
+                            <p><strong>Last Operation:</strong> <span id="lastOpTime">-</span></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Memory Usage</h3>
+                        <div id="memoryMetrics">
+                            <p><strong>Used JS Heap:</strong> <span id="usedJSHeap">-</span></p>
+                            <p><strong>Total JS Heap:</strong> <span id="totalJSHeap">-</span></p>
+                            <button class="btn btn-primary" onclick="updateMemoryMetrics()">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debug Console -->
+            <div class="test-section">
+                <h2>🐛 Debug Console</h2>
+                <div class="test-controls">
+                    <button class="btn btn-primary" onclick="clearDebugLog()">Clear Console</button>
+                    <button class="btn btn-warning" onclick="exportLogs()">Export Logs</button>
+                </div>
+                <div class="output-area" id="debugConsole">Debug messages will appear here...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the SDK -->
+    <script src="./dist/agentary.umd.js"></script>
+    <script>
+        // Global variables
+        let agentarySDK = null;
+        let initStartTime = null;
+        let modelLoadStartTime = null;
+        const debugLog = [];
+
+        // Utility functions
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            debugLog.push({ timestamp, message, type });
+            
+            const debugConsole = document.getElementById('debugConsole');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log-entry log-${type}`;
+            logDiv.textContent = logEntry;
+            debugConsole.appendChild(logDiv);
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+            
+            console.log(logEntry);
+        }
+
+        function updateStatus(status, isConnected = false, isLoading = false) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            statusText.textContent = status;
+            statusDot.className = 'status-dot';
+            
+            if (isLoading) {
+                statusDot.classList.add('loading');
+            } else if (isConnected) {
+                statusDot.classList.add('connected');
+            }
+        }
+
+        function updateProgress(progress, text) {
+            const progressContainer = document.getElementById('modelProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (progress >= 0) {
+                progressContainer.style.display = 'block';
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = text || `Loading model... ${progress}%`;
+            } else {
+                progressContainer.style.display = 'none';
+            }
+        }
+
+        function formatTime(ms) {
+            if (ms < 1000) return `${ms}ms`;
+            return `${(ms / 1000).toFixed(2)}s`;
+        }
+
+        // SDK Functions
+        async function initializeSDK() {
+            try {
+                initStartTime = performance.now();
+                updateStatus('Initializing SDK...', false, true);
+                log('Starting SDK initialization...', 'info');
+
+                // Initialize with test configuration
+                agentarySDK = new AgentaryClient({
+                    loadModel: true,
+                    debug: true,
+                    showWidget: false,
+                    generatePagePrompts: true,
+                    maxPagePrompts: 5
+                });
+
+                // Set up event listeners
+                setupEventListeners();
+
+                const initTime = performance.now() - initStartTime;
+                document.getElementById('initTime').textContent = formatTime(initTime);
+                
+                updateStatus('SDK Initialized Successfully', true);
+                log(`SDK initialized successfully in ${formatTime(initTime)}`, 'success');
+                
+                // Update config display
+                updateConfigDisplay();
+                
+                document.getElementById('initOutput').textContent = 
+                    `SDK initialized successfully!\nInitialization time: ${formatTime(initTime)}\nConfiguration loaded and event listeners attached.`;
+
+            } catch (error) {
+                updateStatus('SDK Initialization Failed', false);
+                log(`SDK initialization failed: ${error.message}`, 'error');
+                document.getElementById('initOutput').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function setupEventListeners() {
+            if (!agentarySDK) return;
+
+            // Listen for various events
+            agentarySDK.on('initialized', () => {
+                log('Event: SDK initialized', 'success');
+                appendEventLog('initialized', 'SDK fully initialized and ready');
+            });
+
+            agentarySDK.on('error', (error) => {
+                log(`Event: Error - ${error.message}`, 'error');
+                appendEventLog('error', error.message);
+            });
+
+            agentarySDK.on('modelLoaded', () => {
+                log('Event: Model loaded', 'success');
+                appendEventLog('modelLoaded', 'AI model loaded and ready for inference');
+            });
+
+            agentarySDK.on('progress', (progress) => {
+                log(`Event: Progress - ${progress}%`, 'info');
+                updateProgress(progress.percent || 0, progress.text);
+            });
+        }
+
+        function appendEventLog(eventType, data) {
+            const eventOutput = document.getElementById('eventOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const eventEntry = `[${timestamp}] ${eventType}: ${data}\n`;
+            eventOutput.textContent += eventEntry;
+            eventOutput.scrollTop = eventOutput.scrollHeight;
+        }
+
+        async function summarizeSampleContent() {
+            if (!agentarySDK) {
+                alert('Please initialize the SDK first');
+                return;
+            }
+
+            try {
+                const startTime = performance.now();
+                updateStatus('Summarizing content...', true, true);
+                log('Starting content summarization...', 'info');
+
+                const sampleText = document.querySelector('.sample-content').textContent;
+                
+                document.getElementById('summarizeOutput').textContent = 'Summarizing content, please wait...';
+
+                const result = await agentarySDK.summarizeContent({
+                    content: sampleText,
+                    maxLength: 150
+                });
+
+                const opTime = performance.now() - startTime;
+                document.getElementById('lastOpTime').textContent = formatTime(opTime);
+
+                updateStatus('Content summarized successfully', true);
+                log(`Content summarized in ${formatTime(opTime)}`, 'success');
+
+                document.getElementById('summarizeOutput').textContent = 
+                    `Summary (${formatTime(opTime)}):\n\n${result.summary || result}`;
+
+            } catch (error) {
+                updateStatus('Summarization failed', true);
+                log(`Summarization failed: ${error.message}`, 'error');
+                document.getElementById('summarizeOutput').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function summarizeCustomContent() {
+            if (!agentarySDK) {
+                alert('Please initialize the SDK first');
+                return;
+            }
+
+            const customContent = document.getElementById('customContent').value.trim();
+            if (!customContent) {
+                alert('Please enter some content to summarize');
+                return;
+            }
+
+            try {
+                const startTime = performance.now();
+                updateStatus('Summarizing custom content...', true, true);
+                log('Starting custom content summarization...', 'info');
+
+                document.getElementById('summarizeOutput').textContent = 'Summarizing your content, please wait...';
+
+                const result = await agentarySDK.summarizeContent({
+                    content: customContent,
+                    maxLength: 150
+                });
+
+                const opTime = performance.now() - startTime;
+                document.getElementById('lastOpTime').textContent = formatTime(opTime);
+
+                updateStatus('Custom content summarized', true);
+                log(`Custom content summarized in ${formatTime(opTime)}`, 'success');
+
+                document.getElementById('summarizeOutput').textContent = 
+                    `Summary (${formatTime(opTime)}):\n\n${result.summary || result}`;
+
+            } catch (error) {
+                updateStatus('Summarization failed', true);
+                log(`Custom summarization failed: ${error.message}`, 'error');
+                document.getElementById('summarizeOutput').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function testEvents() {
+            log('Testing event system...', 'info');
+            
+            if (agentarySDK) {
+                // Emit some test events
+                agentarySDK.emit('test-event', { message: 'This is a test event' });
+                appendEventLog('test-event', 'Manual test event triggered');
+            }
+            
+            appendEventLog('system', 'Event system test completed');
+        }
+
+        function clearEventLog() {
+            document.getElementById('eventOutput').textContent = 'Event log cleared...\n';
+        }
+
+        function updateConfigDisplay() {
+            if (!agentarySDK) return;
+            
+            const config = {
+                loadModel: true,
+                debug: true,
+                showWidget: false,
+                generatePagePrompts: true,
+                maxPagePrompts: 5
+            };
+            
+            document.getElementById('configOutput').textContent = JSON.stringify(config, null, 2);
+        }
+
+        function testDebugMode() {
+            log('Debug mode test - this message should appear in debug mode', 'info');
+            alert('Debug mode test completed - check the debug console');
+        }
+
+        function testModelLoading() {
+            if (!agentarySDK) {
+                alert('Please initialize the SDK first');
+                return;
+            }
+            
+            log('Testing model loading status...', 'info');
+            // This would typically check if the model is loaded
+            alert('Model loading test completed - check debug console for details');
+        }
+
+        function updateMemoryMetrics() {
+            if (performance.memory) {
+                const used = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+                const total = (performance.memory.totalJSHeapSize / 1024 / 1024).toFixed(2);
+                
+                document.getElementById('usedJSHeap').textContent = `${used} MB`;
+                document.getElementById('totalJSHeap').textContent = `${total} MB`;
+            } else {
+                document.getElementById('usedJSHeap').textContent = 'Not available';
+                document.getElementById('totalJSHeap').textContent = 'Not available';
+            }
+        }
+
+        function clearDebugLog() {
+            document.getElementById('debugConsole').innerHTML = 'Debug console cleared...';
+            debugLog.length = 0;
+        }
+
+        function exportLogs() {
+            const logs = debugLog.map(entry => 
+                `[${entry.timestamp}] ${entry.type.toUpperCase()}: ${entry.message}`
+            ).join('\n');
+            
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `agentary-sdk-logs-${new Date().toISOString().slice(0, 19)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function reinitializeSDK() {
+            if (agentarySDK) {
+                log('Reinitializing SDK...', 'warning');
+                agentarySDK = null;
+            }
+            initializeSDK();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Test page loaded', 'info');
+            updateMemoryMetrics();
+            
+            // Auto-initialize SDK
+            setTimeout(() => {
+                initializeSDK();
+            }, 1000);
+        });
+
+        // Update memory metrics periodically
+        setInterval(updateMemoryMetrics, 5000);
+    </script>
+</body>
+</html> 
