@@ -156,5 +156,5 @@ export function mountWidget(
   };
 
   // Set up the model loading callback
-  webLLMClient.setModelLoadingCallback(updateButtonState);
+  webLLMClient.setOnModelLoadingChange(updateButtonState);
 }

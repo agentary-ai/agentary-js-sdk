@@ -1,19 +1,6 @@
 /**
  * Core type definitions for Agentary SDK
  */
-
-export interface AgentaryConfig {
-  apiKey?: string;
-  baseUrl?: string;
-  debug?: boolean;
-  loadModel?: boolean;
-  workerUrl?: string;
-  contentSelector?: string;
-  showWidget?: boolean;
-  generateQuestions?: boolean;
-  maxQuestions?: number;
-}
-
 export interface WebLLMConfig {
   modelPath: string;
   useWorker?: boolean;

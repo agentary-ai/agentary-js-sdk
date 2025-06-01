@@ -1,6 +1,6 @@
 import { addSelectionMonitor } from "./selection-helper.js";
 import { marked } from "marked";
-import { getSelectedText } from "../utils/index.js";
+import { getSelectedText } from "../utils/index.ts";
 import { explainSelectedText } from "../explain/index.js";
 
 /** 

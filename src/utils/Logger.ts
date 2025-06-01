@@ -2,45 +2,48 @@
  * Logger utility for the SDK
  */
 export class Logger {
+  private debugEnabled: boolean;
+  private prefix: string;
+
   /**
    * Create a logger instance
-   * @param {boolean} debug - Enable debug logging
+   * @param {boolean} debugEnabled - Enable debug logging
    */
-  constructor(debug = false) {
-    this.debug = debug;
+  constructor(debugEnabled = false) {
+    this.debugEnabled = debugEnabled;
     this.prefix = '[Agentary SDK]';
   }
 
   /**
    * Log an info message
-   * @param {...any} args - Arguments to log
+   * @param {...unknown} args - Arguments to log
    */
-  info(...args) {
+  info(...args: unknown[]) {
     console.log(this.prefix, ...args);
   }
 
   /**
    * Log a warning message
-   * @param {...any} args - Arguments to log
+   * @param {...unknown} args - Arguments to log
    */
-  warn(...args) {
+  warn(...args: unknown[]) {
     console.warn(this.prefix, ...args);
   }
 
   /**
    * Log an error message
-   * @param {...any} args - Arguments to log
+   * @param {...unknown} args - Arguments to log
    */
-  error(...args) {
+  error(...args: unknown[]) {
     console.error(this.prefix, ...args);
   }
 
   /**
    * Log a debug message (only if debug mode is enabled)
-   * @param {...any} args - Arguments to log
+   * @param {...unknown} args - Arguments to log
    */
-  debug(...args) {
-    if (this.debug) {
+  debug(...args: unknown[]) {
+    if (this.debugEnabled) {
       console.debug(this.prefix, '[DEBUG]', ...args);
     }
   }
@@ -49,7 +52,7 @@ export class Logger {
    * Enable or disable debug logging
    * @param {boolean} enabled - Whether to enable debug logging
    */
-  setDebug(enabled) {
-    this.debug = enabled;
+  setDebug(enabled: boolean) {
+    this.debugEnabled = enabled;
   }
 } 

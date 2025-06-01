@@ -1,5 +1,5 @@
-import { extractPageContent } from "../utils/index.js";
-import { getSelectedText } from "../utils/index.js";
+import { extractPageContent } from "../utils/index.ts";
+import { getSelectedText } from "../utils/index.ts";
 
 /**
  * Explains the selected text on the webpage
@@ -53,18 +53,12 @@ export async function explainSelectedText(
     ];
     
     // Stream response
-    const chunks = await llm.streamingChatCompletion(messages);
-    let explanationText = "";
-    
-    for await (const chunk of chunks) {
-      if (chunk.choices && chunk.choices[0]?.delta?.content) {
-        const token = chunk.choices[0].delta.content;
-        explanationText += token;
-        if (options.onToken) {
-          options.onToken(token);
-        }
-      }
-    }
+    const explanationText = await llm.chatCompletion(
+      messages, 
+      true, 
+      { type: "text" }, 
+      options.onToken
+    );
     
     return explanationText;
   } catch (error) {

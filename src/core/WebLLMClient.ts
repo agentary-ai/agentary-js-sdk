@@ -1,27 +1,40 @@
 import { CreateMLCEngine, CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
+import type { ChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam, InitProgressCallback, InitProgressReport, MLCEngine, ResponseFormat, WebWorkerMLCEngine } from "@mlc-ai/web-llm";
+import { Logger } from "../utils/Logger";
+
+interface ChatCompletionOptions {
+  stream: boolean;
+  responseFormat?: 'text' | 'json_object';
+  onStreamToken?: (token: string) => void;
+}
 
 export class WebLLMClient {
+  private logger: Logger;
+  private modelPath: string;
+  private initProgressCallback: InitProgressCallback;
+  private useWorker: boolean;
+  private engine?: WebWorkerMLCEngine | MLCEngine | null;
+  private worker?: Worker | null;
+  private workerVerified?: boolean;
+  private workerBlobUrl?: string | null;
+  private isModelLoading?: boolean;
+  private onModelLoadingChange?: (isLoading: boolean) => void
+
   constructor(
-    modelPath,
-    initProgressCallback = (p) => {
+    logger: Logger,
+    modelPath: string,
+    initProgressCallback = (p: InitProgressReport) => {
       console.log(p);
     },
-    useWorker = true,
+    useWorker: boolean = true,
   ) {
     this.modelPath = modelPath;
     this.initProgressCallback = initProgressCallback;
     this.useWorker = useWorker;
-    this.engine = null;
-    this.worker = null;
-    this.isModelLoading = false;
-    this.modelLoadingProgress = 0;
-    this.onModelLoadingChange = undefined;
-    this.workerVerified = false;
-    this.workerBlobUrl = null;
-    this.workerCreationStrategy = null;
+    this.logger = logger;
   }
 
-  setModelLoadingCallback(callback) {
+  setOnModelLoadingChange(callback: (isLoading: boolean) => void) {
     this.onModelLoadingChange = callback;
   }
 
@@ -40,16 +53,14 @@ export class WebLLMClient {
     }
     
     this.workerVerified = false;
-    this.workerCreationStrategy = null;
   }
 
   /**
    * Create a worker using blob URL strategy (CORS-safe)
    * @returns {Promise<Worker|null>} Created worker or null
    */
-  async createWebWorker() {
+  async createWebWorker(): Promise<Worker | null> {
     try {
-      console.log("Creating worker with blob URL strategy...");
       const workerUrl = new URL('./webllm-worker.js', import.meta.url);
       
       // Fetch the worker code
@@ -61,19 +72,17 @@ export class WebLLMClient {
       const workerCode = await response.text();
       const blob = new Blob([workerCode], { type: 'application/javascript' });
       const blobUrl = URL.createObjectURL(blob);
-      
-      console.log("Worker blob URL created:", blobUrl);
-      const worker = new Worker(blobUrl);
-      
-      // Store blob URL for cleanup
+      this.logger.debug("Worker blob URL created:", blobUrl);
+
+      const worker = new Worker(blobUrl);      
       this.workerBlobUrl = blobUrl;
-      this.workerCreationStrategy = 'blob';
-      
-      console.log("✅ Worker created successfully with blob URL strategy");
+
+      this.logger.debug("Worker created successfully with blob URL strategy");
+
       return worker;
       
     } catch (error) {
-      console.error("Failed to create worker:", error);
+      this.logger.error("Failed to create worker:", error);
       return null;
     }
   }
@@ -83,37 +92,37 @@ export class WebLLMClient {
    * @param {Worker} worker - The worker to verify
    * @returns {Promise<boolean>} - True if worker is verified
    */
-  async verifyWorker(worker) {
+  async verifyWorker(worker: Worker): Promise<boolean> {
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
-        console.warn("Worker verification timeout");
+        this.logger.warn("Worker verification timeout");
         resolve(false);
       }, 5000);
 
       if (!worker) {
-        console.error("Worker is null or undefined");
+        this.logger.error("Worker is null or undefined");
         clearTimeout(timeout);
         resolve(false);
         return;
       }
 
-      console.log("Verifying worker communication...");
+      this.logger.debug("Verifying worker communication");
 
       const testMessage = { type: 'ping', timestamp: Date.now() };
       
-      const messageHandler = (event) => {
-        console.log("Worker verification - received:", event.data);
+      const messageHandler = (event: MessageEvent) => {
+        this.logger.debug("Worker verification - received:", event.data);
         if (event.data && (event.data.type === 'pong' || event.data.type === 'echo')) {
           worker.removeEventListener('message', messageHandler);
           worker.removeEventListener('error', errorHandler);
           clearTimeout(timeout);
-          console.log("✅ Worker verification successful");
+          this.logger.debug("Worker verification successful");
           resolve(true);
         }
       };
 
-      const errorHandler = (error) => {
-        console.error("Worker verification error:", error);
+      const errorHandler = (error: ErrorEvent) => {
+        this.logger.error("Worker verification error:", error);
         worker.removeEventListener('message', messageHandler);
         worker.removeEventListener('error', errorHandler);
         clearTimeout(timeout);
@@ -125,9 +134,9 @@ export class WebLLMClient {
 
       try {
         worker.postMessage(testMessage);
-        console.log("Worker verification - test message sent");
+        this.logger.debug("Worker verification - test message sent");
       } catch (error) {
-        console.error("Failed to send verification message:", error);
+        this.logger.error("Failed to send verification message:", error);
         worker.removeEventListener('message', messageHandler);
         worker.removeEventListener('error', errorHandler);
         clearTimeout(timeout);
@@ -143,11 +152,10 @@ export class WebLLMClient {
           this.onModelLoadingChange(true);
         }
         this.isModelLoading = true;
-        this.modelLoadingProgress = 0;
         
         if (this.useWorker) {
           try {
-            console.log("Attempting to create web worker engine");
+            this.logger.debug("Attempting to create web worker engine");
             
             // Create worker using blob URL strategy
             const worker = await this.createWebWorker();
@@ -156,7 +164,7 @@ export class WebLLMClient {
               throw new Error('Failed to create worker');
             }
 
-            console.log("Worker created successfully: ", worker);
+            this.logger.debug("Worker created successfully:", worker);
 
             // Verify the worker
             this.workerVerified = await this.verifyWorker(worker);
@@ -167,7 +175,7 @@ export class WebLLMClient {
 
             this.worker = worker;
 
-            console.log("Creating web worker engine from verified worker for model: ", this.modelPath);
+            this.logger.debug("Creating web worker engine from verified worker for model:", this.modelPath);
             this.engine = await CreateWebWorkerMLCEngine(
               this.worker,
               this.modelPath,
@@ -175,9 +183,9 @@ export class WebLLMClient {
                 initProgressCallback: this.initProgressCallback
               }
             );
-            console.log("✅ Web worker engine created successfully");
+            this.logger.debug("Web worker engine created successfully");
           } catch (workerError) {
-            console.warn("Failed to create web worker engine, falling back to main thread:", workerError);
+            this.logger.warn("Failed to create web worker engine, falling back to main thread:", workerError);
             // Clean up any partially created worker
             this.cleanup();
             // Fall back to main thread engine
@@ -186,10 +194,10 @@ export class WebLLMClient {
             }, {
               context_window_size: 8192
             });
-            console.log("✅ Main thread engine created successfully");
+            this.logger.debug("Main thread engine created successfully");
           }
         } else {
-          console.log("Creating main thread engine (worker disabled)");
+          this.logger.debug("Creating main thread engine (worker disabled)");
           this.engine = await CreateMLCEngine(this.modelPath, {
             initProgressCallback: this.initProgressCallback
           });
@@ -202,52 +210,51 @@ export class WebLLMClient {
           this.onModelLoadingChange(false);
         }
         this.isModelLoading = false;
-        this.modelLoadingProgress = 1;
       }
     }
   }
 
-  /**
-   * Get worker status information
-   * @returns {Object} Worker status details
-   */
-  getWorkerStatus() {
-    return {
-      hasWorker: !!this.worker,
-      workerVerified: this.workerVerified,
-      useWorker: this.useWorker,
-      workerType: this.worker ? this.worker.constructor.name : null,
-      workerCreationStrategy: this.workerCreationStrategy,
-      hasBlobUrl: !!this.workerBlobUrl,
-      blobUrl: this.workerBlobUrl
-    };
-  }
-
   async chatCompletion(
-    messages,
-    options
-  ) {
-    await this.createEngine();
-    if (options.stream) {
-      return this.streamingChatCompletion(messages, options);
+    messages: ChatCompletionMessageParam[],
+    options: ChatCompletionOptions
+  ): Promise<ChatCompletion | ChatCompletionChunk | null> {
+    if (!this.engine) {
+      throw new Error("Engine not created");
     }
-    return this.engine.chat.completions.create({
-      messages,
-      temperature: options.temperature,
-      response_format: options.response_format
-    });
-  }
 
-  async streamingChatCompletion(
-    messages,
-    options = {}
-  ) {
-    await this.createEngine();
-    return this.engine.chat.completions.create({
-      messages,
-      temperature: options.temperature,
-      stream: true,
-      stream_options: options.stream_options
-    });
+    if (options.stream) {
+      const chunks = await this.engine.chat.completions.create({
+        messages,
+        response_format: { type: options.responseFormat || 'text' },
+        stream: true
+      }) as AsyncIterable<ChatCompletionChunk>;
+
+      let fullContent = '';
+      let lastChunk: ChatCompletionChunk | null = null;
+
+      // Process the stream and accumulate the full response
+      for await (const chunk of chunks) {
+        lastChunk = chunk;
+
+        if (chunk.choices && chunk.choices[0]?.delta?.content) {
+          const token = chunk.choices[0].delta.content;
+          fullContent += token;
+          if (options.onStreamToken) {
+            options.onStreamToken(token);
+          }
+        }
+      }
+
+      return lastChunk;
+
+    } else {
+      // Non-streaming response
+      const response = await this.engine.chat.completions.create({
+        messages,
+        response_format: { type: options.responseFormat || 'text' },
+        stream: false
+      }) as ChatCompletion;
+      return response;
+    }
   }
 }

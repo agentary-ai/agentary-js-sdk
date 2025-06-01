@@ -1,4 +1,4 @@
-import { extractPageContent } from "../utils/index.js";
+import { extractPageContent } from "../utils/index.ts";
 
 /**
  * Generates relevant questions about the current page content
@@ -76,8 +76,9 @@ export async function generatePagePrompts(
     });
     
     const startTime = performance.now();
-    const response = await llm.chatCompletion(messages, {
-      response_format: { type: "json_object", schema: `{ "type": "array", "items": { "type": "string" } }` }
+    const response = await llm.chatCompletion(messages, false, {
+      type: "json_object", 
+      schema: `{ "type": "array", "items": { "type": "string" } }`
     });
     const endTime = performance.now();
     console.log(`Chat completion took ${endTime - startTime}ms`);

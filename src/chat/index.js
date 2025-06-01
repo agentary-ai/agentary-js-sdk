@@ -1,4 +1,4 @@
-import { extractPageContent } from "../utils/index.js";
+import { extractPageContent } from "../utils/index.ts";
 
 /**
  * Post a chat message and return a streaming response
@@ -83,18 +83,12 @@ export async function postMessage(
     console.log(messages);
 
     // Stream response
-    const chunks = await llm.streamingChatCompletion(messages);
-    let responseText = "";
-    
-    for await (const chunk of chunks) {
-      if (chunk.choices && chunk.choices[0]?.delta?.content) {
-        const token = chunk.choices[0].delta.content;
-        responseText += token;
-        if (onToken) {
-          onToken(token);
-        }
-      }
-    }
+    const responseText = await llm.chatCompletion(
+      messages, 
+      true, 
+      { type: "text" }, 
+      onToken
+    );
     
     return responseText;
   } catch (error) {

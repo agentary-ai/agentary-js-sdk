@@ -1,7 +1,7 @@
 import { postMessage } from "../../chat/index.js";
 import { summarizeContent } from "../../summarize/index.js";
 import { explainSelectedText } from "../../explain/index.js";
-import { getSelectedText } from "../../utils/index.js";
+import { getSelectedText } from "../../utils/index.ts";
 import { marked } from "marked";
 import { generatePagePrompts } from "../../prompts/index.js";
 
@@ -636,9 +636,10 @@ function createDialogActions(
     try {
       let summaryText = "";
       
-      // Use the summarizeContent function with onToken callback
+      // Use the summarizeContent function with onStreamToken callback
       await summarizeContent(webLLMClient, {
-        onToken: (token) => {
+        streamResponse: true,
+        onStreamToken: (token) => {
           // Remove typing indicator when first token arrives
           if (summaryText === "") {
             contentElement.innerHTML = "";

@@ -1,23 +1,29 @@
-import { extractPageContent } from "../utils/index.js";
+import { extractPageContent } from "../utils/content-extraction";
+import { WebLLMClient } from "../core/WebLLMClient";
+import { SummarizeContentOptions } from "../types/AgentaryClient";
+import { Logger } from "../utils/Logger";
+import { ChatCompletionMessageParam, ChatCompletion, ChatCompletionChunk } from "@mlc-ai/web-llm";
 
 /**
  * Summarizes the content of the current webpage or given content
  * 
- * @param llm - The WebLLM client instance
+ * @param webLLMClient - The WebLLM client instance
  * @param options - Configuration options for summarization
- * @param options.content - Pre-extracted content (if not provided, will extract from page)
- * @param options.contentSelector - CSS selector for extracting article content
- * @param options.onToken - Callback for streaming tokens
  * @returns A promise that resolves to the generated summary
  */
 export async function summarizeContent(
-  llm,
-  options = {}
-) {
+  webLLMClient: WebLLMClient,
+  options: SummarizeContentOptions = {},
+  logger: Logger,
+): Promise<string> {
   try {
     // Extract content if not provided
-    const content = options.content || extractPageContent({ contentSelector: options.contentSelector });
-    
+    const content = options.content || 
+      extractPageContent({ 
+        contentSelector: options.contentSelector || null,
+        maxChars: options.maxChars || 4000,
+      }, logger);
+      
     // Create prompt for summarization
     const systemPrompt = `
       You are a helpful assistant designed to assist users in better
@@ -39,7 +45,6 @@ export async function summarizeContent(
       - If the webpage contains potentially harmful content, provide a neutral, factual summary that doesn't amplify harmful messaging
       - Maintain a professional and respectful tone in all summaries
       - If content appears to be misinformation or conspiracy theories, note this in your summary rather than presenting it as fact
-
     `
     
     // Prepare messages for the model
@@ -47,28 +52,27 @@ export async function summarizeContent(
       { role: "system", content: systemPrompt },
       { 
         role: "user", 
-        content: "Summarize the following content:\n\n" + 
-          content.substring(0, 4000) + 
-          (content.length > 4000 ? '...' : '')
+        content: "Summarize the following content:\n\n" + content
       }
-    ];
+    ] as ChatCompletionMessageParam[];
     
-    // Stream response
-    const chunks = await llm.streamingChatCompletion(messages);
-    let summaryText = "";
-    
-    for await (const chunk of chunks) {
-      if (chunk.choices && chunk.choices[0]?.delta?.content) {
-        const token = chunk.choices[0].delta.content;
-        summaryText += token;
-        if (options.onToken) {
-          options.onToken(token);
+    if (options.streamResponse) {
+      // Stream response with callback
+      const response = await webLLMClient.chatCompletion(
+        messages,
+        {
+          stream: true,
+          ...(options.onStreamToken && { onStreamToken: options.onStreamToken })
         }
-        console.log(summaryText)
-      }
+      ) as ChatCompletionChunk;
+      return response.choices[0].delta.content || '';
+
+    } else {
+      // Non-streaming response
+      const response = await webLLMClient.chatCompletion(messages, { stream: false }) as ChatCompletion;
+      return response.choices[0].message.content || '';
     }
     
-    return summaryText;
   } catch (error) {
     console.error("Error summarizing content:", error);
     throw error;
