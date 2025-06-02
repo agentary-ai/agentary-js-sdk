@@ -217,7 +217,7 @@ export class WebLLMClient {
   async chatCompletion(
     messages: ChatCompletionMessageParam[],
     options: ChatCompletionOptions
-  ): Promise<ChatCompletion | ChatCompletionChunk | null> {
+  ): Promise<ChatCompletion> {
     if (!this.engine) {
       throw new Error("Engine not created");
     }
@@ -245,7 +245,39 @@ export class WebLLMClient {
         }
       }
 
-      return lastChunk;
+      // Construct a ChatCompletion object from accumulated streaming data
+      if (lastChunk) {
+        const chatCompletion: ChatCompletion = {
+          id: lastChunk.id,
+          object: 'chat.completion',
+          created: lastChunk.created,
+          model: lastChunk.model,
+          choices: [{
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: fullContent
+            },
+            logprobs: null,
+            finish_reason: lastChunk.choices?.[0]?.finish_reason || 'stop'
+          }],
+          usage: lastChunk.usage || {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            total_tokens: 0,
+            extra: {
+              e2e_latency_s: 0,
+              prefill_tokens_per_s: 0,
+              decode_tokens_per_s: 0,
+              time_to_first_token_s: 0,
+              time_per_output_token_s: 0
+            }
+          }
+        };
+        return chatCompletion;
+      } else {
+        throw new Error("No chunks received from streaming response");
+      }
 
     } else {
       // Non-streaming response

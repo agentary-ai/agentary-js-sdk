@@ -470,12 +470,11 @@
                 log('Starting SDK initialization...', 'info');
 
                 // Initialize with test configuration
-                agentarySDK = new AgentaryClient({
+                agentarySDK = window.Agentary.init({
                     loadModel: true,
                     debug: true,
                     showWidget: false,
-                    generatePagePrompts: true,
-                    maxPagePrompts: 5
+                    generatePagePrompts: false,
                 });
 
                 // Set up event listeners
@@ -550,7 +549,11 @@
 
                 const result = await agentarySDK.summarizeContent({
                     content: sampleText,
-                    maxLength: 150
+                    streamResponse: true,
+                    onStreamToken: (token) => {
+                        log(token, 'info');
+                    },
+                    maxLength: 4000
                 });
 
                 const opTime = performance.now() - startTime;
@@ -590,7 +593,7 @@
 
                 const result = await agentarySDK.summarizeContent({
                     content: customContent,
-                    maxLength: 150
+                    maxLength: 4000
                 });
 
                 const opTime = performance.now() - startTime;

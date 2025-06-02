@@ -15,11 +15,19 @@ export class Logger {
   }
 
   /**
+   * Get formatted timestamp
+   * @returns {string} Formatted timestamp
+   */
+  private getTimestamp(): string {
+    return new Date().toISOString();
+  }
+
+  /**
    * Log an info message
    * @param {...unknown} args - Arguments to log
    */
   info(...args: unknown[]) {
-    console.log(this.prefix, ...args);
+    console.log(`${this.getTimestamp()} ${this.prefix}`, ...args);
   }
 
   /**
@@ -27,7 +35,7 @@ export class Logger {
    * @param {...unknown} args - Arguments to log
    */
   warn(...args: unknown[]) {
-    console.warn(this.prefix, ...args);
+    console.warn(`${this.getTimestamp()} ${this.prefix}`, ...args);
   }
 
   /**
@@ -35,7 +43,7 @@ export class Logger {
    * @param {...unknown} args - Arguments to log
    */
   error(...args: unknown[]) {
-    console.error(this.prefix, ...args);
+    console.error(`${this.getTimestamp()} ${this.prefix}`, ...args);
   }
 
   /**
@@ -44,7 +52,7 @@ export class Logger {
    */
   debug(...args: unknown[]) {
     if (this.debugEnabled) {
-      console.debug(this.prefix, '[DEBUG]', ...args);
+      console.debug(`${this.getTimestamp()} ${this.prefix} [DEBUG]`, ...args);
     }
   }
 

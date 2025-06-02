@@ -23,6 +23,8 @@ export async function summarizeContent(
         contentSelector: options.contentSelector || null,
         maxChars: options.maxChars || 4000,
       }, logger);
+
+    logger.debug("Content extracted:", content);
       
     // Create prompt for summarization
     const systemPrompt = `
@@ -56,25 +58,20 @@ export async function summarizeContent(
       }
     ] as ChatCompletionMessageParam[];
     
-    if (options.streamResponse) {
-      // Stream response with callback
       const response = await webLLMClient.chatCompletion(
         messages,
         {
-          stream: true,
+          stream: options.streamResponse || false,
           ...(options.onStreamToken && { onStreamToken: options.onStreamToken })
         }
-      ) as ChatCompletionChunk;
-      return response.choices[0].delta.content || '';
+      );
 
-    } else {
-      // Non-streaming response
-      const response = await webLLMClient.chatCompletion(messages, { stream: false }) as ChatCompletion;
+      logger.debug("Chat completion response:", response);
+
       return response.choices[0].message.content || '';
-    }
-    
+
   } catch (error) {
-    console.error("Error summarizing content:", error);
+    logger.error("Error summarizing content:", error);
     throw error;
   }
 } 
