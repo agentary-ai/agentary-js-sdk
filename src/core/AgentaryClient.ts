@@ -4,7 +4,7 @@ import { Logger } from '../utils/Logger';
 import { WebLLMClient } from './WebLLMClient';
 import { summarizeContent } from '../summarize';
 // import { explainSelectedText } from '../explain/index.js';
-// import { generatePagePrompts } from '../prompts/index.js';
+import { generatePrompts } from '../prompts/index';
 // import { postMessage } from '../chat/index.js';
 // import { mountWidget } from '../ui/widget.js';
 
@@ -12,7 +12,7 @@ import type {
   AgentaryClientConfig,
   SummarizeContentOptions,
   ExplainSelectedTextOptions,
-  GeneratePagePromptsOptions,
+  GeneratePromptsOptions,
   PostMessageOptions
 } from '../types/AgentaryClient';
 import type { InitProgressReport } from '@mlc-ai/web-llm';
@@ -72,7 +72,10 @@ export class AgentaryClient extends EventEmitter {
   }
 
   summarizeContent(options: SummarizeContentOptions = {}) {
-    return summarizeContent(this.webLLMClient, options, this.logger);
+    return summarizeContent(this.webLLMClient, {
+      ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
+      ...options
+    }, this.logger);
   }
 
   // explainSelectedText(text = null, options: ExplainSelectedTextOptions = {}) {
@@ -82,12 +85,12 @@ export class AgentaryClient extends EventEmitter {
   //   });
   // }
 
-  // generatePagePrompts(options: GeneratePagePromptsOptions = {}) {
-  //   return generatePagePrompts(this.webLLMClient, {
-  //     contentSelector: this.config.contentSelector,
-  //     ...options
-  //   });
-  // }
+  generatePagePrompts(options: GeneratePromptsOptions = {}) {
+    return generatePrompts(this.webLLMClient, {
+      ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
+      ...options
+    }, this.logger);
+  }
 
   // postMessage(
   //   message: string,

@@ -341,6 +341,31 @@
                 <div class="output-area" id="summarizeOutput">No summarization performed yet...</div>
             </div>
 
+            <!-- Page Prompt Generation Test -->
+            <div class="test-section">
+                <h2>💡 Page Prompt Generation</h2>
+                <div class="sample-content">
+                    <h3>Sample Content: Machine Learning Fundamentals</h3>
+                    <p>Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It uses algorithms to build mathematical models based on training data to make predictions or decisions.</p>
+                    <p>There are three main types of machine learning: supervised learning, unsupervised learning, and reinforcement learning. Supervised learning uses labeled training data, unsupervised learning finds patterns in unlabeled data, and reinforcement learning learns through interaction with an environment.</p>
+                    <p>Common applications include recommendation systems, image recognition, natural language processing, and predictive analytics. Popular algorithms include linear regression, decision trees, neural networks, and support vector machines.</p>
+                </div>
+                <div class="input-group">
+                    <label for="promptCustomContent">Or enter your own content for prompt generation:</label>
+                    <textarea id="promptCustomContent" placeholder="Paste content here to generate relevant questions..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="promptCount">Number of prompts to generate (1-10):</label>
+                    <input type="number" id="promptCount" value="5" min="1" max="10">
+                </div>
+                <div class="test-controls">
+                    <button class="btn btn-primary" onclick="generateSamplePrompts()">Generate From Sample</button>
+                    <button class="btn btn-success" onclick="generateCustomPrompts()">Generate From Custom</button>
+                    <button class="btn btn-warning" onclick="generateCurrentPagePrompts()">Generate From Current Page</button>
+                </div>
+                <div class="output-area" id="promptOutput">No prompts generated yet...</div>
+            </div>
+
             <!-- Event Handling Test -->
             <div class="test-section">
                 <h2>📡 Event Handling</h2>
@@ -610,6 +635,141 @@
                 log(`Custom summarization failed: ${error.message}`, 'error');
                 document.getElementById('summarizeOutput').textContent = `Error: ${error.message}`;
             }
+        }
+
+        // Page Prompt Generation Functions
+        async function generateSamplePrompts() {
+            if (!agentarySDK) {
+                alert('Please initialize the SDK first');
+                return;
+            }
+
+            try {
+                const startTime = performance.now();
+                updateStatus('Generating prompts from sample content...', true, true);
+                log('Starting sample prompt generation...', 'info');
+
+                const promptCount = parseInt(document.getElementById('promptCount').value) || 5;
+                const promptSection = document.getElementById('promptOutput').closest('.test-section');
+                const sampleContent = promptSection.querySelector('.sample-content').textContent;
+                
+                document.getElementById('promptOutput').textContent = 'Generating educational prompts, please wait...';
+
+                const prompts = await agentarySDK.generatePagePrompts({
+                    content: sampleContent,
+                    promptCount: promptCount,
+                    maxContentChars: 4000
+                });
+
+                const opTime = performance.now() - startTime;
+                document.getElementById('lastOpTime').textContent = formatTime(opTime);
+
+                updateStatus('Prompts generated successfully', true);
+                log(`Generated ${prompts.length} prompts in ${formatTime(opTime)}`, 'success');
+
+                displayPrompts(prompts, opTime, 'sample content');
+
+            } catch (error) {
+                updateStatus('Prompt generation failed', true);
+                log(`Sample prompt generation failed: ${error.message}`, 'error');
+                document.getElementById('promptOutput').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function generateCustomPrompts() {
+            if (!agentarySDK) {
+                alert('Please initialize the SDK first');
+                return;
+            }
+
+            const customContent = document.getElementById('promptCustomContent').value.trim();
+            if (!customContent) {
+                alert('Please enter some content for prompt generation');
+                return;
+            }
+
+            try {
+                const startTime = performance.now();
+                updateStatus('Generating prompts from custom content...', true, true);
+                log('Starting custom prompt generation...', 'info');
+
+                const promptCount = parseInt(document.getElementById('promptCount').value) || 5;
+                
+                document.getElementById('promptOutput').textContent = 'Generating educational prompts from your content, please wait...';
+
+                const prompts = await agentarySDK.generatePagePrompts({
+                    content: customContent,
+                    promptCount: promptCount,
+                    maxContentChars: 4000
+                });
+
+                const opTime = performance.now() - startTime;
+                document.getElementById('lastOpTime').textContent = formatTime(opTime);
+
+                updateStatus('Custom prompts generated', true);
+                log(`Generated ${prompts.length} custom prompts in ${formatTime(opTime)}`, 'success');
+
+                displayPrompts(prompts, opTime, 'custom content');
+
+            } catch (error) {
+                updateStatus('Custom prompt generation failed', true);
+                log(`Custom prompt generation failed: ${error.message}`, 'error');
+                document.getElementById('promptOutput').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function generateCurrentPagePrompts() {
+            if (!agentarySDK) {
+                alert('Please initialize the SDK first');
+                return;
+            }
+
+            try {
+                const startTime = performance.now();
+                updateStatus('Generating prompts from current page...', true, true);
+                log('Starting page prompt generation...', 'info');
+
+                const promptCount = parseInt(document.getElementById('promptCount').value) || 5;
+                
+                document.getElementById('promptOutput').textContent = 'Analyzing current page content and generating educational prompts, please wait...';
+
+                // Use the SDK's generatePagePrompts method which will extract content from the current page
+                const prompts = await agentarySDK.generatePagePrompts({
+                    promptCount: promptCount,
+                    maxContentChars: 4000
+                });
+
+                const opTime = performance.now() - startTime;
+                document.getElementById('lastOpTime').textContent = formatTime(opTime);
+
+                updateStatus('Page prompts generated', true);
+                log(`Generated ${prompts.length} page prompts in ${formatTime(opTime)}`, 'success');
+
+                displayPrompts(prompts, opTime, 'current page');
+
+            } catch (error) {
+                updateStatus('Page prompt generation failed', true);
+                log(`Page prompt generation failed: ${error.message}`, 'error');
+                document.getElementById('promptOutput').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function displayPrompts(prompts, opTime, source) {
+            const output = document.getElementById('promptOutput');
+            let displayText = `Generated ${prompts.length} educational prompts from ${source} (${formatTime(opTime)}):\n\n`;
+            
+            prompts.forEach((prompt, index) => {
+                displayText += `${index + 1}. ${prompt}\n\n`;
+            });
+
+            // Add some metadata
+            displayText += `\n--- Generation Details ---\n`;
+            displayText += `Source: ${source}\n`;
+            displayText += `Generation time: ${formatTime(opTime)}\n`;
+            displayText += `Number of prompts: ${prompts.length}\n`;
+            displayText += `Timestamp: ${new Date().toLocaleString()}`;
+
+            output.textContent = displayText;
         }
 
         function testEvents() {

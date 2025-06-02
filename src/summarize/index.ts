@@ -2,7 +2,7 @@ import { extractPageContent } from "../utils/content-extraction";
 import { WebLLMClient } from "../core/WebLLMClient";
 import { SummarizeContentOptions } from "../types/AgentaryClient";
 import { Logger } from "../utils/Logger";
-import { ChatCompletionMessageParam, ChatCompletion, ChatCompletionChunk } from "@mlc-ai/web-llm";
+import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 
 /**
  * Summarizes the content of the current webpage or given content
@@ -21,7 +21,7 @@ export async function summarizeContent(
     const content = options.content || 
       extractPageContent({ 
         contentSelector: options.contentSelector || null,
-        maxChars: options.maxChars || 4000,
+        maxChars: options.maxContentChars || 4000,
       }, logger);
 
     logger.debug("Content extracted:", content);

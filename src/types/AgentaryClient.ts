@@ -12,20 +12,21 @@ export interface AgentaryClientConfig {
 export interface SummarizeContentOptions {
   content?: string;
   contentSelector?: string;
-  maxChars?: number;
+  maxContentChars?: number;
   streamResponse?: boolean;
   onStreamToken?: (token: string) => void;
+}
+
+export interface GeneratePromptsOptions {
+  content?: string;
+  contentSelector?: string;
+  maxContentChars?: number;
+  promptCount?: number;
 }
 
 export interface ExplainSelectedTextOptions {
   contentSelector?: string;
   maxLength?: number;
-  includeMetadata?: boolean;
-}
-
-export interface GeneratePagePromptsOptions {
-  contentSelector?: string;
-  maxPrompts?: number;
   includeMetadata?: boolean;
 }
 
