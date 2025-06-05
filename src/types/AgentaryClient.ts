@@ -1,3 +1,5 @@
+import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
+
 export interface AgentaryClientConfig {
   apiKey?: string;
   baseUrl?: string;
@@ -24,15 +26,21 @@ export interface GeneratePromptsOptions {
   promptCount?: number;
 }
 
-export interface ExplainSelectedTextOptions {
+export interface ExplainTextOptions {
+  content?: string;
   contentSelector?: string;
-  maxLength?: number;
-  includeMetadata?: boolean;
+  maxContentChars?: number;
+  text?: string;
+  selectedText?: boolean;
+  streamResponse?: boolean;
+  onStreamToken?: (token: string) => void;
 }
 
 export interface PostMessageOptions {
+  previousMessages?: ChatCompletionMessageParam[];
+  content?: string;
   contentSelector?: string;
-  onToken?: (token: string) => void;
-  previousMessages?: string[];
-  includeMetadata?: boolean;
+  maxContentChars?: number;
+  streamResponse?: boolean;
+  onStreamToken?: (token: string) => void;
 }

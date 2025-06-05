@@ -1,4 +1,4 @@
-import { postMessage } from "../../chat/index.js";
+import { postMessage } from "../../chat/index.ts";
 import { summarizeContent } from "../../summarize/index.js";
 import { explainSelectedText } from "../../explain/index.js";
 import { getSelectedText } from "../../utils/index.ts";

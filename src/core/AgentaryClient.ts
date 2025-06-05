@@ -3,19 +3,19 @@ import { EventEmitter } from '../utils/EventEmitter';
 import { Logger } from '../utils/Logger';
 import { WebLLMClient } from './WebLLMClient';
 import { summarizeContent } from '../summarize';
-// import { explainSelectedText } from '../explain/index.js';
+import { explainText } from '../explain/index.js';
 import { generatePrompts } from '../prompts/index';
-// import { postMessage } from '../chat/index.js';
+import { postMessage } from '../chat/index.js';
 // import { mountWidget } from '../ui/widget.js';
 
 import type { 
   AgentaryClientConfig,
   SummarizeContentOptions,
-  ExplainSelectedTextOptions,
   GeneratePromptsOptions,
+  ExplainTextOptions,
   PostMessageOptions
 } from '../types/AgentaryClient';
-import type { InitProgressReport } from '@mlc-ai/web-llm';
+import type { InitProgressReport, ChatCompletionMessageParam } from '@mlc-ai/web-llm';
 
 /**
  * Main Agentary SDK class
@@ -78,12 +78,13 @@ export class AgentaryClient extends EventEmitter {
     }, this.logger);
   }
 
-  // explainSelectedText(text = null, options: ExplainSelectedTextOptions = {}) {
-  //   return explainSelectedText(this.webLLMClient, text, {
-  //     contentSelector: this.config.contentSelector,
-  //     ...options
-  //   });
-  // }
+  explainSelectedText(options: ExplainTextOptions = {}) {
+    return explainText(this.webLLMClient, {
+      ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
+      selectedText: true,
+      ...options
+    }, this.logger);
+  }
 
   generatePagePrompts(options: GeneratePromptsOptions = {}) {
     return generatePrompts(this.webLLMClient, {
@@ -92,21 +93,18 @@ export class AgentaryClient extends EventEmitter {
     }, this.logger);
   }
 
-  // postMessage(
-  //   message: string,
-  //   onToken: (token: string) => void,
-  //   previousMessages: string[] = [], 
-  //   options: PostMessageOptions = {}
-  // ) {
-  //   return postMessage(
-  //     this.webLLMClient,
-  //     message,
-  //     onToken,
-  //     previousMessages,
-  //     {
-  //       contentSelector: this.config.contentSelector,
-  //       ...options
-  //     }
-  //   );
-  // }
+  postMessage(
+    message: string,
+    options: PostMessageOptions = {}
+  ) {
+    return postMessage(
+      this.webLLMClient,
+      message,
+      {
+        ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
+        ...options
+      },
+      this.logger
+    );
+  }
 }
