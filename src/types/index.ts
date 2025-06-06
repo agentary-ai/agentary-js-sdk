@@ -7,6 +7,14 @@ export interface WebLLMConfig {
   workerUrl?: string;
 }
 
+export interface WidgetOptions {
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  autoOpenOnLoad?: boolean;
+  generatePagePrompts?: boolean;
+  maxPagePrompts?: number;
+  contentSelector?: string;
+}
+
 export interface ProgressCallback {
   (progress: number): void;
 }
@@ -25,14 +33,6 @@ export interface SummarizeOptions extends ContentExtractionOptions {
 export interface ExplainOptions extends ContentExtractionOptions {
   context?: string;
   level?: 'simple' | 'detailed' | 'technical';
-}
-
-export interface WidgetOptions {
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  autoOpenOnLoad?: boolean;
-  generateQuestions?: boolean;
-  maxQuestions?: number;
-  contentSelector?: string;
 }
 
 export interface RSSFeed {

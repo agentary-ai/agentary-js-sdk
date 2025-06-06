@@ -39,6 +39,14 @@ export class WebLLMClient {
   }
 
   /**
+   * Get the current model loading state
+   * @returns {boolean} True if the model is currently loading
+   */
+  get modelLoading(): boolean {
+    return this.isModelLoading || false;
+  }
+
+  /**
    * Clean up resources including blob URLs
    */
   cleanup() {

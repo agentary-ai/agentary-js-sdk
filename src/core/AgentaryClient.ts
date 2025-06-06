@@ -3,19 +3,20 @@ import { EventEmitter } from '../utils/EventEmitter';
 import { Logger } from '../utils/Logger';
 import { WebLLMClient } from './WebLLMClient';
 import { summarizeContent } from '../summarize';
-import { explainText } from '../explain/index.js';
+import { explainText } from '../explain/index';
 import { generatePrompts } from '../prompts/index';
-import { postMessage } from '../chat/index.js';
-// import { mountWidget } from '../ui/widget.js';
+import { postMessage } from '../chat/index';
+import { mountWidget } from '../ui/widget';
 
 import type { 
   AgentaryClientConfig,
   SummarizeContentOptions,
   GeneratePromptsOptions,
   ExplainTextOptions,
-  PostMessageOptions
+  PostMessageOptions,
 } from '../types/AgentaryClient';
-import type { InitProgressReport, ChatCompletionMessageParam } from '@mlc-ai/web-llm';
+import { WidgetOptions } from '../types/index';
+import type { InitProgressReport } from '@mlc-ai/web-llm';
 
 /**
  * Main Agentary SDK class
@@ -57,18 +58,25 @@ export class AgentaryClient extends EventEmitter {
       this.webLLMClient.createEngine();
     }
     
-    // if (this.config.showWidget) {
-    //   mountWidget(
-    //     this.webLLMClient, 
-    //     "bottom-right",
-    //     {
-    //       autoOpenOnLoad: true,
-    //       generatePagePrompts: this.config.generatePagePrompts,
-    //       maxPagePrompts: this.config.maxPagePrompts,
-    //       contentSelector: this.config.contentSelector
-    //     }
-    //   );
-    // }
+    if (this.config.showWidget) {
+      const widgetOptions: WidgetOptions = {
+        position: "bottom-right",
+        autoOpenOnLoad: true,
+        generatePagePrompts: this.config.generatePagePrompts || false,
+        maxPagePrompts: this.config.maxPagePrompts || 5,
+      };
+      
+      // Only add contentSelector if it's defined
+      if (this.config.contentSelector) {
+        widgetOptions.contentSelector = this.config.contentSelector;
+      }
+      
+      mountWidget(
+        this.webLLMClient, 
+        widgetOptions,
+        this.logger
+      );
+    }
   }
 
   summarizeContent(options: SummarizeContentOptions = {}) {

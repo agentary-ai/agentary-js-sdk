@@ -2,8 +2,8 @@
  * Creates the floating chat button
  */
 export function createButton(
-  corner,
-  onClick
+  corner: string,
+  onClick: () => any
 ) {
   const btn = document.createElement("button");
   

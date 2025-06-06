@@ -1,7 +1,10 @@
-import { createDialog } from "./components/dialog.js";
-import { createContextMenu } from "./context-menu.js";
+import { createDialog } from "./components/dialog";
+import { createContextMenu } from "./context-menu";
+import { WebLLMClient } from "../core/WebLLMClient";
+import type { WidgetOptions } from "../types/index";
+import { Logger } from "../utils/Logger";
 
-/**
+/** 
  * Injects Font Awesome CSS into the page
  */
 function injectFontAwesome() {
@@ -24,17 +27,20 @@ function injectFontAwesome() {
 /**
  * Mounts the UI widget and sets up the context menu
  * @param webLLMClient - The Agentary client instance
- * @param position - Button position (bottom-right or bottom-left)
- * @param uiOptions - UI configuration options
- * @param uiOptions.autoOpenOnLoad - Whether to automatically open the dialog when model loads (default: false)
+ * @param widgetOptions - UI configuration options
+ * @param logger - The logger instance
  */
 export function mountWidget(
-  webLLMClient, 
-  position = "bottom-right",
-  uiOptions = {}
+  webLLMClient: WebLLMClient, 
+  widgetOptions: WidgetOptions = {},
+  logger: Logger
 ) {
-  // Extract autoOpenOnLoad option with default value
-  const { autoOpenOnLoad = false, ...otherOptions } = uiOptions;
+  // Extract options with default values
+  const { 
+    position = "bottom-right",
+    autoOpenOnLoad = false, 
+    ...otherOptions 
+  } = widgetOptions;
 
   // Inject Font Awesome CSS
   injectFontAwesome();
@@ -63,7 +69,7 @@ export function mountWidget(
   `;
 
   // Initialize button in loading state if model is loading
-  if (webLLMClient.isModelLoading) {
+  if (webLLMClient.modelLoading) {
     button.disabled = true;
     button.style.cursor = "not-allowed";
     button.style.opacity = "0.7";
@@ -72,7 +78,7 @@ export function mountWidget(
 
   // Add hover effect
   button.addEventListener("mouseenter", () => {
-    if (!webLLMClient.isModelLoading) {
+    if (!webLLMClient.modelLoading) {
       button.style.transform = "scale(1.05)";
     }
   });
@@ -82,7 +88,10 @@ export function mountWidget(
   });
   
   // Create dialog and get show function
-  const { dialog, showDialog } = createDialog(webLLMClient, position, otherOptions);
+  const { dialog, showDialog } = createDialog(webLLMClient, {
+    position,
+    ...otherOptions,
+  }, logger);
   
   // Track dialog visibility state
   let isDialogVisible = false;
@@ -124,10 +133,12 @@ export function mountWidget(
   document.body.appendChild(button);
   
   // Set up context menu for text selection
-  createContextMenu(webLLMClient, { contentSelector: otherOptions.contentSelector });
+  createContextMenu(webLLMClient, { 
+    ...(otherOptions.contentSelector && { contentSelector: otherOptions.contentSelector })
+  }, logger);
 
   // Function to update button state based on loading status
-  const updateButtonState = (isLoading) => {
+  const updateButtonState = (isLoading: boolean) => {
     // Only update button appearance when loading state changes
     if (isLoading) {
       button.disabled = true;
