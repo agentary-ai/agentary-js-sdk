@@ -1,6 +1,7 @@
 import { createDialog } from "./components/dialog";
 import { createContextMenu } from "./context-menu";
 import { WebLLMClient } from "../core/WebLLMClient";
+import { getAnalytics } from "../utils/Analytics";
 import type { WidgetOptions } from "../types/index";
 import { Logger } from "../utils/Logger";
 
@@ -42,11 +43,21 @@ export function mountWidget(
     ...otherOptions 
   } = widgetOptions;
 
+  const analytics = getAnalytics();
+
+  // Track widget mounting
+  analytics?.track('widget_mounted', {
+    auto_open: autoOpenOnLoad,
+    generate_page_prompts: widgetOptions.generatePagePrompts || false,
+    page_url: window.location.href,
+    page_domain: window.location.hostname,
+  });
+
   // Inject Font Awesome CSS
   injectFontAwesome();
 
   const button = document.createElement("button");
-  button.innerHTML = '<i class="fas fa-robot"></i>';
+  button.innerHTML = '<i class="fas fa-brain"></i>';
   button.title = "Agentary Assistant";
   button.style.cssText = `
     position:fixed;
@@ -95,6 +106,8 @@ export function mountWidget(
   
   // Track dialog visibility state
   let isDialogVisible = false;
+  let dialogOpenTime = 0;
+  let messagesSentInSession = 0;
   
   // Track if this is the first time the model finishes loading
   let hasModelLoadedOnce = false;
@@ -102,6 +115,14 @@ export function mountWidget(
   // Function to toggle dialog visibility
   const toggleDialog = () => {
     if (isDialogVisible) {
+      // Track dialog closing
+      analytics?.track('chat_dialog_closed', {
+        session_length_ms: Date.now() - dialogOpenTime,
+        messages_sent: messagesSentInSession,
+        page_url: window.location.href,
+        page_domain: window.location.hostname,
+      });
+
       // Hide dialog
       dialog.style.opacity = "0";
       dialog.style.transform = "translateY(20px)";
@@ -112,10 +133,20 @@ export function mountWidget(
       }, 300);
       
       // Update button appearance
-      button.innerHTML = '<i class="fas fa-robot"></i>';
+      button.innerHTML = '<i class="fas fa-brain"></i>';
       button.title = "Open Agentary Assistant";
       isDialogVisible = false;
+      messagesSentInSession = 0;
     } else {
+      // Track dialog opening
+      dialogOpenTime = Date.now();
+      analytics?.track('chat_dialog_opened', {
+        trigger: hasModelLoadedOnce && autoOpenOnLoad ? 'auto_open' : 'manual',
+        model_loaded: !webLLMClient.modelLoading,
+        page_url: window.location.href,
+        page_domain: window.location.hostname,
+      });
+
       // Show dialog
       showDialog();
       
@@ -127,7 +158,17 @@ export function mountWidget(
   };
   
   // Set up the button click handler
-  button.addEventListener("click", toggleDialog);
+  button.addEventListener("click", () => {
+    // Track button click
+    analytics?.track('widget_button_clicked', {
+      action: isDialogVisible ? 'close' : 'open',
+      page_url: window.location.href,
+      page_domain: window.location.hostname,
+      model_loaded: !webLLMClient.modelLoading,
+    });
+
+    toggleDialog();
+  });
   
   // Add the button to the body
   document.body.appendChild(button);
@@ -151,7 +192,7 @@ export function mountWidget(
       button.style.opacity = "1";
       button.innerHTML = isDialogVisible ? 
         '<i class="fas fa-times"></i>' : 
-        '<i class="fas fa-robot"></i>';
+        '<i class="fas fa-brain"></i>';
       
       // Auto-open dialog when model finishes loading for the first time
       if (autoOpenOnLoad && !hasModelLoadedOnce && !isDialogVisible) {

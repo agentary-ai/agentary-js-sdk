@@ -9,6 +9,13 @@ export interface AgentaryClientConfig {
   showWidget?: boolean;
   generatePagePrompts?: boolean;
   maxPagePrompts?: number;
+  // Analytics configuration
+  analytics?: {
+    mixpanelToken?: string;
+    enabled?: boolean;
+    userId?: string;
+    debug?: boolean;
+  };
 }
 
 export interface SummarizeContentOptions {

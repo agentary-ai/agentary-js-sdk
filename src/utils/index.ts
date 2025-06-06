@@ -3,5 +3,6 @@
  */
 export { EventEmitter } from './EventEmitter';
 export { Logger } from './Logger';
+export { Analytics, getAnalytics, setAnalytics } from './Analytics';
 export { extractPageContent } from './content-extraction';
 export { getSelectedText } from './selected-text';

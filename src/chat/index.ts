@@ -1,5 +1,6 @@
 import { WebLLMClient } from "@/core/WebLLMClient.js";
 import { extractPageContent, Logger } from "../utils/index.js";
+import { getAnalytics } from "../utils/Analytics";
 import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import { PostMessageOptions } from "@/types/AgentaryClient.js";
 
@@ -17,7 +18,23 @@ export async function postMessage(
   options: PostMessageOptions = {},
   logger: Logger
 ) {
+  const analytics = getAnalytics();
+  const messageStartTime = Date.now();
+  
   try {
+    // Calculate conversation turn number
+    const conversationTurn = (options.previousMessages?.length || 0) + 1;
+    
+    // Track message sent
+    analytics?.track('message_sent', {
+      message_length: message.length,
+      conversation_turn: conversationTurn,
+      feature_used: 'chat',
+      has_context: Boolean(options.content || options.contentSelector),
+      page_url: window.location.href,
+      page_domain: window.location.hostname,
+    });
+
     // Create system prompt if this is the first message (no previous messages)
     const messages: ChatCompletionMessageParam[] = [];
 
@@ -104,9 +121,21 @@ export async function postMessage(
         })
       }
     );
+
+    // Track successful response (this will also be tracked in WebLLMClient)
+    const responseContent = response.choices[0].message.content || '';
     
-    return response.choices[0].message.content || '';
+    return responseContent;
   } catch (error) {
+    // Track error
+    analytics?.track('error_occurred', {
+      error_type: 'chat_error',
+      error_message: error instanceof Error ? error.message : String(error),
+      feature: 'chat',
+      page_url: window.location.href,
+      page_domain: window.location.hostname,
+    });
+
     logger.error("Error processing message:", error);
     throw error;
   }

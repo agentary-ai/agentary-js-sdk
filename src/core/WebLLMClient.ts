@@ -1,6 +1,7 @@
 import { CreateMLCEngine, CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import type { ChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam, InitProgressCallback, InitProgressReport, MLCEngine, ResponseFormat, WebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import { Logger } from "../utils/Logger";
+import { getAnalytics } from "../utils/Analytics";
 
 interface ChatCompletionOptions {
   stream: boolean;
@@ -155,6 +156,16 @@ export class WebLLMClient {
 
   async createEngine() {
     if (!this.engine) {
+      const analytics = getAnalytics();
+      const modelLoadingStartTime = Date.now();
+      
+      // Track model loading start
+      analytics?.track('model_loading_started', {
+        model_name: this.modelPath,
+        page_url: window.location.href,
+        page_domain: window.location.hostname,
+      });
+
       try {
         if (this.onModelLoadingChange) {
           this.onModelLoadingChange(true);
@@ -199,25 +210,45 @@ export class WebLLMClient {
             // Fall back to main thread engine
             this.engine = await CreateMLCEngine(this.modelPath, {
               initProgressCallback: this.initProgressCallback
-            }, {
-              context_window_size: 8192
             });
-            this.logger.debug("Main thread engine created successfully");
           }
         } else {
-          this.logger.debug("Creating main thread engine (worker disabled)");
+          this.logger.debug("Creating main thread engine for model:", this.modelPath);
           this.engine = await CreateMLCEngine(this.modelPath, {
             initProgressCallback: this.initProgressCallback
           });
         }
-      } catch (error) {
-        console.error("Error creating engine:", error);
-        throw error;
-      } finally {
+
+        this.isModelLoading = false;
         if (this.onModelLoadingChange) {
           this.onModelLoadingChange(false);
         }
+
+        // Track successful model loading
+        analytics?.track('model_loading_completed', {
+          model_name: this.modelPath,
+          loading_time_ms: Date.now() - modelLoadingStartTime,
+          page_url: window.location.href,
+          page_domain: window.location.hostname,
+        });
+
+        this.logger.debug("Engine created and ready");
+      } catch (error) {
         this.isModelLoading = false;
+        if (this.onModelLoadingChange) {
+          this.onModelLoadingChange(false);
+        }
+
+        // Track model loading failure
+        analytics?.track('model_loading_failed', {
+          model_name: this.modelPath,
+          error: error instanceof Error ? error.message : String(error),
+          page_url: window.location.href,
+          page_domain: window.location.hostname,
+        });
+
+        this.logger.error("Failed to create engine:", error);
+        throw error;
       }
     }
   }
@@ -230,71 +261,110 @@ export class WebLLMClient {
       throw new Error("Engine not created");
     }
 
-    if (options.stream) {
-      const chunks = await this.engine.chat.completions.create({
-        messages,
-        response_format: { type: options.responseFormat || 'text' },
-        stream: true
-      }) as AsyncIterable<ChatCompletionChunk>;
+    const analytics = getAnalytics();
+    const responseStartTime = Date.now();
+    const isStreaming = options.stream;
 
-      let fullContent = '';
-      let lastChunk: ChatCompletionChunk | null = null;
+    try {
+      if (options.stream) {
+        const chunks = await this.engine.chat.completions.create({
+          messages,
+          response_format: { type: options.responseFormat || 'text' },
+          stream: true
+        }) as AsyncIterable<ChatCompletionChunk>;
 
-      // Process the stream and accumulate the full response
-      for await (const chunk of chunks) {
-        lastChunk = chunk;
+        let fullContent = '';
+        let lastChunk: ChatCompletionChunk | null = null;
 
-        if (chunk.choices && chunk.choices[0]?.delta?.content) {
-          const token = chunk.choices[0].delta.content;
-          fullContent += token;
-          if (options.onStreamToken) {
-            options.onStreamToken(token);
-          }
-        }
-      }
+        // Process the stream and accumulate the full response
+        for await (const chunk of chunks) {
+          lastChunk = chunk;
 
-      // Construct a ChatCompletion object from accumulated streaming data
-      if (lastChunk) {
-        const chatCompletion: ChatCompletion = {
-          id: lastChunk.id,
-          object: 'chat.completion',
-          created: lastChunk.created,
-          model: lastChunk.model,
-          choices: [{
-            index: 0,
-            message: {
-              role: 'assistant',
-              content: fullContent
-            },
-            logprobs: null,
-            finish_reason: lastChunk.choices?.[0]?.finish_reason || 'stop'
-          }],
-          usage: lastChunk.usage || {
-            prompt_tokens: 0,
-            completion_tokens: 0,
-            total_tokens: 0,
-            extra: {
-              e2e_latency_s: 0,
-              prefill_tokens_per_s: 0,
-              decode_tokens_per_s: 0,
-              time_to_first_token_s: 0,
-              time_per_output_token_s: 0
+          if (chunk.choices && chunk.choices[0]?.delta?.content) {
+            const token = chunk.choices[0].delta.content;
+            fullContent += token;
+            if (options.onStreamToken) {
+              options.onStreamToken(token);
             }
           }
-        };
-        return chatCompletion;
-      } else {
-        throw new Error("No chunks received from streaming response");
-      }
+        }
 
-    } else {
-      // Non-streaming response
-      const response = await this.engine.chat.completions.create({
-        messages,
-        response_format: { type: options.responseFormat || 'text' },
-        stream: false
-      }) as ChatCompletion;
-      return response;
+        // Construct a ChatCompletion object from accumulated streaming data
+        if (lastChunk) {
+          const chatCompletion: ChatCompletion = {
+            id: lastChunk.id,
+            object: 'chat.completion',
+            created: lastChunk.created,
+            model: lastChunk.model,
+            choices: [{
+              index: 0,
+              message: {
+                role: 'assistant',
+                content: fullContent
+              },
+              logprobs: null,
+              finish_reason: lastChunk.choices?.[0]?.finish_reason || 'stop'
+            }],
+            usage: lastChunk.usage || {
+              prompt_tokens: 0,
+              completion_tokens: 0,
+              total_tokens: 0,
+              extra: {
+                e2e_latency_s: 0,
+                prefill_tokens_per_s: 0,
+                decode_tokens_per_s: 0,
+                time_to_first_token_s: 0,
+                time_per_output_token_s: 0
+              }
+            }
+          };
+
+          // Track AI response
+          analytics?.track('ai_response_received', {
+            response_time_ms: Date.now() - responseStartTime,
+            response_length: fullContent.length,
+            feature_used: 'chat', // This will be overridden by calling code if needed
+            streaming: isStreaming,
+            page_url: window.location.href,
+            page_domain: window.location.hostname,
+          });
+
+          return chatCompletion;
+        } else {
+          throw new Error("No chunks received from streaming response");
+        }
+
+      } else {
+        // Non-streaming response
+        const response = await this.engine.chat.completions.create({
+          messages,
+          response_format: { type: options.responseFormat || 'text' },
+          stream: false
+        }) as ChatCompletion;
+
+        // Track AI response
+        analytics?.track('ai_response_received', {
+          response_time_ms: Date.now() - responseStartTime,
+          response_length: response.choices[0]?.message?.content?.length || 0,
+          feature_used: 'chat', // This will be overridden by calling code if needed
+          streaming: isStreaming,
+          page_url: window.location.href,
+          page_domain: window.location.hostname,
+        });
+
+        return response;
+      }
+    } catch (error) {
+      // Track errors
+      analytics?.track('error_occurred', {
+        error_type: 'chat_completion_error',
+        error_message: error instanceof Error ? error.message : String(error),
+        feature: 'chat',
+        page_url: window.location.href,
+        page_domain: window.location.hostname,
+      });
+
+      throw error;
     }
   }
 }

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentary SDK with Analytics - Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .analytics-status {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .code-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .events-list {
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .event-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 4px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Agentary SDK Analytics Integration Example</h1>
+    
+    <div class="warning">
+        <h3>⚠️ Before Running This Example</h3>
+        <p>Replace <code>YOUR_MIXPANEL_TOKEN</code> below with your actual Mixpanel project token to see analytics in action.</p>
+        <p>You can get a free Mixpanel account at <a href="https://mixpanel.com" target="_blank">mixpanel.com</a></p>
+    </div>
+
+    <div class="analytics-status">
+        <h3>📊 Analytics Status</h3>
+        <p id="analytics-status">Initializing...</p>
+        <p><strong>Events Tracked:</strong> <span id="event-count">0</span></p>
+    </div>
+
+    <h2>How to Test Analytics</h2>
+    <ol>
+        <li><strong>Widget Interaction:</strong> Click the floating Agentary button to open/close the chat</li>
+        <li><strong>Text Selection:</strong> Select any text on this page to trigger the context menu</li>
+        <li><strong>Chat Usage:</strong> Send messages in the chat to track AI interactions</li>
+        <li><strong>Model Loading:</strong> Watch the model loading events in real-time</li>
+    </ol>
+
+    <h2>Sample Content for Testing</h2>
+    <p>This is sample content that you can select to test the explain feature. The Agentary SDK allows users to select any text on a webpage and get AI-powered explanations.</p>
+    
+    <h3>Technical Features</h3>
+    <ul>
+        <li><strong>WebLLM Integration:</strong> Runs AI models directly in the browser</li>
+        <li><strong>Context-Aware:</strong> Understands the content of the current page</li>
+        <li><strong>Privacy-First:</strong> No data leaves your browser</li>
+        <li><strong>Analytics Ready:</strong> Built-in Mixpanel integration for usage tracking</li>
+    </ul>
+
+    <h2>Live Analytics Events</h2>
+    <div class="events-list" id="events-list">
+        <p>Analytics events will appear here...</p>
+    </div>
+
+    <div class="code-block">
+        <h3>Configuration Used:</h3>
+        <pre id="config-display"></pre>
+    </div>
+
+    <script type="module">
+        // Import the Agentary SDK
+        import { init } from '../dist/agentary.esm.js';
+
+        // Configuration
+        const config = {
+            analytics: {
+                mixpanelToken: 'YOUR_MIXPANEL_TOKEN', // Replace with your token
+                enabled: true,
+                userId: 'demo-user-' + Math.random().toString(36).substr(2, 9),
+                debug: true // Enable debug mode to see events in console
+            },
+            debug: true,
+            loadModel: true,
+            showWidget: true,
+            generatePagePrompts: true,
+            maxPagePrompts: 3
+        };
+
+        // Display configuration
+        document.getElementById('config-display').textContent = JSON.stringify(config, null, 2);
+
+        // Initialize Agentary with analytics
+        const agentary = init(config);
+
+        // Track analytics status
+        let eventCount = 0;
+        const statusElement = document.getElementById('analytics-status');
+        const countElement = document.getElementById('event-count');
+        const eventsListElement = document.getElementById('events-list');
+
+        // Monitor analytics events (this is just for demo purposes)
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            
+            // Check if this is an analytics debug message
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('Analytics event:')) {
+                eventCount++;
+                countElement.textContent = eventCount;
+                
+                // Add event to the display list
+                const eventDiv = document.createElement('div');
+                eventDiv.className = 'event-item';
+                eventDiv.textContent = `${new Date().toLocaleTimeString()}: ${args[0]} ${JSON.stringify(args[1] || {})}`;
+                eventsListElement.insertBefore(eventDiv, eventsListElement.firstChild);
+                
+                // Keep only last 20 events
+                while (eventsListElement.children.length > 20) {
+                    eventsListElement.removeChild(eventsListElement.lastChild);
+                }
+            }
+        };
+
+        // Update analytics status
+        if (config.analytics.mixpanelToken === 'YOUR_MIXPANEL_TOKEN') {
+            statusElement.innerHTML = '❌ <strong>Not Connected</strong> - Please add your Mixpanel token';
+        } else {
+            statusElement.innerHTML = '✅ <strong>Connected</strong> - Analytics are being tracked';
+        }
+
+        // Add some interactive elements for testing
+        document.body.addEventListener('click', (e) => {
+            if (e.target.tagName === 'H3') {
+                console.log('📊 User clicked on heading:', e.target.textContent);
+            }
+        });
+
+        // Log page load completion
+        window.addEventListener('load', () => {
+            console.log('📊 Page fully loaded - Agentary SDK initialized with analytics');
+        });
+    </script>
+
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+        <p><small>This example demonstrates the Agentary SDK with Mixpanel analytics integration. Check your browser console and Mixpanel dashboard to see tracked events.</small></p>
+    </footer>
+</body>
+</html> 

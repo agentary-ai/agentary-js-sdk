@@ -2,6 +2,7 @@ import { addSelectionMonitor } from "./selection-helper.js";
 import { marked } from "marked";
 import { getSelectedText, Logger } from "../utils/index.js";
 import { explainText } from "../explain/index.js";
+import { getAnalytics } from "../utils/Analytics";
 import { WebLLMClient } from "@/core/WebLLMClient.js";
 
 /** 
@@ -37,6 +38,7 @@ interface ContextMenuOptions {
 export function createContextMenu(webLLMClient: WebLLMClient, options: ContextMenuOptions = {}, logger: Logger) {
   // Create a floating button that appears when text is selected
   const { contentSelector } = options;
+  const analytics = getAnalytics();
 
   const contextButton = document.createElement("div");
   contextButton.style.cssText = `
@@ -60,6 +62,13 @@ export function createContextMenu(webLLMClient: WebLLMClient, options: ContextMe
   // Function to position the button near selected text
   const positionButton = (rect: DOMRect | null) => {
     if (!rect) return;
+    
+    // Track context menu opening
+    analytics?.track('context_menu_opened', {
+      selected_text_length: currentSelectedText.length,
+      page_url: window.location.href,
+      page_domain: window.location.hostname,
+    });
     
     // Position above the selection
     contextButton.style.top = `${window.scrollY + rect.top - 30}px`;
@@ -448,6 +457,13 @@ export function createContextMenu(webLLMClient: WebLLMClient, options: ContextMe
   contextButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // Track context menu action
+    analytics?.track('context_menu_action', {
+      action: 'explain',
+      selected_text_length: currentSelectedText.length,
+      page_url: window.location.href,
+      page_domain: window.location.hostname,
+    });
     handleContextButtonClick(logger);
   });
   

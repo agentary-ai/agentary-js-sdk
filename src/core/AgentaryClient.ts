@@ -1,6 +1,7 @@
 // import { ApiClient } from './core/ApiClient.js';
 import { EventEmitter } from '../utils/EventEmitter';
 import { Logger } from '../utils/Logger';
+import { Analytics, setAnalytics } from '../utils/Analytics';
 import { WebLLMClient } from './WebLLMClient';
 import { summarizeContent } from '../summarize';
 import { explainText } from '../explain/index';
@@ -25,6 +26,7 @@ export class AgentaryClient extends EventEmitter {
   private config: AgentaryClientConfig;
   private logger: Logger;
   private webLLMClient: WebLLMClient;
+  private analytics: Analytics;
 
   /**
    * Create an Agentary SDK instance
@@ -43,6 +45,17 @@ export class AgentaryClient extends EventEmitter {
     this.logger.info(
       `Initializing with config: ${JSON.stringify(this.config)}`
     );
+
+    // Initialize analytics
+    this.analytics = new Analytics({
+      enabled: true,
+      debug: this.config.debug || false,
+    }, this.logger);
+
+    this.analytics.setupPageTimeTracking();
+
+    // Set global analytics instance
+    setAnalytics(this.analytics);
 
     // TODO: Add once API is implemented
     // this.apiClient = new ApiClient(this.config, this.logger);
@@ -78,6 +91,13 @@ export class AgentaryClient extends EventEmitter {
         widgetOptions,
         this.logger
       );
+    }
+
+    // Set up page unload handler to flush analytics
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => {
+        this.analytics.flush();
+      });
     }
   }
 
