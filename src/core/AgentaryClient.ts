@@ -31,8 +31,8 @@ export class AgentaryClient extends EventEmitter {
    * @param {AgentaryClientConfig} config - Configuration options
    */
   constructor(config: AgentaryClientConfig = {
-    loadModel: true,
     debug: false,
+    loadModel: true,
     showWidget: true,
     generatePagePrompts: true,
     maxPagePrompts: 5,
@@ -70,6 +70,8 @@ export class AgentaryClient extends EventEmitter {
       if (this.config.contentSelector) {
         widgetOptions.contentSelector = this.config.contentSelector;
       }
+
+      this.logger.info('Mounting widget');
       
       mountWidget(
         this.webLLMClient, 
