@@ -5,6 +5,13 @@ import { getAnalytics } from "../utils/Analytics";
 import type { WidgetOptions } from "../types/index";
 import { Logger } from "../utils/Logger";
 
+// Global widget state to track mounted widgets
+let mountedWidgets: Map<string, {
+  button: HTMLElement;
+  dialog: HTMLElement;
+  cleanup: () => void;
+}> = new Map();
+
 /** 
  * Injects Font Awesome CSS into the page
  */
@@ -26,16 +33,24 @@ function injectFontAwesome() {
 }
 
 /**
+ * Generates a unique widget ID
+ */
+function generateWidgetId(): string {
+  return `agentary-widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
  * Mounts the UI widget and sets up the context menu
  * @param webLLMClient - The Agentary client instance
  * @param widgetOptions - UI configuration options
  * @param logger - The logger instance
+ * @returns Object with unmount function and widget ID
  */
 export function mountWidget(
   webLLMClient: WebLLMClient, 
   widgetOptions: WidgetOptions = {},
   logger: Logger
-) {
+): { unmount: () => void; widgetId: string } {
   // Extract options with default values
   const { 
     position = "bottom-right",
@@ -43,6 +58,7 @@ export function mountWidget(
     ...otherOptions 
   } = widgetOptions;
 
+  const widgetId = generateWidgetId();
   const analytics = getAnalytics();
 
   // Track widget mounting
@@ -57,6 +73,7 @@ export function mountWidget(
   injectFontAwesome();
 
   const button = document.createElement("button");
+  button.id = `${widgetId}-button`;
   button.innerHTML = '<i class="fas fa-brain"></i>';
   button.title = "Agentary Assistant";
   button.style.cssText = `
@@ -88,15 +105,18 @@ export function mountWidget(
   }
 
   // Add hover effect
-  button.addEventListener("mouseenter", () => {
+  const handleMouseEnter = () => {
     if (!webLLMClient.modelLoading) {
       button.style.transform = "scale(1.05)";
     }
-  });
+  };
   
-  button.addEventListener("mouseleave", () => {
+  const handleMouseLeave = () => {
     button.style.transform = "scale(1)";
-  });
+  };
+
+  button.addEventListener("mouseenter", handleMouseEnter);
+  button.addEventListener("mouseleave", handleMouseLeave);
   
   // Create dialog and get show function
   const { dialog, showDialog } = createDialog(webLLMClient, {
@@ -158,7 +178,7 @@ export function mountWidget(
   };
   
   // Set up the button click handler
-  button.addEventListener("click", () => {
+  const handleButtonClick = () => {
     // Track button click
     analytics?.track('widget_button_clicked', {
       action: isDialogVisible ? 'close' : 'open',
@@ -168,13 +188,15 @@ export function mountWidget(
     });
 
     toggleDialog();
-  });
+  };
+
+  button.addEventListener("click", handleButtonClick);
   
   // Add the button to the body
   document.body.appendChild(button);
   
   // Set up context menu for text selection
-  createContextMenu(webLLMClient, { 
+  const contextMenuCleanup = createContextMenu(webLLMClient, { 
     ...(otherOptions.contentSelector && { contentSelector: otherOptions.contentSelector })
   }, logger);
 
@@ -209,4 +231,94 @@ export function mountWidget(
 
   // Set up the model loading callback
   webLLMClient.setOnModelLoadingChange(updateButtonState);
+
+  // Create cleanup function
+  const cleanup = () => {
+    // Remove event listeners
+    button.removeEventListener("mouseenter", handleMouseEnter);
+    button.removeEventListener("mouseleave", handleMouseLeave);
+    button.removeEventListener("click", handleButtonClick);
+    
+    // Remove DOM elements
+    if (button.parentNode) {
+      button.parentNode.removeChild(button);
+    }
+    if (dialog.parentNode) {
+      dialog.parentNode.removeChild(dialog);
+    }
+    
+    // Clean up context menu
+    if (contextMenuCleanup) {
+      contextMenuCleanup();
+    }
+    
+    // Remove model loading callback
+    webLLMClient.setOnModelLoadingChange(() => {});
+    
+    // Track widget unmounting
+    analytics?.track('widget_unmounted', {
+      widget_id: widgetId,
+      page_url: window.location.href,
+      page_domain: window.location.hostname,
+    });
+
+    logger.info(`Widget ${widgetId} unmounted`);
+  };
+
+  // Store widget reference
+  mountedWidgets.set(widgetId, {
+    button,
+    dialog,
+    cleanup
+  });
+
+  // Create unmount function
+  const unmount = () => {
+    cleanup();
+    mountedWidgets.delete(widgetId);
+  };
+
+  logger.info(`Widget ${widgetId} mounted`);
+
+  return { unmount, widgetId };
+}
+
+/**
+ * Unmounts a specific widget by ID
+ * @param widgetId - The ID of the widget to unmount
+ * @returns boolean indicating success
+ */
+export function unmountWidget(widgetId: string): boolean {
+  const widget = mountedWidgets.get(widgetId);
+  if (widget) {
+    widget.cleanup();
+    mountedWidgets.delete(widgetId);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Unmounts all mounted widgets
+ * @returns number of widgets unmounted
+ */
+export function unmountAllWidgets(): number {
+  const count = mountedWidgets.size;
+  mountedWidgets.forEach((widget) => {
+    widget.cleanup();
+  });
+  mountedWidgets.clear();
+  return count;
+}
+
+/**
+ * Gets information about all mounted widgets
+ * @returns Array of widget information
+ */
+export function getMountedWidgets(): Array<{ widgetId: string; hasButton: boolean; hasDialog: boolean }> {
+  return Array.from(mountedWidgets.entries()).map(([widgetId, widget]) => ({
+    widgetId,
+    hasButton: !!widget.button.parentNode,
+    hasDialog: !!widget.dialog.parentNode
+  }));
 }

@@ -4,3 +4,15 @@ import type { AgentaryClientConfig } from './types/AgentaryClient';
 export const init = (config?: AgentaryClientConfig): AgentaryClient => {
   return new AgentaryClient(config);
 };
+
+// Export widget functions for independent use
+export { 
+  mountWidget, 
+  unmountWidget, 
+  unmountAllWidgets, 
+  getMountedWidgets 
+} from './ui/widget';
+
+// Export types
+export type { WidgetOptions } from './types/index';
+export type { AgentaryClientConfig } from './types/AgentaryClient';

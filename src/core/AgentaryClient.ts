@@ -7,7 +7,7 @@ import { summarizeContent } from '../summarize';
 import { explainText } from '../explain/index';
 import { generatePrompts } from '../prompts/index';
 import { postMessage } from '../chat/index';
-import { mountWidget } from '../ui/widget';
+import { mountWidget, unmountWidget, unmountAllWidgets, getMountedWidgets } from '../ui/widget';
 
 import type { 
   AgentaryClientConfig,
@@ -35,7 +35,7 @@ export class AgentaryClient extends EventEmitter {
   constructor(config: AgentaryClientConfig = {
     debug: false,
     loadModel: true,
-    showWidget: true,
+    showWidgetOnInit: true,
     generatePagePrompts: true,
     maxPagePrompts: 5,
   }) {
@@ -71,7 +71,7 @@ export class AgentaryClient extends EventEmitter {
       this.webLLMClient.createEngine();
     }
     
-    if (this.config.showWidget) {
+    if (this.config.showWidgetOnInit) {
       const widgetOptions: WidgetOptions = {
         position: "bottom-right",
         autoOpenOnLoad: true,
@@ -99,6 +99,61 @@ export class AgentaryClient extends EventEmitter {
         this.analytics.flush();
       });
     }
+  }
+
+  /**
+   * Mount a new widget with the specified options
+   * @param {WidgetOptions} options - Widget configuration options
+   * @returns Object with unmount function and widget ID
+   */
+  mountWidget(options: WidgetOptions = {}): { unmount: () => void; widgetId: string } {
+    const widgetOptions: WidgetOptions = {
+      position: "bottom-right",
+      autoOpenOnLoad: false,
+      generatePagePrompts: this.config.generatePagePrompts || false,
+      maxPagePrompts: this.config.maxPagePrompts || 5,
+      ...options
+    };
+    
+    // Add contentSelector from config if not provided in options
+    if (this.config.contentSelector && !widgetOptions.contentSelector) {
+      widgetOptions.contentSelector = this.config.contentSelector;
+    }
+
+    this.logger.info('Mounting widget with options:', widgetOptions);
+    
+    return mountWidget(
+      this.webLLMClient, 
+      widgetOptions,
+      this.logger
+    );
+  }
+
+  /**
+   * Unmount a specific widget by ID
+   * @param {string} widgetId - The ID of the widget to unmount
+   * @returns boolean indicating success
+   */
+  unmountWidget(widgetId: string): boolean {
+    this.logger.info(`Unmounting widget: ${widgetId}`);
+    return unmountWidget(widgetId);
+  }
+
+  /**
+   * Unmount all mounted widgets
+   * @returns number of widgets unmounted
+   */
+  unmountAllWidgets(): number {
+    this.logger.info('Unmounting all widgets');
+    return unmountAllWidgets();
+  }
+
+  /**
+   * Get information about all mounted widgets
+   * @returns Array of widget information
+   */
+  getMountedWidgets(): Array<{ widgetId: string; hasButton: boolean; hasDialog: boolean }> {
+    return getMountedWidgets();
   }
 
   summarizeContent(options: SummarizeContentOptions = {}) {

@@ -6,7 +6,7 @@ export interface AgentaryClientConfig {
   debug?: boolean;
   loadModel?: boolean;
   contentSelector?: string;
-  showWidget?: boolean;
+  showWidgetOnInit?: boolean;
   generatePagePrompts?: boolean;
   maxPagePrompts?: number;
   // Analytics configuration

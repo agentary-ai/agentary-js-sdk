@@ -12,6 +12,11 @@ export interface AnalyticsEvents {
     page_url: string;
     page_domain: string;
   };
+  'widget_unmounted': {
+    widget_id: string;
+    page_url: string;
+    page_domain: string;
+  };
   'widget_button_clicked': {
     action: 'open' | 'close';
     page_url: string;
