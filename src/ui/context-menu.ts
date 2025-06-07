@@ -1,7 +1,9 @@
 import { addSelectionMonitor } from "./selection-helper.js";
 import { marked } from "marked";
-import { getSelectedText } from "../utils/index.js";
-import { explainSelectedText } from "../explain/index.js";
+import { getSelectedText, Logger } from "../utils/index.js";
+import { explainText } from "../explain/index.js";
+import { getAnalytics } from "../utils/Analytics";
+import { WebLLMClient } from "@/core/WebLLMClient.js";
 
 /** 
  * Configure marked for safe HTML rendering
@@ -14,13 +16,17 @@ marked.setOptions({
 /**
  * Renders markdown content safely
  */
-function renderMarkdown(content) {
+function renderMarkdown(content: string): string {
   try {
-    return marked.parse(content);
+    return marked.parse(content) as string;
   } catch (error) {
     console.warn("Error parsing markdown:", error);
     return content; // Fallback to plain text
   }
+}
+
+interface ContextMenuOptions {
+  contentSelector?: string;
 }
 
 /**
@@ -29,8 +35,11 @@ function renderMarkdown(content) {
  * @param options - Configuration options including contentSelector
  * @returns A cleanup function to remove the context menu event listeners
  */
-export function createContextMenu(webLLMClient, options = {}) {
+export function createContextMenu(webLLMClient: WebLLMClient, options: ContextMenuOptions = {}, logger: Logger) {
   // Create a floating button that appears when text is selected
+  const { contentSelector } = options;
+  const analytics = getAnalytics();
+
   const contextButton = document.createElement("div");
   contextButton.style.cssText = `
     position: absolute;
@@ -51,8 +60,15 @@ export function createContextMenu(webLLMClient, options = {}) {
   document.body.appendChild(contextButton);
   
   // Function to position the button near selected text
-  const positionButton = (rect) => {
+  const positionButton = (rect: DOMRect | null) => {
     if (!rect) return;
+    
+    // Track context menu opening
+    analytics?.track('context_menu_opened', {
+      selected_text_length: currentSelectedText.length,
+      page_url: window.location.href,
+      page_domain: window.location.hostname,
+    });
     
     // Position above the selection
     contextButton.style.top = `${window.scrollY + rect.top - 30}px`;
@@ -77,7 +93,7 @@ export function createContextMenu(webLLMClient, options = {}) {
   
   // Function to remove the overlay
   const removeOverlay = () => {
-    const overlay = document.querySelector('#agentary-overlay');
+    const overlay = document.querySelector('#agentary-overlay') as HTMLElement;
     if (overlay) {
       overlay.style.opacity = "0";
       // Remove overlay after animation completes
@@ -201,21 +217,21 @@ export function createContextMenu(webLLMClient, options = {}) {
   };
 
   // Click handler for the context button
-  const handleContextButtonClick = async () => {
-    console.log("Explain button clicked"); // Debug log
+  const handleContextButtonClick = async (logger: Logger) => {
+    logger.debug("Explain button clicked"); // Debug log
     
     // Get text from current selection first, then fallback to tracked text
     let selectedText = getSelectedText() || currentSelectedText;
     
-    console.log("Text to explain:", selectedText ? selectedText.substring(0, 30) + (selectedText.length > 30 ? '...' : '') : "No text selected"); // Debug log
+    logger.debug("Text to explain:", selectedText ? selectedText.substring(0, 30) + (selectedText.length > 30 ? '...' : '') : "No text selected"); // Debug log
     
     if (!selectedText) {
-      console.error("No text selected when button was clicked.");
+      logger.error("No text selected when button was clicked.");
       return;
     }
     
     // Check if there's a dialog already in the DOM
-    let dialog = document.querySelector('#agentary-explain-dialog');
+    let dialog = document.querySelector('#agentary-explain-dialog') as HTMLElement;
     
     // Create dialog if it doesn't exist
     if (!dialog) {
@@ -325,7 +341,7 @@ export function createContextMenu(webLLMClient, options = {}) {
       document.body.appendChild(dialog);
       
       // Add keydown listener to close dialog with Escape key
-      const escapeKeyHandler = (e) => {
+      const escapeKeyHandler = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           removeOverlay();
           dialog.remove();
@@ -336,7 +352,7 @@ export function createContextMenu(webLLMClient, options = {}) {
     }
     
     // Get the dialog body
-    const body = dialog.querySelector("div:nth-child(2)");
+    const body = dialog.querySelector("div:nth-child(2)") as HTMLElement;
     
     // Show selected text
     const selectedTextEl = document.createElement("div");
@@ -351,7 +367,7 @@ export function createContextMenu(webLLMClient, options = {}) {
     selectedTextEl.textContent = selectedText;
     
     // Create explanation container
-    const explanationContainer = document.createElement("div");
+    const explanationContainer = document.createElement("div") as HTMLElement;
     explanationContainer.className = "markdown-content";
     explanationContainer.style.cssText = `
       margin-top: 16px;
@@ -401,9 +417,11 @@ export function createContextMenu(webLLMClient, options = {}) {
       // Call the explain function with streaming
       let explanationText = "";
       
-      await explainSelectedText(webLLMClient, selectedText, {
-        contentSelector: options.contentSelector,
-        onToken: (token) => {
+      await explainText(webLLMClient, {
+        ...(contentSelector && { contentSelector }),  
+        content: selectedText,
+        streamResponse: true,
+        onStreamToken: (token: string) => {
           // Remove typing indicator when first token arrives
           if (explanationText === "") {
             explanationContainer.innerHTML = "";
@@ -418,7 +436,7 @@ export function createContextMenu(webLLMClient, options = {}) {
           // Scroll to the bottom of the container to show latest text
           body.scrollTop = body.scrollHeight;
         }
-      });
+      }, logger);
       
       // If no text was streamed for some reason
       if (explanationText === "") {
@@ -439,7 +457,14 @@ export function createContextMenu(webLLMClient, options = {}) {
   contextButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    handleContextButtonClick();
+    // Track context menu action
+    analytics?.track('context_menu_action', {
+      action: 'explain',
+      selected_text_length: currentSelectedText.length,
+      page_url: window.location.href,
+      page_domain: window.location.hostname,
+    });
+    handleContextButtonClick(logger);
   });
   
   // For mouse interactions with the button
@@ -452,8 +477,8 @@ export function createContextMenu(webLLMClient, options = {}) {
   console.log("Agentary context menu initialized - Select text to see the explain button");
   
   // Set up selection monitoring using our helper
-  const cleanup = addSelectionMonitor((text, rect) => {
-    if (text && !webLLMClient.isModelLoading) {
+  const cleanup = addSelectionMonitor((text: string, rect: DOMRect | null) => {
+    if (text && !webLLMClient.modelLoading) {
       currentSelectedText = text;
       positionButton(rect);
       console.log("Text selected:", text.substring(0, 30) + (text.length > 30 ? '...' : ''));
@@ -464,12 +489,12 @@ export function createContextMenu(webLLMClient, options = {}) {
   });
   
   // Add keyboard shortcut for selected text
-  const keydownHandler = (e) => {
+  const keydownHandler = (e: KeyboardEvent) => {
     // Check for Ctrl+E or Cmd+E (on Mac)
     if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
       e.preventDefault();
       if (currentSelectedText) {
-        handleContextButtonClick();
+        handleContextButtonClick(logger);
       }
     }
   };

@@ -2,7 +2,7 @@ import { WebWorkerMLCEngineHandler } from "@mlc-ai/web-llm";
 
 const handler = new WebWorkerMLCEngineHandler();
 
-self.onmessage = (msg) => {
+self.onmessage = (msg: MessageEvent) => {
   // Handle verification ping messages
   if (msg.data && msg.data.type === 'ping') {
     console.log("Worker received ping, sending pong");
@@ -16,4 +16,4 @@ self.onmessage = (msg) => {
   
   // Handle regular WebLLM messages
   handler.onmessage(msg);
-};
+}; 

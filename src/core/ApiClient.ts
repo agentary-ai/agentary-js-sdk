@@ -1,13 +1,25 @@
+import { Logger } from "../utils/Logger";
+
+interface ApiClientConfig {
+  baseUrl: string;
+  apiKey: string;
+}
+
 /**
  * API Client for handling HTTP requests
  */
 export class ApiClient {
+  private config: ApiClientConfig;
+  private logger: Logger;
+  private baseUrl: string;
+  private apiKey: string;
+
   /**
    * Create an API client
    * @param {Object} config - Configuration object
    * @param {Logger} logger - Logger instance
    */
-  constructor(config, logger) {
+  constructor(config: ApiClientConfig, logger: Logger) {
     this.config = config;
     this.logger = logger;
     this.baseUrl = config.baseUrl;
@@ -20,7 +32,7 @@ export class ApiClient {
    * @param {Object} params - Query parameters
    * @returns {Promise<Object>} Response data
    */
-  async get(endpoint, params = {}) {
+  async get(endpoint: string, params: Record<string, string> = {}) {
     return this._request('GET', endpoint, null, params);
   }
 
@@ -30,7 +42,7 @@ export class ApiClient {
    * @param {Object} data - Request body data
    * @returns {Promise<Object>} Response data
    */
-  async post(endpoint, data = {}) {
+  async post(endpoint: string, data: Record<string, any> = {}) {
     return this._request('POST', endpoint, data);
   }
 
@@ -40,7 +52,7 @@ export class ApiClient {
    * @param {Object} data - Request body data
    * @returns {Promise<Object>} Response data
    */
-  async put(endpoint, data = {}) {
+  async put(endpoint: string, data: Record<string, any> = {}) {
     return this._request('PUT', endpoint, data);
   }
 
@@ -49,7 +61,7 @@ export class ApiClient {
    * @param {string} endpoint - API endpoint
    * @returns {Promise<Object>} Response data
    */
-  async delete(endpoint) {
+  async delete(endpoint: string) {
     return this._request('DELETE', endpoint);
   }
 
@@ -57,7 +69,7 @@ export class ApiClient {
    * Internal method to make HTTP requests
    * @private
    */
-  async _request(method, endpoint, data = null, params = {}) {
+  async _request(method: string, endpoint: string, data: any = null, params: Record<string, string> = {}) {
     const url = new URL(endpoint, this.baseUrl);
     
     // Add query parameters
@@ -65,7 +77,15 @@ export class ApiClient {
       url.searchParams.append(key, params[key]);
     });
 
-    const options = {
+    const options: {
+      method: string;
+      headers: {
+        'Content-Type': string;
+        'Authorization': string;
+        'User-Agent': string;
+      };
+      body?: string;
+    } = {
       method,
       headers: {
         'Content-Type': 'application/json',

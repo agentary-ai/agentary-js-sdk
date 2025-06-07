@@ -56,6 +56,77 @@ console.log('Connected:', isConnected);
 console.log('Version:', agentary.getVersion());
 ```
 
+### Analytics Integration
+
+The Agentary SDK includes built-in analytics powered by Mixpanel to help you understand how users interact with your AI widget.
+
+```javascript
+import { init } from 'agentary-js-sdk';
+
+// Initialize with analytics
+const agentary = init({
+  analytics: {
+    mixpanelToken: 'your-mixpanel-project-token',
+    enabled: true,
+    userId: 'user123', // optional
+    debug: false // optional
+  },
+  debug: false,
+  loadModel: true,
+  showWidget: true
+});
+```
+
+#### Tracked Events
+
+The SDK automatically tracks the following user interactions:
+
+**Widget Events:**
+- `widget_mounted` - When the widget is initialized
+- `widget_button_clicked` - When users click the widget button
+- `chat_dialog_opened` - When the chat dialog opens
+- `chat_dialog_closed` - When the chat dialog closes
+
+**AI Interaction Events:**
+- `message_sent` - When users send messages
+- `ai_response_received` - When AI responses are received
+- `feature_used` - When specific features (explain, summarize) are used
+
+**Context Menu Events:**
+- `context_menu_opened` - When text selection triggers context menu
+- `context_menu_action` - When users click context menu actions
+
+**Model Events:**
+- `model_loading_started` - When AI model loading begins
+- `model_loading_completed` - When AI model is ready
+- `model_loading_failed` - When model loading fails
+
+**Performance & Error Events:**
+- `error_occurred` - When errors happen
+- `page_prompts_generated` - When page-specific prompts are created
+
+Each event includes relevant metadata like response times, content length, user context, and page information.
+
+#### Analytics Configuration
+
+```javascript
+{
+  analytics: {
+    mixpanelToken: 'your-token',    // Required for tracking
+    enabled: true,                  // Enable/disable tracking (default: true)
+    userId: 'user123',             // Optional user identifier
+    debug: false                   // Log analytics events to console
+  }
+}
+```
+
+#### Privacy Considerations
+
+- Analytics are enabled by default but can be disabled
+- Only interaction data is tracked, not content
+- User content is never sent to analytics services
+- All tracking respects user privacy and GDPR compliance
+
 ### Event Handling
 
 ```javascript

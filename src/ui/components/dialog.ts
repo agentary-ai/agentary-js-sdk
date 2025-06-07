@@ -1,12 +1,14 @@
-import { postMessage } from "../../chat/index.js";
-import { summarizeContent } from "../../summarize/index.js";
-import { explainSelectedText } from "../../explain/index.js";
-import { getSelectedText } from "../../utils/index.js";
+import { postMessage } from "../../chat/index";
+import { summarizeContent } from "../../summarize/index";
+import { explainText } from "../../explain/index";
+import { getSelectedText } from "../../utils/index";
 import { marked } from "marked";
-import { generatePagePrompts } from "../../prompts/index.js";
+import { generatePrompts } from "../../prompts/index";
+import { WebLLMClient } from "../../core/WebLLMClient";
+import { Logger } from "../../utils/Logger";
 
 // Global variable to store generated questions for the page lifetime
-let cachedQuestions = null;
+let cachedQuestions: string[] | null = null;
 
 /**
  * Configure marked for safe HTML rendering
@@ -19,29 +21,40 @@ marked.setOptions({
 /**
  * Renders markdown content safely
  */
-function renderMarkdown(content) {
+function renderMarkdown(content: string): string {
   try {
-    return marked.parse(content);
+    const result = marked.parse(content);
+    // Ensure we return a string, not a Promise
+    return typeof result === 'string' ? result : content;
   } catch (error) {
     console.warn("Error parsing markdown:", error);
     return content; // Fallback to plain text
   }
 }
 
+interface DialogOptions {
+  position?: string;
+  generatePagePrompts?: boolean;
+  maxPagePrompts?: number;
+  contentSelector?: string;
+}
+
 /**
  * Creates the chat dialog element
  */
 export function createDialog(
-  webLLMClient, 
-  corner,
-  uiOptions = {}
+  webLLMClient: WebLLMClient, 
+  dialogOptions: DialogOptions,
+  logger: Logger
 ) {
+  const { contentSelector, generatePagePrompts, maxPagePrompts } = dialogOptions;
+
   // Create dialog element
   const dialog = document.createElement("div");
   dialog.style.cssText = `
     position:fixed;
     bottom:5.5rem;
-    ${corner === "bottom-right" ? "right:1.5rem" : "left:1.5rem"};
+    ${dialogOptions.position === "bottom-right" ? "right:1.5rem" : "left:1.5rem"};
     width:350px;
     max-width:90vw;
     background:white;
@@ -193,11 +206,11 @@ export function createDialog(
   dialog.appendChild(chatInputContainer);
   
   // Helper function to show/hide chat input
-  const showChatInput = (show) => {
+  const showChatInput = (show: boolean) => {
     if (chatInputContainer) {
       chatInputContainer.style.display = show ? 'block' : 'none';
       // Hide actions when chat is shown
-      const actionsContainer = dialog.querySelector('.actions-container');
+      const actionsContainer = dialog.querySelector('.actions-container') as HTMLElement;
       if (actionsContainer) {
         actionsContainer.style.display = show ? 'none' : 'flex';
       }
@@ -205,7 +218,7 @@ export function createDialog(
   };
 
   // Helper function to disable/enable chat input
-  const setChatInputDisabled = (disabled) => {
+  const setChatInputDisabled = (disabled: boolean) => {
     const chatInput = chatInputContainer?.querySelector('input');
     const sendButton = chatInputContainer?.querySelector('button');
     
@@ -228,7 +241,7 @@ export function createDialog(
     showChatInput(false);
     
     // Check if question generation is enabled
-    if (uiOptions.generateQuestions === false) {
+    if (generatePagePrompts === false) {
       // Show default welcome message
       const welcomeMessage = document.createElement("div");
       welcomeMessage.style.cssText = `
@@ -242,7 +255,7 @@ export function createDialog(
     }
     
     // Check if model is ready
-    if (webLLMClient.isModelLoading) {
+    if (webLLMClient.modelLoading) {
       // Show model loading message
       const loadingMessage = document.createElement("div");
       loadingMessage.style.cssText = `
@@ -283,10 +296,10 @@ export function createDialog(
       
       try {
         // Generate questions
-        questions = await generatePagePrompts(webLLMClient, { 
-          maxQuestions: uiOptions.maxQuestions || 5,
-          contentSelector: uiOptions.contentSelector || null
-        });
+        questions = await generatePrompts(webLLMClient, {
+          ...(contentSelector && { contentSelector: contentSelector }),
+          promptCount: maxPagePrompts || 5,
+        }, logger);
         
         // Cache the questions for the page lifetime
         cachedQuestions = questions;
@@ -328,7 +341,7 @@ export function createDialog(
     questionsContainer.appendChild(questionsTitle);
     
     // Add questions as clickable buttons
-    questions.forEach((question, index) => {
+    questions.forEach((question: string, index: number) => {
       const questionButton = document.createElement("button");
       questionButton.textContent = question;
       questionButton.style.cssText = `
@@ -365,9 +378,7 @@ export function createDialog(
         dialogContent.innerHTML = "";
         
         // Add back button
-        addBackButton(dialogContent, () => {
-          showHomeScreen();
-        });
+        addBackButton(dialogContent, showHomeScreen);
         
         // Add user message
         addChatMessage(dialogContent, question, "user");
@@ -399,22 +410,26 @@ export function createDialog(
           await postMessage(
             webLLMClient, 
             question,
-            (token) => {
-              // Remove typing indicator when first token arrives
-              if (responseText === "") {
-                contentElement.innerHTML = "";
+            {
+              streamResponse: true,
+              onStreamToken: (token) => {
+                // Remove typing indicator when first token arrives
+                if (responseText === "") {
+                  contentElement.innerHTML = "";
+                }
+              
+                // Update full text
+                responseText += token;
+              
+                // Render markdown progressively
+                contentElement.innerHTML = renderMarkdown(responseText);
               }
-              
-              // Update full text
-              responseText += token;
-              
-              // Render markdown progressively
-              contentElement.innerHTML = renderMarkdown(responseText);
-            }
+            },
+            logger
           );
           
           // Setup and show chat input after response
-          setupChatInput(chatInputContainer, webLLMClient, dialogContent, setChatInputDisabled);
+          setupChatInput(chatInputContainer, webLLMClient, dialogContent, setChatInputDisabled, logger);
           showChatInput(true);
           
         } catch (error) {
@@ -433,7 +448,16 @@ export function createDialog(
   };
   
   // Create dialog actions section with buttons for different functionalities
-  const { actionsContainer } = createDialogActions(webLLMClient, dialogContent, showHomeScreen, chatInputContainer, showChatInput, setChatInputDisabled);
+  const { actionsContainer } = createDialogActions(
+    webLLMClient,
+    contentSelector || null,
+    dialogContent,
+    showHomeScreen,
+    chatInputContainer,
+    showChatInput,
+    setChatInputDisabled,
+    logger
+  );
   actionsContainer.classList.add('actions-container');
   dialog.appendChild(actionsContainer);
   
@@ -462,7 +486,7 @@ export function createDialog(
 /**
  * Adds a back button to return to the home screen
  */
-function addBackButton(dialogContent, showHomeScreen) {
+function addBackButton(dialogContent: HTMLElement, showHomeScreen: () => void) {
   const backButtonContainer = document.createElement("div");
   backButtonContainer.style.cssText = `
     padding: 0 0 1rem 0;
@@ -512,12 +536,14 @@ function addBackButton(dialogContent, showHomeScreen) {
  * Creates the dialog actions area with buttons for different functionalities
  */
 function createDialogActions(
-  webLLMClient, 
-  dialogContent,
-  showHomeScreen,
-  chatInputContainer,
-  showChatInput,
-  setChatInputDisabled
+  webLLMClient: WebLLMClient, 
+  contentSelector: string | null,
+  dialogContent: HTMLElement,
+  showHomeScreen: () => void,
+  chatInputContainer: HTMLElement,
+  showChatInput: (show: boolean) => void,
+  setChatInputDisabled: (disabled: boolean) => void,
+  logger: Logger
 ) {
   const actionsContainer = document.createElement("div");
   actionsContainer.style.cssText = `
@@ -556,15 +582,13 @@ function createDialogActions(
     clearContent();
     
     // Add back button
-    addBackButton(dialogContent, () => {
-      showHomeScreen();
-    });
+    addBackButton(dialogContent, showHomeScreen);
     
     // Add initial assistant message
     addChatMessage(dialogContent, "I'm ready to help! Ask me anything.", "assistant");
     
     // Setup and show chat input
-    setupChatInput(chatInputContainer, webLLMClient, dialogContent, setChatInputDisabled);
+    setupChatInput(chatInputContainer, webLLMClient, dialogContent, setChatInputDisabled, logger);
     showChatInput(true);
   };
   
@@ -591,9 +615,7 @@ function createDialogActions(
     clearContent();
     
     // Add back button
-    addBackButton(dialogContent, () => {
-      showHomeScreen();
-    });
+    addBackButton(dialogContent, showHomeScreen);
     
     // Add system message to chat
     addChatMessage(dialogContent, "Summarizing page content...", "system");
@@ -636,9 +658,10 @@ function createDialogActions(
     try {
       let summaryText = "";
       
-      // Use the summarizeContent function with onToken callback
+      // Use the summarizeContent function with onStreamToken callback
       await summarizeContent(webLLMClient, {
-        onToken: (token) => {
+        streamResponse: true,
+        onStreamToken: (token) => {
           // Remove typing indicator when first token arrives
           if (summaryText === "") {
             contentElement.innerHTML = "";
@@ -650,7 +673,7 @@ function createDialogActions(
           // Render markdown progressively
           contentElement.innerHTML = renderMarkdown(summaryText);
         }
-      });
+      }, logger);
       
     } catch (error) {
       // Handle error
@@ -690,9 +713,7 @@ function createDialogActions(
       clearContent();
       
       // Add back button
-      addBackButton(dialogContent, () => {
-        showHomeScreen();
-      });
+      addBackButton(dialogContent, showHomeScreen);
       
       // Add system message if no text is selected
       addChatMessage(dialogContent, "No text selected. Please select some text on the page to explain.", "system");
@@ -703,9 +724,7 @@ function createDialogActions(
     clearContent();
     
     // Add back button
-    addBackButton(dialogContent, () => {
-      showHomeScreen();
-    });
+    addBackButton(dialogContent, showHomeScreen);
     
     // Add system message to chat
     addChatMessage(dialogContent, `Explaining selected text: "${selectedText.substring(0, 50)}${selectedText.length > 50 ? '...' : ''}"`, "system");
@@ -735,8 +754,11 @@ function createDialogActions(
       let explanationText = "";
       
       // Use the explainSelectedText function with onToken callback
-      await explainSelectedText(webLLMClient, selectedText, {
-        onToken: (token) => {
+      await explainText(webLLMClient, {
+        ...(contentSelector && { contentSelector: contentSelector }),
+        text: selectedText,
+        streamResponse: true,
+        onStreamToken: (token: string) => {
           // Remove typing indicator when first token arrives
           if (explanationText === "") {
             contentElement.innerHTML = "";
@@ -748,7 +770,7 @@ function createDialogActions(
           // Render markdown progressively
           contentElement.innerHTML = renderMarkdown(explanationText);
         }
-      });
+      }, logger);
       
     } catch (error) {
       // Handle error
@@ -773,10 +795,11 @@ function createDialogActions(
  * Sets up the chat input interface in the fixed container
  */
 function setupChatInput(
-  chatInputContainer,
-  webLLMClient,
-  dialogContent,
-  setChatInputDisabled
+  chatInputContainer: HTMLElement,
+  webLLMClient: WebLLMClient,
+  dialogContent: HTMLElement,
+  setChatInputDisabled: (disabled: boolean) => void,
+  logger: Logger
 ) {
   // Clear any existing content
   chatInputContainer.innerHTML = "";
@@ -852,10 +875,12 @@ function setupChatInput(
       await postMessage(
         webLLMClient, 
         message,
-        (token) => {
-          // Remove typing indicator when first token arrives
-          if (responseText === "") {
-            contentElement.innerHTML = "";
+        {
+          streamResponse: true,
+          onStreamToken: (token: string) => {
+            // Remove typing indicator when first token arrives
+            if (responseText === "") {
+              contentElement.innerHTML = "";
           }
           
           // Update full text
@@ -864,7 +889,7 @@ function setupChatInput(
           // Render markdown progressively
           contentElement.innerHTML = renderMarkdown(responseText);
         }
-      );
+      }, logger);
       
     } catch (error) {
       // Handle error
@@ -903,9 +928,9 @@ function setupChatInput(
  * Adds a chat message to the dialog content
  */
 function addChatMessage(
-  container, 
-  message, 
-  role
+  container: HTMLElement, 
+  message: string, 
+  role: string
 ) {
   const isUser = role === "user";
   

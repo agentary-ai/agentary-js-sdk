@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentary Widget Mount/Unmount Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .demo-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .demo-section h2 {
+            margin-top: 0;
+            color: #1e293b;
+            font-size: 1.5em;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .control-group {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: #374151;
+            font-size: 1.1em;
+        }
+
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            background: #5855eb;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #64748b;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        button.danger {
+            background: #ef4444;
+        }
+
+        button.danger:hover {
+            background: #dc2626;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .status h4 {
+            margin: 0 0 10px 0;
+            color: #374151;
+        }
+
+        .widget-list {
+            background: #f1f5f9;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .widget-item {
+            background: white;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #6366f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .widget-item button {
+            padding: 4px 8px;
+            font-size: 11px;
+            margin: 0;
+            width: auto;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .option-group {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .option-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .sample-content {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .sample-content h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+
+        .code-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .code-example .comment {
+            color: #64748b;
+        }
+
+        .code-example .keyword {
+            color: #f472b6;
+        }
+
+        .code-example .string {
+            color: #34d399;
+        }
+
+        .code-example .function {
+            color: #60a5fa;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .info-box h4 {
+            margin: 0 0 8px 0;
+            color: #1e40af;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #1e3a8a;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Agentary Widget Demo</h1>
+            <p>Interactive demonstration of widget mounting and unmounting functionality</p>
+        </div>
+
+        <div class="content">
+            <!-- Introduction -->
+            <div class="demo-section">
+                <h2>🚀 Getting Started</h2>
+                <p>This demo showcases the new widget mounting and unmounting capabilities of the Agentary SDK. You can now programmatically control when and how widgets appear on your page.</p>
+                
+                <div class="info-box">
+                    <h4>💡 What's New</h4>
+                    <p>The SDK now supports mounting multiple widgets, unmounting specific widgets by ID, and getting information about all mounted widgets. Perfect for dynamic applications!</p>
+                </div>
+            </div>
+
+            <!-- Widget Controls -->
+            <div class="demo-section">
+                <h2>🎛️ Widget Controls</h2>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <h3>Mount New Widget</h3>
+                        <div class="options">
+                            <div class="option-group">
+                                <label for="position">Position:</label>
+                                <select id="position">
+                                    <option value="bottom-right">Bottom Right</option>
+                                    <option value="bottom-left">Bottom Left</option>
+                                    <option value="top-right">Top Right</option>
+                                    <option value="top-left">Top Left</option>
+                                </select>
+                            </div>
+                            <div class="option-group">
+                                <label for="autoOpen">Auto Open:</label>
+                                <select id="autoOpen">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="mountNewWidget()">🔧 Mount Widget</button>
+                        <button onclick="mountWithClient()" class="secondary">📱 Mount via Client</button>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>Widget Management</h3>
+                        <button onclick="refreshWidgetList()">🔄 Refresh List</button>
+                        <button onclick="unmountAllWidgets()" class="danger">🗑️ Unmount All</button>
+                        <button onclick="showWidgetInfo()" class="secondary">ℹ️ Show Widget Info</button>
+                    </div>
+                </div>
+
+                <div class="status">
+                    <h4>📊 Mounted Widgets</h4>
+                    <div id="widgetList" class="widget-list">
+                        <div style="text-align: center; color: #64748b; padding: 20px;">
+                            No widgets mounted yet. Click "Mount Widget" to get started!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Examples -->
+            <div class="demo-section">
+                <h2>💻 Code Examples</h2>
+                
+                <h3>Method 1: Using AgentaryClient</h3>
+                <div class="code-example">
+<span class="comment">// Initialize the client</span>
+<span class="keyword">const</span> agentary = <span class="function">init</span>({
+    <span class="string">loadModel</span>: <span class="keyword">true</span>,
+    <span class="string">showWidgetOnInit</span>: <span class="keyword">false</span> <span class="comment">// Don't auto-mount</span>
+});
+
+<span class="comment">// Mount a widget with custom options</span>
+<span class="keyword">const</span> { unmount, widgetId } = agentary.<span class="function">mountWidget</span>({
+    <span class="string">position</span>: <span class="string">'bottom-right'</span>,
+    <span class="string">autoOpenOnLoad</span>: <span class="keyword">false</span>,
+    <span class="string">generatePagePrompts</span>: <span class="keyword">true</span>
+});
+
+<span class="comment">// Unmount the widget later</span>
+<span class="function">unmount</span>();
+
+<span class="comment">// Or unmount by ID</span>
+agentary.<span class="function">unmountWidget</span>(widgetId);
+                </div>
+
+                <h3>Method 2: Using Standalone Functions</h3>
+                <div class="code-example">
+<span class="keyword">import</span> { <span class="function">mountWidget</span>, <span class="function">unmountWidget</span> } <span class="keyword">from</span> <span class="string">'agentary-js-sdk'</span>;
+
+<span class="comment">// Mount widget directly</span>
+<span class="keyword">const</span> { unmount, widgetId } = <span class="function">mountWidget</span>(
+    webLLMClient, 
+    {
+        <span class="string">position</span>: <span class="string">'top-left'</span>,
+        <span class="string">autoOpenOnLoad</span>: <span class="keyword">true</span>
+    },
+    logger
+);
+
+<span class="comment">// Unmount specific widget</span>
+<span class="function">unmountWidget</span>(widgetId);
+                </div>
+
+                <h3>Method 3: Managing Multiple Widgets</h3>
+                <div class="code-example">
+<span class="keyword">import</span> { <span class="function">getMountedWidgets</span>, <span class="function">unmountAllWidgets</span> } <span class="keyword">from</span> <span class="string">'agentary-js-sdk'</span>;
+
+<span class="comment">// Get info about all mounted widgets</span>
+<span class="keyword">const</span> widgets = <span class="function">getMountedWidgets</span>();
+<span class="function">console.log</span>(<span class="string">'Mounted widgets:'</span>, widgets);
+
+<span class="comment">// Unmount all widgets at once</span>
+<span class="keyword">const</span> count = <span class="function">unmountAllWidgets</span>();
+<span class="function">console.log</span>(<span class="string">`Unmounted ${count} widgets`</span>);
+                </div>
+            </div>
+
+            <!-- Sample Content -->
+            <div class="demo-section">
+                <h2>📝 Sample Content for Testing</h2>
+                <div class="sample-content">
+                    <h3>Test the Context Menu</h3>
+                    <p>Select any text in this section to see the Agentary context menu appear. This demonstrates how the widget integrates with text selection functionality.</p>
+                    
+                    <p><strong>Artificial Intelligence</strong> is transforming how we interact with technology. From natural language processing to computer vision, AI systems are becoming increasingly sophisticated and capable of handling complex tasks that were once thought to be exclusively human domains.</p>
+                    
+                    <p>The field of <em>machine learning</em> has seen remarkable advances in recent years, particularly in deep learning architectures like transformers and neural networks. These technologies power everything from search engines to autonomous vehicles.</p>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="demo-section">
+                <h2>✨ Key Features</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div class="info-box">
+                        <h4>🔧 Flexible Mounting</h4>
+                        <p>Mount widgets at any time with custom positioning and behavior options.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>🎯 Precise Control</h4>
+                        <p>Unmount specific widgets by ID or remove all widgets at once.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>📊 Widget Tracking</h4>
+                        <p>Get real-time information about all mounted widgets and their status.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>🔄 Dynamic Updates</h4>
+                        <p>Perfect for single-page applications that need dynamic widget management.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the Agentary SDK
+        import { init, mountWidget, unmountWidget, unmountAllWidgets, getMountedWidgets } from '../dist/agentary.esm.js';
+
+        // Global variables
+        let agentaryClient = null;
+        let mountedWidgets = new Map();
+
+        // Initialize the SDK
+        async function initializeSDK() {
+            try {
+                agentaryClient = init({
+                    debug: true,
+                    loadModel: true,
+                    showWidgetOnInit: false, // Don't auto-mount
+                    generatePagePrompts: true,
+                    maxPagePrompts: 3,
+                    contentSelector: '.sample-content'
+                });
+
+                console.log('✅ Agentary SDK initialized successfully');
+                updateStatus('SDK initialized and ready!');
+            } catch (error) {
+                console.error('❌ Failed to initialize SDK:', error);
+                updateStatus('Failed to initialize SDK: ' + error.message);
+            }
+        }
+
+        // Mount a new widget using standalone function
+        window.mountNewWidget = function() {
+            if (!agentaryClient) {
+                alert('SDK not initialized yet. Please wait...');
+                return;
+            }
+
+            const position = document.getElementById('position').value;
+            const autoOpen = document.getElementById('autoOpen').value === 'true';
+
+            try {
+                const result = agentaryClient.mountWidget({
+                    position: position,
+                    autoOpenOnLoad: autoOpen,
+                    generatePagePrompts: true,
+                    maxPagePrompts: 3
+                });
+
+                mountedWidgets.set(result.widgetId, {
+                    ...result,
+                    position,
+                    autoOpen,
+                    mountTime: new Date().toLocaleTimeString()
+                });
+
+                console.log('✅ Widget mounted:', result.widgetId);
+                refreshWidgetList();
+                updateStatus(`Widget mounted successfully! ID: ${result.widgetId}`);
+            } catch (error) {
+                console.error('❌ Failed to mount widget:', error);
+                updateStatus('Failed to mount widget: ' + error.message);
+            }
+        };
+
+        // Mount widget via client method
+        window.mountWithClient = function() {
+            if (!agentaryClient) {
+                alert('SDK not initialized yet. Please wait...');
+                return;
+            }
+
+            const position = document.getElementById('position').value;
+            const autoOpen = document.getElementById('autoOpen').value === 'true';
+
+            try {
+                const result = agentaryClient.mountWidget({
+                    position: position,
+                    autoOpenOnLoad: autoOpen
+                });
+
+                mountedWidgets.set(result.widgetId, {
+                    ...result,
+                    position,
+                    autoOpen,
+                    mountTime: new Date().toLocaleTimeString(),
+                    method: 'client'
+                });
+
+                console.log('✅ Widget mounted via client:', result.widgetId);
+                refreshWidgetList();
+                updateStatus(`Widget mounted via client! ID: ${result.widgetId}`);
+            } catch (error) {
+                console.error('❌ Failed to mount widget via client:', error);
+                updateStatus('Failed to mount widget: ' + error.message);
+            }
+        };
+
+        // Unmount a specific widget
+        window.unmountWidget = function(widgetId) {
+            try {
+                const success = agentaryClient.unmountWidget(widgetId);
+                if (success) {
+                    mountedWidgets.delete(widgetId);
+                    console.log('✅ Widget unmounted:', widgetId);
+                    refreshWidgetList();
+                    updateStatus(`Widget ${widgetId} unmounted successfully!`);
+                } else {
+                    updateStatus(`Failed to unmount widget ${widgetId}`);
+                }
+            } catch (error) {
+                console.error('❌ Failed to unmount widget:', error);
+                updateStatus('Failed to unmount widget: ' + error.message);
+            }
+        };
+
+        // Unmount all widgets
+        window.unmountAllWidgets = function() {
+            try {
+                const count = agentaryClient.unmountAllWidgets();
+                mountedWidgets.clear();
+                console.log(`✅ Unmounted ${count} widgets`);
+                refreshWidgetList();
+                updateStatus(`Successfully unmounted ${count} widgets!`);
+            } catch (error) {
+                console.error('❌ Failed to unmount all widgets:', error);
+                updateStatus('Failed to unmount widgets: ' + error.message);
+            }
+        };
+
+        // Refresh widget list display
+        window.refreshWidgetList = function() {
+            const widgetListEl = document.getElementById('widgetList');
+            
+            try {
+                const widgets = agentaryClient.getMountedWidgets();
+                
+                if (widgets.length === 0) {
+                    widgetListEl.innerHTML = `
+                        <div style="text-align: center; color: #64748b; padding: 20px;">
+                            No widgets currently mounted.
+                        </div>
+                    `;
+                    return;
+                }
+
+                widgetListEl.innerHTML = widgets.map(widget => {
+                    const localInfo = mountedWidgets.get(widget.widgetId) || {};
+                    return `
+                        <div class="widget-item">
+                            <div>
+                                <strong>${widget.widgetId}</strong><br>
+                                <small>
+                                    Position: ${localInfo.position || 'unknown'} | 
+                                    Auto-open: ${localInfo.autoOpen ? 'Yes' : 'No'} | 
+                                    Mounted: ${localInfo.mountTime || 'unknown'}
+                                    ${localInfo.method ? ` | Method: ${localInfo.method}` : ''}
+                                </small><br>
+                                <small style="color: #64748b;">
+                                    Button: ${widget.hasButton ? '✅' : '❌'} | 
+                                    Dialog: ${widget.hasDialog ? '✅' : '❌'}
+                                </small>
+                            </div>
+                            <button onclick="unmountWidget('${widget.widgetId}')" class="danger">
+                                Unmount
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('❌ Failed to refresh widget list:', error);
+                widgetListEl.innerHTML = `
+                    <div style="text-align: center; color: #ef4444; padding: 20px;">
+                        Error loading widget list: ${error.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Show widget information
+        window.showWidgetInfo = function() {
+            try {
+                const widgets = agentaryClient.getMountedWidgets();
+                const info = {
+                    totalWidgets: widgets.length,
+                    widgets: widgets,
+                    timestamp: new Date().toISOString()
+                };
+                
+                console.log('📊 Widget Information:', info);
+                alert(`Widget Info:\n\nTotal Widgets: ${info.totalWidgets}\n\nSee console for detailed information.`);
+            } catch (error) {
+                console.error('❌ Failed to get widget info:', error);
+                alert('Failed to get widget information: ' + error.message);
+            }
+        };
+
+        // Update status message
+        function updateStatus(message) {
+            console.log('📢 Status:', message);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Initializing Agentary Widget Demo...');
+            initializeSDK();
+            
+            // Refresh widget list every 5 seconds
+            setInterval(refreshWidgetList, 5000);
+        });
+
+        // Add some demo event listeners
+        window.addEventListener('load', () => {
+            console.log('📄 Demo page loaded successfully');
+        });
+    </script>
+</body>
+</html> 

@@ -2,7 +2,7 @@
  * Gets the currently selected text on the page
  * @returns The selected text or empty string if no selection
  */
-export function getSelectedText() {
+export function getSelectedText(): string {
     // Try multiple approaches to get selected text
     
     // 1. Standard window.getSelection
@@ -13,8 +13,9 @@ export function getSelectedText() {
     }
     
     // 2. Check document.selection for IE compatibility
-    if (document.hasOwnProperty('selection')) {
-      const ieSelection = document.selection;
+    const documentWithSelection = document as any;
+    if (documentWithSelection.selection) {
+      const ieSelection = documentWithSelection.selection;
       if (ieSelection.type !== 'Control') {
         const text = ieSelection.createRange().text.trim();
         if (text) return text;

@@ -2,6 +2,8 @@
  * Simple Event Emitter implementation
  */
 export class EventEmitter {
+  private events: Record<string, Function[]>;
+  
   constructor() {
     this.events = {};
   }
@@ -11,7 +13,7 @@ export class EventEmitter {
    * @param {string} event - Event name
    * @param {Function} listener - Event listener function
    */
-  on(event, listener) {
+  on(event: string, listener: Function) {
     if (!this.events[event]) {
       this.events[event] = [];
     }
@@ -23,7 +25,7 @@ export class EventEmitter {
    * @param {string} event - Event name
    * @param {Function} listener - Event listener function to remove
    */
-  off(event, listener) {
+  off(event: string, listener: Function) {
     if (!this.events[event]) return;
     
     const index = this.events[event].indexOf(listener);
@@ -37,8 +39,8 @@ export class EventEmitter {
    * @param {string} event - Event name
    * @param {Function} listener - Event listener function
    */
-  once(event, listener) {
-    const onceListener = (...args) => {
+  once(event: string, listener: Function) {
+    const onceListener = (...args: unknown[]) => {
       this.off(event, onceListener);
       listener.apply(this, args);
     };
@@ -50,7 +52,7 @@ export class EventEmitter {
    * @param {string} event - Event name
    * @param {...any} args - Arguments to pass to listeners
    */
-  emit(event, ...args) {
+  emit(event: string, ...args: unknown[]) {
     if (!this.events[event]) return;
     
     this.events[event].forEach(listener => {
@@ -66,7 +68,7 @@ export class EventEmitter {
    * Remove all listeners for an event
    * @param {string} event - Event name
    */
-  removeAllListeners(event) {
+  removeAllListeners(event: string) {
     if (event) {
       delete this.events[event];
     } else {

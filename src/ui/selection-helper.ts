@@ -8,13 +8,13 @@
  * @returns Cleanup function
  */
 export function addSelectionMonitor(
-  callback
+  callback: (text: string, rect: DOMRect | null) => void
 ) {
   // Store current selection to detect changes
   let lastSelectionText = '';
   
   // Function to get selection info
-  const getSelectionInfo = () => {
+  const getSelectionInfo = (): { text: string, rect: DOMRect | null } => {
     let selText = '';
     let selRect = null;
     

@@ -1,6 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import babel from '@rollup/plugin-babel';
+import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -12,17 +12,11 @@ const baseConfig = {
       preferBuiltins: false
     }),
     commonjs(),
-    babel({
-      babelHelpers: 'bundled',
-      exclude: 'node_modules/**',
-      presets: [
-        ['@babel/preset-env', {
-          targets: {
-            browsers: ['> 1%', 'last 2 versions', 'not dead']
-          },
-          modules: false
-        }]
-      ]
+    typescript({
+      tsconfig: './tsconfig.json',
+      declaration: true,
+      declarationDir: './dist',
+      rootDir: './src'
     })
   ],
   external: []
@@ -31,7 +25,7 @@ const baseConfig = {
 // Web worker configuration
 const workerConfig = {
   ...baseConfig,
-  input: 'src/core/webllm-worker.js',
+  input: 'src/core/webllm-worker.ts',
   output: {
     file: 'dist/webllm-worker.js',
     format: 'es',
@@ -46,7 +40,7 @@ const workerConfig = {
 // Service worker configuration
 const serviceWorkerConfig = {
   ...baseConfig,
-  input: 'src/core/webllm-service-worker.js',
+  input: 'src/core/webllm-service-worker.ts',
   output: {
     file: 'dist/webllm-service-worker.js',
     format: 'es',
@@ -61,7 +55,7 @@ const serviceWorkerConfig = {
 // Main SDK configurations
 const mainConfig = {
   ...baseConfig,
-  input: 'src/index.js'
+  input: 'src/index.ts'
 };
 
 const configs = [

@@ -1,49 +1,54 @@
-import { extractPageContent } from "../utils/index.js";
+import { WebLLMClient } from "@/core/WebLLMClient.js";
+import { extractPageContent, Logger } from "../utils/index.js";
+import { GeneratePromptsOptions } from "../types/AgentaryClient";
+import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 
 /**
  * Generates relevant questions about the current page content
- * @param llm - The WebLLM client instance
+ * @param webLLMClient - The WebLLM client instance
  * @param options - Configuration options
- * @param options.maxQuestions - Maximum number of questions to generate
- * @param options.focusAreas - Array of focus areas for questions
- * @param options.maxContentTokens - Maximum tokens for content extraction
- * @param options.contentSelector - CSS selector for extracting article content
+ * @param logger - Logger instance for debugging
+ * @returns A promise that resolves to an array of generated questions
  */
-export async function generatePagePrompts(
-  llm,
-  options = {}
-) {
+export async function generatePrompts(
+  webLLMClient: WebLLMClient,
+  options: GeneratePromptsOptions = {},
+  logger: Logger,
+): Promise<string[]> {
   const {
-    maxQuestions = 5,
-    maxContentTokens = 1500, // Leave room for prompt overhead
-    contentSelector
+    promptCount = 5,
+    maxContentChars = 4000, // Leave room for prompt overhead
+    contentSelector,
+    content
   } = options;
   
-  console.log("Starting prompt generation with options:", options);
+  logger.debug("Starting prompt generation with options:", options);
   
-  const pageContent = extractPageContent({ 
-    contentSelector,
-    maxTokens: maxContentTokens 
-  });
+  // Extract content if not provided
+  const pageContent = content || 
+    extractPageContent({ 
+      contentSelector: contentSelector || null,
+      maxChars: maxContentChars 
+    }, logger);
   
-  console.log("Extracted page content length:", pageContent.length);
-  console.log("Page content preview:", pageContent.substring(0, 200) + "...");
+  logger.debug("Extracted page content length:", pageContent.length);
+  logger.debug("Page content preview:", pageContent.substring(0, 200) + "...");
   
   if (!pageContent.trim() || pageContent.length < 50) {
-    console.log("Insufficient content found, returning fallback questions");
+    logger.debug("Insufficient content found, returning fallback questions");
     return [
       "What is this page about?", 
       "Can you explain the main topic?",
       "What are the key points discussed here?",
       "How can I learn more about this subject?",
       "What questions might someone new to this topic have?"
-    ].slice(0, maxQuestions);
+    ].slice(0, promptCount);
   }
   
   const systemPrompt = `
     You are an educational assistant that generates thoughtful, engaging questions to help users learn about content they're reading.
 
-    Your task is to analyze the provided content and generate ${maxQuestions} relevant questions that would help someone understand and engage with the material better.
+    Your task is to analyze the provided content and generate ${promptCount} relevant questions that would help someone understand and engage with the material better.
 
     The questions should be:
     - Specific to the content provided
@@ -51,11 +56,11 @@ export async function generatePagePrompts(
     - Clear and well-formed
     - Varied in type (comprehension, analysis, application, etc.)
 
-    Return your response as an array containing the ${maxQuestions} questions as strings.
+    Return your response as an array containing the ${promptCount} questions as strings.
   `;
 
   const userPrompt = `
-    Generate ${maxQuestions} educational questions about this content:
+    Generate ${promptCount} educational questions about this content:
 
     CONTENT:
     ${pageContent}
@@ -67,32 +72,33 @@ export async function generatePagePrompts(
     const messages = [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
-    ];
+    ] as ChatCompletionMessageParam[];
 
-    console.log("Sending messages to LLM:", {
+    logger.debug("Sending messages to LLM:", {
       systemPromptLength: systemPrompt.length,
       userPromptLength: userPrompt.length,
       contentLength: pageContent.length
     });
     
     const startTime = performance.now();
-    const response = await llm.chatCompletion(messages, {
-      response_format: { type: "json_object", schema: `{ "type": "array", "items": { "type": "string" } }` }
+    const response = await webLLMClient.chatCompletion(messages, {
+      stream: false,
+      responseFormat: "json_object"
     });
     const endTime = performance.now();
-    console.log(`Chat completion took ${endTime - startTime}ms`);
+    logger.debug(`Chat completion took ${endTime - startTime}ms`);
 
-    console.log(`Prompt generation response:`, response);
+    logger.debug(`Prompt generation response:`, response);
 
-    let questions = [];
+    let questions: string[] = [];
 
     if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
       try {
         const content = response.choices[0].message.content;
-        console.log("Raw response content:", content);
+        logger.debug("Raw response content:", content);
 
         const parsed = JSON.parse(content);
-        console.log("Parsed response:", parsed);
+        logger.debug("Parsed response:", parsed);
 
         // Handle different possible response formats
         if (parsed.questions && Array.isArray(parsed.questions)) {
@@ -100,30 +106,30 @@ export async function generatePagePrompts(
         } else if (Array.isArray(parsed)) {
           questions = parsed;
         } else {
-          console.warn("Unexpected response format:", parsed);
+          logger.warn("Unexpected response format:", parsed);
           questions = [];
         }
 
         // Validate and clean questions
         questions = questions
-          .filter(q => typeof q === 'string' && q.trim().length > 0)
-          .map(q => q.trim())
-          .slice(0, maxQuestions);
+          .filter((q: any) => typeof q === 'string' && q.trim().length > 0)
+          .map((q: any) => q.trim())
+          .slice(0, promptCount);
 
-        console.log("Final processed questions:", questions);
+        logger.debug("Final processed questions:", questions);
 
       } catch (e) {
-        console.error("Error parsing JSON response:", e);
-        console.error("Raw content that failed to parse:", response.choices[0].message.content);
+        logger.error("Error parsing JSON response:", e);
+        logger.error("Raw content that failed to parse:", response.choices[0].message.content);
         questions = [];
       }
     } else {
-      console.error("Unexpected response structure:", response);
+      logger.error("Unexpected response structure:", response);
     }
     
     // Fallback questions if parsing fails or no valid questions returned
     if (questions.length === 0) {
-      console.log("No valid questions generated, using content-aware fallbacks");
+      logger.debug("No valid questions generated, using content-aware fallbacks");
       
       // Try to create more content-aware fallback questions
       const contentLower = pageContent.toLowerCase();
@@ -151,13 +157,13 @@ export async function generatePagePrompts(
         "What questions might someone new to this topic have?"
       );
       
-      return fallbackQuestions.slice(0, maxQuestions);
+      return fallbackQuestions.slice(0, promptCount);
     }
     
-    return questions.slice(0, maxQuestions);
+    return questions.slice(0, promptCount);
     
   } catch (error) {
-    console.error("Error generating questions:", error);
+    logger.error("Error generating questions:", error);
     
     // Return fallback questions
     return [
@@ -166,6 +172,6 @@ export async function generatePagePrompts(
       "Can you explain this in simpler terms?",
       "What are the practical implications?",
       "How can I learn more about this topic?"
-    ].slice(0, maxQuestions);
+    ].slice(0, promptCount);
   }
 }
