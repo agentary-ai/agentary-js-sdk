@@ -84,7 +84,7 @@ export class AgentaryClient extends EventEmitter {
         widgetOptions.contentSelector = this.config.contentSelector;
       }
 
-      this.logger.info('Mounting widget');
+      this.logger.debug('Mounting widget');
       
       mountWidget(
         this.webLLMClient, 
