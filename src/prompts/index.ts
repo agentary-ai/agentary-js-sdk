@@ -46,17 +46,20 @@ export async function generatePrompts(
   }
   
   const systemPrompt = `
-    You are an educational assistant that generates thoughtful, engaging questions to help users learn about content they're reading.
+    You are an educational assistant that generates thoughtful, engaging questions to 
+    help users learn about content they're reading.
 
-    Your task is to analyze the provided content and generate ${promptCount} relevant questions that would help someone understand and engage with the material better.
+    Your task is to analyze the provided content and generate ${promptCount} relevant 
+    questions that would help someone understand and engage with the material better.
 
     The questions should be:
     - Specific to the content provided
-    - Educational and thought-provoking
+    - Educational and thought-provoking 
     - Clear and well-formed
     - Varied in type (comprehension, analysis, application, etc.)
 
-    **IMPORTANT:** You must return your response as an array of strings containing the ${promptCount} questions. DO NOT return a response using any other format.
+    **IMPORTANT:** You must return your response as an array of strings containing the 
+    ${promptCount} questions. DO NOT return a response using any other format.
   `;
 
   const userPrompt = `
