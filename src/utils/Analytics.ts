@@ -25,17 +25,21 @@ export interface AnalyticsEvents {
   };
   'model_loading_started': {
     model_name: string;
+    browser_name?: string;
     page_url: string;
     page_domain: string;
   };
   'model_loading_completed': {
     model_name: string;
+    browser_name?: string;
+    worker_used?: boolean;
     loading_time_ms: number;
     page_url: string;
     page_domain: string;
   };
   'model_loading_failed': {
     model_name: string;
+    browser_name?: string;
     error: string;
     page_url: string;
     page_domain: string;

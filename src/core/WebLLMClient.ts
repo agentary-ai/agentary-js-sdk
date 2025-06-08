@@ -2,6 +2,7 @@ import { CreateMLCEngine, CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import type { ChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam, InitProgressCallback, InitProgressReport, MLCEngine, ResponseFormat, WebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import { Logger } from "../utils/Logger";
 import { getAnalytics } from "../utils/Analytics";
+import { isSafari, getBrowserName } from "../utils/BrowserDetection";
 
 interface ChatCompletionOptions {
   stream: boolean;
@@ -33,6 +34,20 @@ export class WebLLMClient {
     this.initProgressCallback = initProgressCallback;
     this.useWorker = useWorker;
     this.logger = logger;
+    
+    // Log browser detection info
+    const browserInfo = {
+      browser: getBrowserName(),
+      isSafari: isSafari(),
+      requestedWorkerMode: useWorker,
+      willForceMainThread: useWorker && isSafari()
+    };
+    
+    this.logger.debug("WebLLMClient initialized with browser info:", browserInfo);
+    
+    if (isSafari() && useWorker) {
+      this.logger.info("Safari detected: Will use main thread engine instead of worker to avoid compatibility issues");
+    }
   }
 
   setOnModelLoadingChange(callback: (isLoading: boolean) => void) {
@@ -162,10 +177,12 @@ export class WebLLMClient {
     if (!this.engine) {
       const analytics = getAnalytics();
       const modelLoadingStartTime = Date.now();
+      const browserName = getBrowserName();
       
       // Track model loading start
       analytics?.track('model_loading_started', {
         model_name: this.modelPath,
+        browser_name: browserName,
         page_url: window.location.href,
         page_domain: window.location.hostname,
       });
@@ -176,7 +193,20 @@ export class WebLLMClient {
         }
         this.isModelLoading = true;
         
-        if (this.useWorker) {
+        // For Safari browsers, force main thread usage to avoid worker issues
+        const shouldUseWorker = this.useWorker && !isSafari();
+        
+        if (shouldUseWorker) {
+          this.logger.debug(`Browser: ${browserName} - Attempting to create web worker engine`);
+        } else {
+          if (isSafari()) {
+            this.logger.debug(`Browser: ${browserName} - Using main thread engine (Safari detected)`);
+          } else {
+            this.logger.debug(`Browser: ${browserName} - Using main thread engine (worker disabled)`);
+          }
+        }
+        
+        if (shouldUseWorker) {
           try {
             this.logger.debug("Attempting to create web worker engine");
             
@@ -231,6 +261,8 @@ export class WebLLMClient {
         // Track successful model loading
         analytics?.track('model_loading_completed', {
           model_name: this.modelPath,
+          browser_name: browserName,
+          worker_used: shouldUseWorker && this.worker !== null,
           loading_time_ms: Date.now() - modelLoadingStartTime,
           page_url: window.location.href,
           page_domain: window.location.hostname,
@@ -246,6 +278,7 @@ export class WebLLMClient {
         // Track model loading failure
         analytics?.track('model_loading_failed', {
           model_name: this.modelPath,
+          browser_name: browserName,
           error: error instanceof Error ? error.message : String(error),
           page_url: window.location.href,
           page_domain: window.location.hostname,
@@ -370,5 +403,29 @@ export class WebLLMClient {
 
       throw error;
     }
+  }
+
+  /**
+   * Check if the engine is running on the main thread due to Safari detection
+   * @returns {boolean} True if using main thread because of Safari
+   */
+  get isUsingMainThreadForSafari(): boolean {
+    return isSafari() && this.useWorker && !this.worker;
+  }
+
+  /**
+   * Get information about the current engine setup
+   * @returns {object} Engine setup information
+   */
+  getEngineInfo() {
+    return {
+      browserName: getBrowserName(),
+      isSafari: isSafari(),
+      useWorker: this.useWorker,
+      actuallyUsingWorker: !!this.worker,
+      workerVerified: this.workerVerified,
+      isMainThreadForSafari: this.isUsingMainThreadForSafari,
+      modelLoading: this.modelLoading
+    };
   }
 }
