@@ -13,6 +13,17 @@ export {
   getMountedWidgets 
 } from './ui/widget';
 
+// Export browser detection utilities
+export {
+  isSafari,
+  isChrome,
+  isFirefox,
+  isEdge,
+  getBrowserName,
+  supportsWebWorkers,
+  hasWebWorkerIssues
+} from './utils/BrowserDetection';
+
 // Export types
 export type { WidgetOptions } from './types/index';
 export type { AgentaryClientConfig } from './types/AgentaryClient';

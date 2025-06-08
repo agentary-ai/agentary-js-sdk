@@ -194,7 +194,8 @@ export class WebLLMClient {
         this.isModelLoading = true;
         
         // For Safari browsers, force main thread usage to avoid worker issues
-        const shouldUseWorker = this.useWorker && !isSafari();
+        // const shouldUseWorker = this.useWorker && !isSafari();
+        const shouldUseWorker = this.useWorker;
         
         if (shouldUseWorker) {
           this.logger.debug(`Browser: ${browserName} - Attempting to create web worker engine`);
