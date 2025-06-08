@@ -78,7 +78,11 @@ export class WebLLMClient {
         throw new Error(`Failed to fetch worker: ${response.status} ${response.statusText}`);
       }
       
-      const workerCode = await response.text();
+      let workerCode = await response.text();
+      
+      // Strip source map references to prevent Safari blob URL issues
+      workerCode = workerCode.replace(/\/\/# sourceMappingURL=.*$/gm, '');
+      
       const blob = new Blob([workerCode], { type: 'application/javascript' });
       const blobUrl = URL.createObjectURL(blob);
       this.logger.debug("Worker blob URL created:", blobUrl);
