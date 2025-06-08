@@ -11,6 +11,13 @@ import { Logger } from "../../utils/Logger";
 let cachedQuestions: string[] | null = null;
 
 /**
+ * Clear cached questions - useful when unmounting widgets
+ */
+export function clearCachedQuestions(): void {
+  cachedQuestions = null;
+}
+
+/**
  * Configure marked for safe HTML rendering
  */
 marked.setOptions({

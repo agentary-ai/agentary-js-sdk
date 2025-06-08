@@ -1,4 +1,4 @@
-import { createDialog } from "./components/dialog";
+import { createDialog, clearCachedQuestions } from "./components/dialog";
 import { createContextMenu } from "./context-menu";
 import { WebLLMClient } from "../core/WebLLMClient";
 import { getAnalytics } from "../utils/Analytics";
@@ -254,6 +254,9 @@ export function mountWidget(
     
     // Remove model loading callback
     webLLMClient.setOnModelLoadingChange(() => {});
+    
+    // Clear cached questions when unmounting widget
+    clearCachedQuestions();
     
     // Track widget unmounting
     analytics?.track('widget_unmounted', {

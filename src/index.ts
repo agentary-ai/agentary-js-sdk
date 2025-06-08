@@ -13,6 +13,9 @@ export {
   getMountedWidgets 
 } from './ui/widget';
 
+// Export dialog utilities
+export { clearCachedQuestions } from './ui/components/dialog';
+
 // Export browser detection utilities
 export {
   isSafari,

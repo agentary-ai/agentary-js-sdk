@@ -327,6 +327,7 @@
                         <button onclick="refreshWidgetList()">🔄 Refresh List</button>
                         <button onclick="unmountAllWidgets()" class="danger">🗑️ Unmount All</button>
                         <button onclick="showWidgetInfo()" class="secondary">ℹ️ Show Widget Info</button>
+                        <button onclick="testPromptClearing()" class="secondary">🧪 Test Prompt Clearing</button>
                     </div>
                 </div>
 
@@ -438,7 +439,7 @@ agentary.<span class="function">unmountWidget</span>(widgetId);
 
     <script type="module">
         // Import the Agentary SDK
-        import { init, mountWidget, unmountWidget, unmountAllWidgets, getMountedWidgets } from '../dist/agentary.esm.js';
+        import { init, mountWidget, unmountWidget, unmountAllWidgets, getMountedWidgets, clearCachedQuestions } from '../dist/agentary.esm.js';
 
         // Global variables
         let agentaryClient = null;
@@ -627,6 +628,49 @@ agentary.<span class="function">unmountWidget</span>(widgetId);
             } catch (error) {
                 console.error('❌ Failed to get widget info:', error);
                 alert('Failed to get widget information: ' + error.message);
+            }
+        };
+
+        // Test prompt clearing functionality
+        window.testPromptClearing = function() {
+            console.log('🧪 Testing prompt clearing functionality...');
+            
+            // Clear any existing cached questions manually
+            clearCachedQuestions();
+            console.log('✅ Manually cleared cached questions');
+            
+            // Mount a widget that will generate prompts
+            if (!agentaryClient) {
+                alert('SDK not initialized yet. Please wait...');
+                return;
+            }
+
+            try {
+                const result = agentaryClient.mountWidget({
+                    position: 'bottom-right',
+                    autoOpenOnLoad: true, // This will trigger prompt generation
+                    generatePagePrompts: true,
+                    maxPagePrompts: 3
+                });
+
+                console.log('✅ Test widget mounted:', result.widgetId);
+                
+                // Wait a bit for prompts to be generated, then unmount
+                setTimeout(() => {
+                    console.log('🔄 Unmounting test widget to verify prompt clearing...');
+                    const success = agentaryClient.unmountWidget(result.widgetId);
+                    if (success) {
+                        console.log('✅ Test widget unmounted - prompts should be cleared');
+                        updateStatus('Prompt clearing test completed! Check console for details.');
+                    } else {
+                        console.error('❌ Failed to unmount test widget');
+                    }
+                }, 3000);
+
+                updateStatus('Prompt clearing test started - widget will auto-unmount in 3 seconds');
+            } catch (error) {
+                console.error('❌ Failed to run prompt clearing test:', error);
+                updateStatus('Failed to run prompt clearing test: ' + error.message);
             }
         };
 

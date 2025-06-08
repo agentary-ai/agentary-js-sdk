@@ -56,7 +56,7 @@ export async function generatePrompts(
     - Clear and well-formed
     - Varied in type (comprehension, analysis, application, etc.)
 
-    **IMPORTANT:** You must return your response as an array of strings containing the ${promptCount} questions.
+    **IMPORTANT:** You must return your response as an array of strings containing the ${promptCount} questions. DO NOT return a response using any other format.
   `;
 
   const userPrompt = `
