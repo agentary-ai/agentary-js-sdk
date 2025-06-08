@@ -111,9 +111,9 @@ export function extractPageContent(options: ExtractPageContentOptions = {}, logg
       const element = document.querySelector(contentSelector);
       if (element && element.textContent) {
           mainContent = element.textContent.trim();
-          logger.info("Found content using provided selector:", contentSelector);
+          logger.info(`Found content using provided selector ${contentSelector}: ${mainContent}`);
       } else {
-          logger.warn("No content found using provided selector:", contentSelector);
+          logger.warn(`No content found using provided selector: ${contentSelector}`);
       }
     }
     
