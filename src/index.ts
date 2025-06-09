@@ -27,6 +27,16 @@ export {
   hasWebWorkerIssues
 } from './utils/BrowserDetection';
 
+// Export environment detection utilities
+export {
+  detectDeviceType,
+  detectBrowserType,
+  isEnvironmentAllowed,
+  getCurrentEnvironment,
+  type DeviceType,
+  type BrowserType
+} from './utils/Environment';
+
 // Export types
 export type { WidgetOptions } from './types/index';
 export type { AgentaryClientConfig } from './types/AgentaryClient';

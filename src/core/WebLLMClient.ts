@@ -34,20 +34,6 @@ export class WebLLMClient {
     this.initProgressCallback = initProgressCallback;
     this.useWorker = useWorker;
     this.logger = logger;
-    
-    // Log browser detection info
-    const browserInfo = {
-      browser: getBrowserName(),
-      isSafari: isSafari(),
-      requestedWorkerMode: useWorker,
-      willForceMainThread: useWorker && isSafari()
-    };
-    
-    this.logger.debug("WebLLMClient initialized with browser info:", browserInfo);
-    
-    if (isSafari() && useWorker) {
-      this.logger.info("Safari detected: Will use main thread engine instead of worker to avoid compatibility issues");
-    }
   }
 
   setOnModelLoadingChange(callback: (isLoading: boolean) => void) {
@@ -193,21 +179,7 @@ export class WebLLMClient {
         }
         this.isModelLoading = true;
         
-        // For Safari browsers, force main thread usage to avoid worker issues
-        // const shouldUseWorker = this.useWorker && !isSafari();
-        const shouldUseWorker = this.useWorker;
-        
-        if (shouldUseWorker) {
-          this.logger.debug(`Browser: ${browserName} - Attempting to create web worker engine`);
-        } else {
-          if (isSafari()) {
-            this.logger.debug(`Browser: ${browserName} - Using main thread engine (Safari detected)`);
-          } else {
-            this.logger.debug(`Browser: ${browserName} - Using main thread engine (worker disabled)`);
-          }
-        }
-        
-        if (shouldUseWorker) {
+        if (this.useWorker) {
           try {
             this.logger.debug("Attempting to create web worker engine");
             
@@ -263,7 +235,6 @@ export class WebLLMClient {
         analytics?.track('model_loading_completed', {
           model_name: this.modelPath,
           browser_name: browserName,
-          worker_used: shouldUseWorker && this.worker !== null,
           loading_time_ms: Date.now() - modelLoadingStartTime,
           page_url: window.location.href,
           page_domain: window.location.hostname,
@@ -384,7 +355,7 @@ export class WebLLMClient {
         analytics?.track('ai_response_received', {
           response_time_ms: Date.now() - responseStartTime,
           response_length: response.choices[0]?.message?.content?.length || 0,
-          feature_used: 'chat', // This will be overridden by calling code if needed
+          feature_used: 'chat',
           streaming: isStreaming,
           page_url: window.location.href,
           page_domain: window.location.hostname,

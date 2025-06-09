@@ -2,6 +2,7 @@
 import { EventEmitter } from '../utils/EventEmitter';
 import { Logger } from '../utils/Logger';
 import { Analytics, setAnalytics } from '../utils/Analytics';
+import { isEnvironmentAllowed, getCurrentEnvironment } from '../utils/Environment';
 import { WebLLMClient } from './WebLLMClient';
 import { summarizeContent } from '../summarize';
 import { explainText } from '../explain/index';
@@ -42,9 +43,36 @@ export class AgentaryClient extends EventEmitter {
     super();
     this.config = config;
     this.logger = new Logger(this.config.debug);
+    
+    // Check environment compatibility before initializing
+    const currentEnv = getCurrentEnvironment();
+    this.logger.debug('Current environment:', currentEnv);
+    
+    // Apply default environment restrictions if none specified
+    const envConfig = this.config.environment || {
+      allowedDevices: ['desktop'],
+      allowedBrowsers: ['chrome']
+    };
+    
+    const isAllowed = isEnvironmentAllowed(
+      envConfig.allowedDevices,
+      envConfig.allowedBrowsers,
+      envConfig.disallowedDevices,
+      envConfig.disallowedBrowsers
+    );
+    
+    if (!isAllowed) {
+      const errorMsg = `SDK not supported in current environment. Current: ${currentEnv.browser} on ${currentEnv.device}. ` +
+        `Allowed devices: ${envConfig.allowedDevices?.join(', ') || 'any'}. ` +
+        `Allowed browsers: ${envConfig.allowedBrowsers?.join(', ') || 'any'}.`;
+      this.logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    
     this.logger.info(
       `Initializing with config: ${JSON.stringify(this.config)}`
     );
+    this.logger.info(`Environment check passed: ${currentEnv.browser} on ${currentEnv.device}`);
 
     // Initialize analytics
     this.analytics = new Analytics({

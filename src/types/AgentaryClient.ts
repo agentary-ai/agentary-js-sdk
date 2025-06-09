@@ -1,4 +1,5 @@
 import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
+import type { DeviceType, BrowserType } from '../utils/Environment';
 
 export interface AgentaryClientConfig {
   apiKey?: string;
@@ -9,6 +10,13 @@ export interface AgentaryClientConfig {
   showWidgetOnInit?: boolean;
   generatePagePrompts?: boolean;
   maxPagePrompts?: number;
+  // Environment configuration
+  environment?: {
+    allowedDevices?: DeviceType[];
+    allowedBrowsers?: BrowserType[];
+    disallowedDevices?: DeviceType[];
+    disallowedBrowsers?: BrowserType[];
+  };
   // Analytics configuration
   analytics?: {
     mixpanelToken?: string;
