@@ -1,7 +1,8 @@
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import type { WebLLMClient } from '../core/WebLLMClient';
 import type { WidgetOptions } from '../types/index';
+import { classNames, injectAgentaryStyles } from './styles';
 
 interface PopupProps {
   webLLMClient: WebLLMClient;
@@ -11,107 +12,85 @@ interface PopupProps {
 
 export function Popup({ webLLMClient, widgetOptions, onClose }: PopupProps) {
   const [isVisible, setIsVisible] = useState(widgetOptions.autoOpenOnLoad || false);
+  const [isModelLoading, setIsModelLoading] = useState(webLLMClient.modelLoading);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Inject styles when component mounts
+  useEffect(() => {
+    injectAgentaryStyles();
+  }, []);
+
+  // Set up model loading state listener
+  useEffect(() => {
+    webLLMClient.setOnModelLoadingChange((loading: boolean) => {
+      setIsModelLoading(loading);
+    });
+    // Initial state
+    setIsModelLoading(webLLMClient.modelLoading);
+  }, [webLLMClient]);
 
   const handleToggle = () => {
-    setIsVisible(!isVisible);
+    if (!isModelLoading) {
+      if (isVisible) {
+        handleClose();
+      } else {
+        setIsVisible(true);
+        setIsClosing(false);
+      }
+    }
   };
 
   const handleClose = () => {
-    setIsVisible(false);
-    onClose?.();
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      setIsClosing(false);
+      onClose?.();
+    }, 300); // Match animation duration
+  };
+
+  const getPopupClassName = () => {
+    const classes = [classNames.popup];
+    if (isClosing) {
+      classes.push(classNames.slideOut);
+    } else {
+      classes.push(classNames.slideIn);
+    }
+    return classes.join(' ');
   };
 
   return (
-    <div style={{ pointerEvents: 'auto' }}>
+    <div className={classNames.container}>
       {/* Floating Action Button */}
-      {!isVisible && (
+      {(!isVisible || isModelLoading) && (
         <button
           onClick={handleToggle}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 123, 255, 0.3)',
-            fontSize: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'transform 0.2s ease',
-            zIndex: 10000,
-          }}
-          onMouseEnter={(e) => {
-            (e.target as HTMLElement).style.transform = 'scale(1.1)';
-          }}
-          onMouseLeave={(e) => {
-            (e.target as HTMLElement).style.transform = 'scale(1)';
-          }}
-          title="Open Agentary"
+          disabled={isModelLoading}
+          className={classNames.floatingButton}
+          title={isModelLoading ? "Loading model..." : "Open Agentary"}
         >
-          <i className="fas fa-robot"></i>
+          {isModelLoading ? (
+            <i className={`fas fa-spinner ${classNames.spinner}`}></i>
+          ) : (
+            <i className="fas fa-robot"></i>
+          )}
         </button>
       )}
 
       {/* Popup Dialog */}
-      {isVisible && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            width: '400px',
-            height: '600px',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e1e5e9',
-            display: 'flex',
-            flexDirection: 'column',
-            zIndex: 10000,
-            overflow: 'hidden',
-          }}
-        >
+      {isVisible && !isModelLoading && (
+        <div className={getPopupClassName()}>
           {/* Header */}
-          <div
-            style={{
-              padding: '16px 20px',
-              borderBottom: '1px solid #e1e5e9',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              backgroundColor: '#f8f9fa',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <i className="fas fa-robot" style={{ color: '#007bff', fontSize: '20px' }}></i>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#333' }}>
+          <div className={classNames.header}>
+            <div className={classNames.headerContent}>
+              <i className={`fas fa-robot ${classNames.headerIcon}`}></i>
+              <h3 className={classNames.headerTitle}>
                 Agentary Assistant
               </h3>
             </div>
             <button
               onClick={handleClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '18px',
-                color: '#666',
-                padding: '4px',
-                borderRadius: '4px',
-                transition: 'background-color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLElement).style.backgroundColor = '#e9ecef';
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLElement).style.backgroundColor = 'transparent';
-              }}
+              className={classNames.closeButton}
               title="Close"
             >
               <i className="fas fa-times"></i>
@@ -119,44 +98,24 @@ export function Popup({ webLLMClient, widgetOptions, onClose }: PopupProps) {
           </div>
 
           {/* Content */}
-          <div
-            style={{
-              flex: 1,
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              color: '#666',
-            }}
-          >
-            <i className="fas fa-cog fa-spin" style={{ fontSize: '48px', marginBottom: '16px', color: '#007bff' }}></i>
-            <h4 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#333' }}>
+          <div className={classNames.content}>
+            <i className={`fas fa-cog ${classNames.contentIcon}`}></i>
+            <h4 className={classNames.contentTitle}>
               Assistant Ready
             </h4>
-            <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+            <p className={classNames.contentDescription}>
               This is a placeholder popup component. The AI assistant will be integrated here.
             </p>
             {widgetOptions.generatePagePrompts && (
-              <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px', fontSize: '12px' }}>
-                <i className="fas fa-lightbulb" style={{ marginRight: '6px', color: '#ffc107' }}></i>
+              <div className={classNames.featureNotice}>
+                <i className={`fas fa-lightbulb ${classNames.featureIcon}`}></i>
                 Page prompts generation is enabled
               </div>
             )}
           </div>
 
           {/* Footer */}
-          <div
-            style={{
-              padding: '16px 20px',
-              borderTop: '1px solid #e1e5e9',
-              backgroundColor: '#f8f9fa',
-              fontSize: '12px',
-              color: '#666',
-              textAlign: 'center',
-            }}
-          >
+          <div className={classNames.footer}>
             Powered by Agentary
           </div>
         </div>

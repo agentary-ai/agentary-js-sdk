@@ -5,6 +5,7 @@ import { getAnalytics } from '../utils/Analytics';
 import type { WidgetOptions } from '../types/index';
 import { Logger } from '../utils/Logger';
 import { Popup } from './Popup';
+import { removeAgentaryStyles } from './styles';
 
 // Global widget state to track mounted widgets
 let mountedWidgets: Map<string, {
@@ -156,6 +157,12 @@ export function unmountAllWidgets(): number {
     widget.cleanup();
   });
   mountedWidgets.clear();
+  
+  // Clean up styles if no widgets remain
+  if (count > 0) {
+    removeAgentaryStyles();
+  }
+  
   return count;
 }
 
