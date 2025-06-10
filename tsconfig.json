@@ -30,6 +30,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     
+    // JSX Support for Preact
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    
     // Advanced
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

@@ -8,7 +8,7 @@ import { summarizeContent } from '../summarize';
 import { explainText } from '../explain/index';
 import { generatePrompts } from '../prompts/index';
 import { postMessage } from '../chat/index';
-import { mountWidget, unmountWidget, unmountAllWidgets, getMountedWidgets } from '../ui/widget';
+import { mountWidget, unmountWidget, unmountAllWidgets, getMountedWidgets } from '../ui';
 
 import type { 
   AgentaryClientConfig,

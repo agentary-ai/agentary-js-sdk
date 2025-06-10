@@ -2,11 +2,17 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
+import babel from '@rollup/plugin-babel';
+import replace from '@rollup/plugin-replace';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
 const baseConfig = {
   plugins: [
+    replace({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      preventAssignment: true
+    }),
     resolve({
       browser: true,
       preferBuiltins: false
@@ -17,6 +23,19 @@ const baseConfig = {
       declaration: true,
       declarationDir: './dist',
       rootDir: './src'
+    }),
+    babel({
+      babelHelpers: 'bundled',
+      exclude: 'node_modules/**',
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      presets: [
+        ['@babel/preset-env', { modules: false }],
+        ['@babel/preset-react', {
+          pragma: 'h',
+          pragmaFrag: 'Fragment',
+          runtime: 'classic'
+        }]
+      ]
     })
   ],
   external: []
