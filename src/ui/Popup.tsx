@@ -83,9 +83,8 @@ export function Popup({ webLLMClient, widgetOptions, onClose }: PopupProps) {
           {/* Header */}
           <div className={classNames.header}>
             <div className={classNames.headerContent}>
-              <i className={`fas fa-robot ${classNames.headerIcon}`}></i>
               <h3 className={classNames.headerTitle}>
-                Agentary Assistant
+                Agentary
               </h3>
             </div>
             <button
@@ -99,19 +98,19 @@ export function Popup({ webLLMClient, widgetOptions, onClose }: PopupProps) {
 
           {/* Content */}
           <div className={classNames.content}>
-            <i className={`fas fa-cog ${classNames.contentIcon}`}></i>
-            <h4 className={classNames.contentTitle}>
-              Assistant Ready
-            </h4>
-            <p className={classNames.contentDescription}>
-              This is a placeholder popup component. The AI assistant will be integrated here.
-            </p>
-            {widgetOptions.generatePagePrompts && (
-              <div className={classNames.featureNotice}>
-                <i className={`fas fa-lightbulb ${classNames.featureIcon}`}></i>
-                Page prompts generation is enabled
-              </div>
-            )}
+            <div className={classNames.questionInputContainer}>
+              <input
+                type="text"
+                placeholder="What do you want to know?"
+                className={classNames.questionInput}
+              />
+              <button
+                className={classNames.sendButton}
+                title="Send message"
+              >
+                <i className="fas fa-paper-plane"></i>
+              </button>
+            </div>
           </div>
 
           {/* Footer */}
