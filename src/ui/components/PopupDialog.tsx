@@ -8,6 +8,7 @@ interface PopupDialogProps {
   isGeneratingPrompts: boolean;
   showPrompts: boolean;
   isFadingOut: boolean;
+  onStartChat: (initialMessage?: string) => void;
 }
 
 export function PopupDialog({ 
@@ -15,7 +16,8 @@ export function PopupDialog({
   contentPrompts, 
   isGeneratingPrompts, 
   showPrompts, 
-  isFadingOut 
+  isFadingOut,
+  onStartChat
 }: PopupDialogProps) {
   const getPopupClassName = () => {
     const classes = [classNames.popup];
@@ -36,11 +38,15 @@ export function PopupDialog({
           isGeneratingPrompts={isGeneratingPrompts}
           showPrompts={showPrompts}
           isFadingOut={isFadingOut}
+          onStartChat={onStartChat}
         />
         
         {/* General action prompts */}
         <div className={classNames.promptPillsContainer}>
-          <div className={classNames.promptPill}>
+          <div 
+            className={classNames.promptPill}
+            onClick={() => onStartChat('Summarize this page')}
+          >
             <i className="fas fa-book-open-reader"></i>
             Summarize this page
           </div>

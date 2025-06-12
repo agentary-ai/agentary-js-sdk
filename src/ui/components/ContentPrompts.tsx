@@ -7,13 +7,15 @@ interface ContentPromptsProps {
   isGeneratingPrompts: boolean;
   showPrompts: boolean;
   isFadingOut: boolean;
+  onPromptClick?: (prompt: string) => void;
 }
 
 export function ContentPrompts({ 
   contentPrompts, 
   isGeneratingPrompts, 
   showPrompts, 
-  isFadingOut 
+  isFadingOut,
+  onPromptClick
 }: ContentPromptsProps) {
   const [isContentPromptsExpanded, setIsContentPromptsExpanded] = useState(false);
 
@@ -39,7 +41,11 @@ export function ContentPrompts({
       <div className={classNames.fadeIn}>
         <div className={classNames.promptPillsContainer}>
           {contentPrompts.slice(0, 2).map((prompt, index) => (
-            <div key={index} className={classNames.contentPromptPill}>
+            <div 
+              key={index} 
+              className={classNames.contentPromptPill}
+              onClick={() => onPromptClick?.(prompt)}
+            >
               {prompt}
             </div>
           ))}
@@ -48,7 +54,11 @@ export function ContentPrompts({
           {contentPrompts.length > 2 && (
             <div className={`${classNames.expandablePrompts} ${isContentPromptsExpanded ? classNames.expanded : ''}`}>
               {contentPrompts.slice(2).map((prompt, index) => (
-                <div key={index + 2} className={classNames.contentPromptPill}>
+                <div 
+                  key={index + 2} 
+                  className={classNames.contentPromptPill}
+                  onClick={() => onPromptClick?.(prompt)}
+                >
                   {prompt}
                 </div>
               ))}
