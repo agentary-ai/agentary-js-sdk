@@ -57,6 +57,7 @@ export async function generatePrompts(
     - Educational and thought-provoking 
     - Clear and well-formed
     - Varied in type (comprehension, analysis, application, etc.)
+    - Max 10 words per question
 
     **IMPORTANT:** You must return your response as an array of strings containing the 
     ${promptCount} questions. DO NOT return a response using any other format.

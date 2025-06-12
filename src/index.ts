@@ -11,10 +11,7 @@ export {
   unmountWidget, 
   unmountAllWidgets, 
   getMountedWidgets 
-} from './ui/widget';
-
-// Export dialog utilities
-export { clearCachedQuestions } from './ui/components/dialog';
+} from './ui/index';
 
 // Export browser detection utilities
 export {

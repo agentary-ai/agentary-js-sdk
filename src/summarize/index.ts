@@ -68,6 +68,12 @@ export async function summarizeContent(
 
       logger.debug("Chat completion response:", response);
 
+      // When streaming, the content is already delivered via onStreamToken
+      // So we return empty string to avoid duplicate content
+      if (options.streamResponse && options.onStreamToken) {
+        return '';
+      }
+
       return response.choices[0].message.content || '';
 
   } catch (error) {
