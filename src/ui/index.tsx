@@ -87,6 +87,7 @@ export function mountWidget(
     h(Popup, {
       webLLMClient,
       widgetOptions,
+      logger,
       onClose: () => {
         // Optional: handle popup close events here
         logger.info(`Popup closed for widget ${widgetId}`);

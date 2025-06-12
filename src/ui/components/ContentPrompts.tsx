@@ -24,7 +24,7 @@ export function ContentPrompts({
       <div className={classNames.contentPromptSection}>
         <div 
           className={isFadingOut ? classNames.fadeOut : ''}
-          style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}
+          style={{ display: 'flex', justifyContent: 'center', padding: '5px' }}
         >
           <i className={`fas fa-spinner ${classNames.spinner}`}></i>
         </div>
