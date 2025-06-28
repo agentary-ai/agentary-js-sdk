@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import type { WebLLMClient } from '../core/WebLLMClient';
+import type { WebLLMClient } from '../core/llm/WebLLMClient';
 import type { WidgetOptions } from '../types/index';
 import type { Logger } from '../utils/Logger';
 import { classNames, injectAgentaryStyles } from './styles';

@@ -1,5 +1,6 @@
 import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import type { DeviceType, BrowserType } from '../utils/Environment';
+import type { BrowserLLMProvider } from '../core/llm/LLMClientInterface';
 
 export interface AgentaryClientConfig {
   apiKey?: string;
@@ -10,6 +11,14 @@ export interface AgentaryClientConfig {
   showWidgetOnInit?: boolean;
   generatePagePrompts?: boolean;
   maxPagePrompts?: number;
+  
+  // LLM Provider configuration
+  provider?: BrowserLLMProvider;
+  model?: string;
+  proxyUrl?: string;
+  proxyHeaders?: Record<string, string>;
+  useWorker?: boolean;
+  
   // Environment configuration
   environment?: {
     allowedDevices?: DeviceType[];
@@ -17,6 +26,7 @@ export interface AgentaryClientConfig {
     disallowedDevices?: DeviceType[];
     disallowedBrowsers?: BrowserType[];
   };
+  
   // Analytics configuration
   analytics?: {
     mixpanelToken?: string;

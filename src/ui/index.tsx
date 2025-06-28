@@ -1,6 +1,6 @@
 import { render } from 'preact';
 import { h } from 'preact';
-import { WebLLMClient } from '../core/WebLLMClient';
+import { WebLLMClient } from '../core/llm/WebLLMClient';
 import { getAnalytics } from '../utils/Analytics';
 import type { WidgetOptions } from '../types/index';
 import { Logger } from '../utils/Logger';

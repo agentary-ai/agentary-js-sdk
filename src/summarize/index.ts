@@ -1,5 +1,5 @@
 import { extractPageContent } from "../utils/content-extraction";
-import { WebLLMClient } from "../core/WebLLMClient";
+import { WebLLMClient } from "../core/llm/WebLLMClient";
 import { SummarizeContentOptions } from "../types/AgentaryClient";
 import { Logger } from "../utils/Logger";
 import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";

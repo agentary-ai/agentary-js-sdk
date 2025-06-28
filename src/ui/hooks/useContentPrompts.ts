@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { WebLLMClient } from '../../core/WebLLMClient';
+import type { WebLLMClient } from '../../core/llm/WebLLMClient';
 import type { WidgetOptions } from '../../types/index';
 import { generatePrompts } from '../../prompts/index';
 import { Logger } from '../../utils/Logger';

@@ -804,6 +804,19 @@ const cssStyles = `
     padding: 0 var(--agentary-spacing-2xl) var(--agentary-spacing-2xl) var(--agentary-spacing-2xl);
     background-color: var(--agentary-background);
     flex-shrink: 0;
+    position: relative;
+  }
+
+  .agentary-chat-input-container::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent 0%, var(--agentary-background) 100%);
+    pointer-events: none;
+    z-index: 1;
   }
 
   .agentary-chat-input-row {

@@ -1,5 +1,5 @@
-import { WebLLMClient } from "@/core/WebLLMClient.js";
-import { extractPageContent, Logger } from "../utils/index.js";
+import { WebLLMClient } from "../core/llm/WebLLMClient";
+import { extractPageContent, Logger } from "../utils/index";
 import { GeneratePromptsOptions } from "../types/AgentaryClient";
 import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 

@@ -1,14 +1,16 @@
-// import { ApiClient } from './core/ApiClient.js';
+// import { ApiClient } from './api/ApiClient.js';
 import { EventEmitter } from '../utils/EventEmitter';
 import { Logger } from '../utils/Logger';
 import { Analytics, setAnalytics } from '../utils/Analytics';
 import { isEnvironmentAllowed, getCurrentEnvironment } from '../utils/Environment';
-import { WebLLMClient } from './WebLLMClient';
+import { WebLLMClient } from './llm/WebLLMClient';
 import { summarizeContent } from '../summarize';
 import { explainText } from '../explain/index';
 import { generatePrompts } from '../prompts/index';
 import { postMessage } from '../chat/index';
 import { mountWidget, unmountWidget, unmountAllWidgets, getMountedWidgets } from '../ui';
+import { LLMClientFactory } from './llm/LLMClientFactory';
+import { LLMClient } from './llm/LLMClientInterface';
 
 import type { 
   AgentaryClientConfig,
@@ -26,7 +28,7 @@ import type { InitProgressReport } from '@mlc-ai/web-llm';
 export class AgentaryClient extends EventEmitter {
   private config: AgentaryClientConfig;
   private logger: Logger;
-  private webLLMClient: WebLLMClient;
+  private llmClient!: LLMClient;
   private analytics: Analytics;
 
   /**
@@ -36,6 +38,7 @@ export class AgentaryClient extends EventEmitter {
   constructor(config: AgentaryClientConfig = {
     debug: false,
     loadModel: true,
+    provider: 'webllm',
     showWidgetOnInit: true,
     generatePagePrompts: true,
     maxPagePrompts: 5,
@@ -88,44 +91,51 @@ export class AgentaryClient extends EventEmitter {
     // TODO: Add once API is implemented
     // this.apiClient = new ApiClient(this.config, this.logger);
     
-    this.webLLMClient = new WebLLMClient(
-      this.logger,
-      "Llama-3.2-1B-Instruct-q4f16_1-MLC",
-      (p: InitProgressReport) => { this.logger.debug(p); },
-      true
-    );
+    // Initialize LLM client
+    this.initializeLLMClient().then(() => {
+      if (this.config.showWidgetOnInit) {
+        const widgetOptions: WidgetOptions = {
+          position: "bottom-right",
+          autoOpenOnLoad: true,
+          generatePagePrompts: this.config.generatePagePrompts || false,
+          maxPagePrompts: this.config.maxPagePrompts || 5,
+        };
+        
+        // Only add contentSelector if it's defined
+        if (this.config.contentSelector) {
+          widgetOptions.contentSelector = this.config.contentSelector;
+        }
 
-    if (this.config.loadModel) {
-      this.webLLMClient.createEngine();
-    }
-    
-    if (this.config.showWidgetOnInit) {
-      const widgetOptions: WidgetOptions = {
-        position: "bottom-right",
-        autoOpenOnLoad: true,
-        generatePagePrompts: this.config.generatePagePrompts || false,
-        maxPagePrompts: this.config.maxPagePrompts || 5,
-      };
-      
-      // Only add contentSelector if it's defined
-      if (this.config.contentSelector) {
-        widgetOptions.contentSelector = this.config.contentSelector;
+        this.logger.debug('Mounting widget');
+        
+        mountWidget(
+          this.llmClient as WebLLMClient,
+          widgetOptions,
+          this.logger
+        );
       }
-
-      this.logger.debug('Mounting widget');
-      
-      mountWidget(
-        this.webLLMClient, 
-        widgetOptions,
-        this.logger
-      );
-    }
+    });
 
     // Set up page unload handler to flush analytics
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', () => {
         this.analytics.flush();
       });
+    }
+  }
+  
+  private async initializeLLMClient() {
+    this.logger.debug('Initializing LLM client');
+    this.llmClient = await LLMClientFactory.create({
+      provider: this.config.provider || 'webllm',
+      model: this.config.model,
+      proxyUrl: this.config.proxyUrl,
+      proxyHeaders: this.config.proxyHeaders,
+      useWorker: this.config.useWorker
+    }, this.logger);
+    
+    if (this.config.loadModel && this.llmClient.init) {
+      await this.llmClient.init();
     }
   }
 
@@ -151,7 +161,7 @@ export class AgentaryClient extends EventEmitter {
     this.logger.info('Mounting widget with options:', widgetOptions);
     
     return mountWidget(
-      this.webLLMClient, 
+      this.llmClient as WebLLMClient,
       widgetOptions,
       this.logger
     );
@@ -185,14 +195,14 @@ export class AgentaryClient extends EventEmitter {
   }
 
   summarizeContent(options: SummarizeContentOptions = {}) {
-    return summarizeContent(this.webLLMClient, {
+    return summarizeContent(this.llmClient as WebLLMClient, {
       ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
       ...options
     }, this.logger);
   }
 
   explainSelectedText(options: ExplainTextOptions = {}) {
-    return explainText(this.webLLMClient, {
+    return explainText(this.llmClient as WebLLMClient, {
       ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
       selectedText: true,
       ...options
@@ -200,7 +210,7 @@ export class AgentaryClient extends EventEmitter {
   }
 
   generatePagePrompts(options: GeneratePromptsOptions = {}) {
-    return generatePrompts(this.webLLMClient, {
+    return generatePrompts(this.llmClient as WebLLMClient, {
       ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
       ...options
     }, this.logger);
@@ -210,14 +220,9 @@ export class AgentaryClient extends EventEmitter {
     message: string,
     options: PostMessageOptions = {}
   ) {
-    return postMessage(
-      this.webLLMClient,
-      message,
-      {
-        ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
-        ...options
-      },
-      this.logger
-    );
+    return postMessage(this.llmClient as WebLLMClient, message, {
+      ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
+      ...options
+    }, this.logger);
   }
 }
