@@ -22,7 +22,7 @@ export function PopupDialog({
   const getPopupClassName = () => {
     const classes = [classNames.popup];
     if (isClosing) {
-      classes.push(classNames.slideOut);
+      classes.push(classNames.fadeOut);
     } else {
       classes.push(classNames.slideIn);
     }

@@ -81,14 +81,8 @@ const cssStyles = `
   }
 
   @keyframes agentaryFadeOut {
-    0% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
 
   /* Base container */
@@ -148,7 +142,7 @@ const cssStyles = `
   }
 
   .agentary-fade-out {
-    animation: agentaryFadeOut 0.3s ease-in forwards;
+    animation: agentaryFadeOut 0.3s forwards;
   }
 
   /* Popup Dialog */

@@ -53,7 +53,6 @@ export class AgentaryClient extends EventEmitter {
     
     // Apply default environment restrictions if none specified
     const envConfig = this.config.environment || {
-      allowedDevices: ['desktop'],
       allowedBrowsers: ['chrome']
     };
     
@@ -106,13 +105,32 @@ export class AgentaryClient extends EventEmitter {
           widgetOptions.contentSelector = this.config.contentSelector;
         }
 
-        this.logger.debug('Mounting widget');
+        this.logger.debug('Mounting widget', this.llmClient);
         
         mountWidget(
           this.llmClient as WebLLMClient,
           widgetOptions,
           this.logger
         );
+
+        // Start loading the model **after** the widget has mounted so the
+        // FloatingActionButton can reflect the loading state.
+        if (this.config.loadModel && this.llmClient.init) {
+          // Fire-and-forget — we don't want to block the UI thread here.
+          this.llmClient.init().catch((err: unknown) => {
+            this.logger.error('Model initialization failed:', err);
+          });
+        }
+      }
+
+      if (!this.config.showWidgetOnInit) {
+        // When the widget isn't shown automatically we still honour the
+        // loadModel flag and begin loading immediately in the background.
+        if (this.config.loadModel && this.llmClient.init) {
+          this.llmClient.init().catch((err: unknown) => {
+            this.logger.error('Model initialization failed:', err);
+          });
+        }
       }
     });
 
@@ -134,9 +152,9 @@ export class AgentaryClient extends EventEmitter {
       useWorker: this.config.useWorker
     }, this.logger);
     
-    if (this.config.loadModel && this.llmClient.init) {
-      await this.llmClient.init();
-    }
+    // NOTE: We intentionally do NOT call llmClient.init() here anymore.
+    // Model loading will be triggered after the UI widget is mounted so the
+    // spinner can be displayed while the model is initializing.
   }
 
   /**

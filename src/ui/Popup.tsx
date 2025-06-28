@@ -23,10 +23,12 @@ export function Popup({ webLLMClient, widgetOptions, logger, onClose }: PopupPro
   const [showChat, setShowChat] = useState(false);
   const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>();
   const [isChatClosing, setIsChatClosing] = useState(false);
+  const [isDialogClosing, setIsDialogClosing] = useState(false);
 
   // Custom hooks for state management
   const { isModelLoading } = useModelState(webLLMClient);
   const { isVisible, isClosing, handleToggle } = usePopupState(widgetOptions.autoOpenOnLoad);
+
   const { 
     contentPrompts, 
     isGeneratingPrompts, 
@@ -44,13 +46,21 @@ export function Popup({ webLLMClient, widgetOptions, logger, onClose }: PopupPro
     injectAgentaryStyles();
   }, []);
 
+  useEffect(() => {
+    logger.debug("isModelLoading", isModelLoading);
+  }, [isModelLoading]);
+
   const handleButtonClick = () => {
     handleToggle(isModelLoading, onClose);
   };
 
   const handleStartChat = (initialMessage?: string) => {
     setChatInitialMessage(initialMessage);
-    setShowChat(true);
+    setIsDialogClosing(true);
+    setTimeout(() => {
+      setShowChat(true);
+      setIsDialogClosing(false); // Reset for next time
+    }, 300); // Match animation duration
   };
 
   const handleCloseChat = () => {
@@ -64,17 +74,10 @@ export function Popup({ webLLMClient, widgetOptions, logger, onClose }: PopupPro
 
   return (
     <div className={classNames.container}>
-      {/* Floating Action Button */}
-      <FloatingActionButton
-        isVisible={isVisible}
-        isModelLoading={isModelLoading}
-        onClick={handleButtonClick}
-      />
-
       {/* Popup Dialog */}
       {isVisible && !isModelLoading && !showChat && (
         <PopupDialog
-          isClosing={isClosing}
+          isClosing={isClosing || isDialogClosing}
           contentPrompts={contentPrompts}
           isGeneratingPrompts={isGeneratingPrompts}
           showPrompts={showPrompts}
@@ -93,6 +96,13 @@ export function Popup({ webLLMClient, widgetOptions, logger, onClose }: PopupPro
           logger={logger}
         />
       )}
+
+      {/* Floating Action Button (rendered last to ensure it stays on top) */}
+      <FloatingActionButton
+        isVisible={isVisible}
+        isModelLoading={isModelLoading}
+        onClick={handleButtonClick}
+      />
     </div>
   );
 } 
