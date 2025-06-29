@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { classNames } from '../styles';
 import { QuestionInput } from './QuestionInput';
+import { RelatedArticlesCarousel } from './RelatedArticlesCarousel';
 
 interface PopupDialogProps {
   isClosing: boolean;
@@ -19,6 +20,9 @@ export function PopupDialog({
   isFadingOut,
   onStartChat
 }: PopupDialogProps) {
+
+
+
   const getPopupClassName = () => {
     const classes = [classNames.popup];
     if (isClosing) {
@@ -42,7 +46,7 @@ export function PopupDialog({
         />
         
         {/* General action prompts */}
-        <div className={classNames.promptPillsContainer}>
+        {/* <div className={classNames.promptPillsContainer}>
           <div 
             className={classNames.promptPill}
             onClick={() => onStartChat('Summarize this page')}
@@ -50,7 +54,10 @@ export function PopupDialog({
             <i className="fas fa-book-open-reader"></i>
             Summarize this page
           </div>
-        </div>
+        </div> */}
+
+        {/* Related Articles Carousel */}
+        <RelatedArticlesCarousel />
       </div>
 
       {/* Footer */}
