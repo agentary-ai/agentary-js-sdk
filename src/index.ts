@@ -1,8 +1,16 @@
-import { AgentaryClient } from './core/index';
+import { AgentaryClient, ApiClient, WidgetService, ContentService, RelatedArticlesService } from './core/index';
 import type { AgentaryClientConfig } from './types/AgentaryClient';
 
 export const init = (config?: AgentaryClientConfig): AgentaryClient => {
   return new AgentaryClient(config);
+};
+
+// Export core components for direct use
+export { 
+  ApiClient, 
+  WidgetService, 
+  ContentService, 
+  RelatedArticlesService 
 };
 
 // // Export widget functions for independent use
@@ -34,6 +42,13 @@ export const init = (config?: AgentaryClientConfig): AgentaryClient => {
 //   type BrowserType
 // } from './utils/Environment';
 
-// // Export types
+// Export types
+export type { 
+  AgentaryClientConfig,
+  GetRelatedArticlesOptions,
+  RelatedArticlesResponse,
+  SimilarPage,
+  ContentMetadata,
+  RelatedArticlesStatistics
+} from './types/AgentaryClient';
 // export type { WidgetOptions } from './types/index';
-// export type { AgentaryClientConfig } from './types/AgentaryClient';

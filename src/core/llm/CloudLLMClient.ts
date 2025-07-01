@@ -2,7 +2,8 @@ import { Logger } from "../../utils/Logger";
 import { ProxyLLMClient } from "./ProxyLLMClient";
 import { LLMClientConfig } from "./LLMClientInterface";
 
-const DEFAULT_CLOUD_URL = 'https://api.agentary.ai';
+// TODO: Move CloudLLMClient to a separate service
+const DEFAULT_CLOUD_URL = 'https://agentary-backend-667848593924.us-central1.run.app';
 const DEFAULT_RETRY_CONFIG = {
   maxRetries: 3,
   backoffMs: 1000

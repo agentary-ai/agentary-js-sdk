@@ -13,4 +13,5 @@ export type {
   BrowserLLMProvider,
   ChatCompletionOptions 
 } from './llm/LLMClientInterface';
-// export { ApiClient } from './api/ApiClient'; 
+export { ApiClient } from './api/ApiClient';
+export { WidgetService, ContentService, RelatedArticlesService } from './services';

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import type { WebLLMClient } from '../core/llm/WebLLMClient';
 import type { WidgetOptions } from '../types/index';
 import type { Logger } from '../utils/Logger';
+import type { RelatedArticlesService } from '../core/services/RelatedArticlesService';
 import { classNames, injectAgentaryStyles } from './styles';
 import { useModelState } from './hooks/useModelState';
 import { usePopupState } from './hooks/usePopupState';
@@ -15,10 +16,11 @@ interface PopupProps {
   webLLMClient: WebLLMClient;
   widgetOptions: WidgetOptions;
   logger: Logger;
+  relatedArticlesService?: RelatedArticlesService | undefined;
   onClose?: () => void;
 }
 
-export function Popup({ webLLMClient, widgetOptions, logger, onClose }: PopupProps) {
+export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesService, onClose }: PopupProps) {
   // Chat state management
   const [showChat, setShowChat] = useState(false);
   const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>();
@@ -83,6 +85,8 @@ export function Popup({ webLLMClient, widgetOptions, logger, onClose }: PopupPro
           showPrompts={showPrompts}
           isFadingOut={isFadingOut}
           onStartChat={handleStartChat}
+          relatedArticlesService={relatedArticlesService}
+          widgetOptions={widgetOptions}
         />
       )}
 

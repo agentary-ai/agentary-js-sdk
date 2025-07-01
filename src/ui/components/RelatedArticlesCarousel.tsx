@@ -1,13 +1,57 @@
 import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { classNames } from '../styles';
+import type { RelatedArticlesService } from '../../core/services/RelatedArticlesService';
+import type { WidgetOptions } from '../../types/index';
+import type { SimilarPage } from '../../types/AgentaryClient';
 
-export function RelatedArticlesCarousel() {
+interface RelatedArticlesCarouselProps {
+  relatedArticlesService?: RelatedArticlesService | undefined;
+  widgetOptions: WidgetOptions;
+}
+
+export function RelatedArticlesCarousel({ 
+  relatedArticlesService, 
+  widgetOptions 
+}: RelatedArticlesCarouselProps) {
   const [activeArticleIndex, setActiveArticleIndex] = useState(0);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const [relatedArticles, setRelatedArticles] = useState<SimilarPage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showFadeIn, setShowFadeIn] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const autoScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const userInteractionTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch related articles when component mounts
+  useEffect(() => {
+    if (relatedArticlesService) {
+      setIsLoading(true);
+      setShowFadeIn(false); // Reset fade-in state when starting new fetch
+      const fetchOptions: any = {};
+      if (widgetOptions.contentSelector) {
+        fetchOptions.contentSelector = widgetOptions.contentSelector;
+      }
+      
+      relatedArticlesService.getSimilarPages(fetchOptions)
+        .then(articles => {
+          setRelatedArticles(articles);
+          setIsLoading(false);
+          // Trigger fade-in animation after a short delay to ensure smooth transition
+          setTimeout(() => {
+            setShowFadeIn(true);
+          }, 50);
+        })
+        .catch(error => {
+          console.error('Failed to fetch related articles:', error);
+          setIsLoading(false);
+          // Trigger fade-in animation even on error to show the "no articles" message
+          setTimeout(() => {
+            setShowFadeIn(true);
+          }, 50);
+        });
+    }
+  }, [relatedArticlesService, widgetOptions.contentSelector]);
 
   // Handle scroll events to update active dot and implement looping
   useEffect(() => {
@@ -16,7 +60,7 @@ export function RelatedArticlesCarousel() {
 
     let isScrolling = false;
     let scrollTimeout: NodeJS.Timeout;
-    const totalArticles = 3; // Total number of articles
+    const totalArticles = Math.max(relatedArticles.length, 1); // Use actual number of articles, minimum 1
 
     const handleScroll = () => {
       const scrollLeft = carouselElement.scrollLeft;
@@ -88,7 +132,7 @@ export function RelatedArticlesCarousel() {
           const currentIndex = Math.round(currentScrollLeft / containerWidth);
           
           // Calculate next index (loop back to 0 after last article)
-          const nextIndex = (currentIndex + 1) % 3;
+          const nextIndex = (currentIndex + 1) % Math.max(relatedArticles.length, 1);
           
           // Same timing for all transitions - no special handling
           carouselElement.scrollTo({
@@ -174,6 +218,13 @@ export function RelatedArticlesCarousel() {
     }, 1000); // Resume auto-scroll 1 second after mouse leaves
   };
 
+  // Handle article click to open in new tab
+  const handleArticleClick = (article: SimilarPage) => {
+    if (article.url) {
+      window.open(article.url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className={classNames.relatedArticles}>
       <div 
@@ -185,60 +236,113 @@ export function RelatedArticlesCarousel() {
           ref={carouselRef}
           className={classNames.relatedArticlesContainer}
         >
-          <div className={classNames.relatedArticleCard}>
-            <div className={classNames.relatedArticleImageBg}>
-              <div className={classNames.relatedArticleOverlay}></div>
-              <div className={classNames.relatedArticleContent}>
-                <div className={classNames.relatedArticleTitle}>
-                  How to Get Started with AI-Powered Web Development
+          {isLoading ? (
+            <>
+              {/* Show 3 skeleton cards to mimic typical carousel */}
+              {[...Array(3)].map((_, index) => (
+                <div key={`skeleton-${index}`} className={classNames.skeletonArticle}>
+                  <div className={classNames.skeletonArticleBg}>
+                    <div className={classNames.skeletonContent}>
+                      <div className={classNames.skeletonTitle}></div>
+                      <div className={classNames.skeletonTitleShort}></div>
+                      <div className={classNames.skeletonSource}></div>
+                    </div>
+                  </div>
                 </div>
-                <div className={classNames.relatedArticleSource}>
-                  TechCrunch • 2 days ago
+              ))}
+            </>
+          ) : relatedArticles.length > 0 ? (
+            <>
+              {relatedArticles.map((article, index) => (
+                <div 
+                  key={article.url || index} 
+                  className={`${classNames.relatedArticleCard} ${showFadeIn ? classNames.articlesFadeIn : ''}`}
+                  onClick={() => handleArticleClick(article)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div 
+                    className={classNames.relatedArticleImageBg}
+                    style={{
+                      backgroundImage: article.main_image_url ? `url(${article.main_image_url})` : undefined,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat'
+                    }}
+                  >
+                    <div className={classNames.relatedArticleOverlay}></div>
+                    <div className={classNames.relatedArticleContent}>
+                      <div className={classNames.relatedArticleTitle}>
+                        {article.content_metadata.title || 'Untitled Article'}
+                      </div>
+                      {article.short_summary && (
+                        <div className={classNames.relatedArticleSummary}>
+                          {article.short_summary}
+                        </div>
+                      )}
+                      <div className={classNames.relatedArticleSource}>
+                        {article.site_name || article.domain || 'Unknown Source'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            <div className={`${classNames.relatedArticleCard} ${showFadeIn ? classNames.articlesFadeIn : ''}`}>
+              <div 
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                  borderRadius: 'var(--agentary-border-radius)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <div 
+                  className={classNames.relatedArticleContent}
+                  style={{
+                    position: 'static',
+                    padding: '24px',
+                    textAlign: 'center',
+                    color: 'initial'
+                  }}
+                >
+                  <div 
+                    className={classNames.relatedArticleTitle}
+                    style={{
+                      color: '#666',
+                      textShadow: 'none'
+                    }}
+                  >
+                    No related articles found
+                  </div>
+                  <div 
+                    className={classNames.relatedArticleSource}
+                    style={{
+                      color: '#666',
+                      fontWeight: 400,
+                      textShadow: 'none'
+                    }}
+                  >
+                    Try browsing other content
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className={classNames.relatedArticleCard}>
-            <div className={classNames.relatedArticleImageBg}>
-              <div className={classNames.relatedArticleOverlay}></div>
-              <div className={classNames.relatedArticleContent}>
-                <div className={classNames.relatedArticleTitle}>
-                  Building Modern Web Applications with Machine Learning
-                </div>
-                <div className={classNames.relatedArticleSource}>
-                  Medium • 1 week ago
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className={classNames.relatedArticleCard}>
-            <div className={classNames.relatedArticleImageBg}>
-              <div className={classNames.relatedArticleOverlay}></div>
-              <div className={classNames.relatedArticleContent}>
-                <div className={classNames.relatedArticleTitle}>
-                  The Future of Conversational AI in Web Browsers
-                </div>
-                <div className={classNames.relatedArticleSource}>
-                  Wired • 3 days ago
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
         <div className={classNames.relatedArticlesNavigation}>
           <div className={classNames.relatedArticlesDots}>
-            <div 
-              className={`${classNames.relatedArticlesDot} ${activeArticleIndex === 0 ? classNames.active : ''}`}
-              onClick={() => handleDotClick(0)}
-            ></div>
-            <div 
-              className={`${classNames.relatedArticlesDot} ${activeArticleIndex === 1 ? classNames.active : ''}`}
-              onClick={() => handleDotClick(1)}
-            ></div>
-            <div 
-              className={`${classNames.relatedArticlesDot} ${activeArticleIndex === 2 ? classNames.active : ''}`}
-              onClick={() => handleDotClick(2)}
-            ></div>
+            {(!isLoading && relatedArticles.length > 1) && relatedArticles.map((_, index) => (
+              <div 
+                key={index}
+                className={`${classNames.relatedArticlesDot} ${activeArticleIndex === index ? classNames.active : ''}`}
+                onClick={() => handleDotClick(index)}
+              ></div>
+            ))}
           </div>
         </div>
       </div>

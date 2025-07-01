@@ -2,6 +2,8 @@ import { h } from 'preact';
 import { classNames } from '../styles';
 import { QuestionInput } from './QuestionInput';
 import { RelatedArticlesCarousel } from './RelatedArticlesCarousel';
+import type { RelatedArticlesService } from '../../core/services/RelatedArticlesService';
+import type { WidgetOptions } from '../../types/index';
 
 interface PopupDialogProps {
   isClosing: boolean;
@@ -10,6 +12,8 @@ interface PopupDialogProps {
   showPrompts: boolean;
   isFadingOut: boolean;
   onStartChat: (initialMessage?: string) => void;
+  relatedArticlesService?: RelatedArticlesService | undefined;
+  widgetOptions: WidgetOptions;
 }
 
 export function PopupDialog({ 
@@ -18,7 +22,9 @@ export function PopupDialog({
   isGeneratingPrompts, 
   showPrompts, 
   isFadingOut,
-  onStartChat
+  onStartChat,
+  relatedArticlesService,
+  widgetOptions
 }: PopupDialogProps) {
 
 
@@ -57,7 +63,10 @@ export function PopupDialog({
         </div> */}
 
         {/* Related Articles Carousel */}
-        <RelatedArticlesCarousel />
+        <RelatedArticlesCarousel 
+          relatedArticlesService={relatedArticlesService}
+          widgetOptions={widgetOptions}
+        />
       </div>
 
       {/* Footer */}

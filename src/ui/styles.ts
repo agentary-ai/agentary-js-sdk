@@ -1034,7 +1034,12 @@ const cssStyles = `
     padding: 0 var(--agentary-spacing-sm);
     box-sizing: border-box;
     scroll-snap-align: start;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .agentary-related-article-card:hover {
+    opacity: 0.85;
   }
 
   .agentary-related-article-image-bg {
@@ -1047,13 +1052,9 @@ const cssStyles = `
     background-repeat: no-repeat;
     display: flex;
     align-items: flex-end;
-    border-radius: var(--agentary-border-radius-small);
+    border-radius: var(--agentary-border-radius);
     overflow: hidden;
     cursor: pointer;
-  }
-
-  .agentary-related-article-card:hover {
-    transform: translateY(-2px);
   }
 
   .agentary-related-article-overlay {
@@ -1079,10 +1080,23 @@ const cssStyles = `
   }
 
   .agentary-related-article-title {
-    font-weight: 600;
-    font-size: var(--agentary-font-size-md);
+    font-weight: 500;
+    font-size: var(--agentary-font-size-lg);
     line-height: 1.3;
+    margin-bottom: var(--agentary-spacing-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .agentary-related-article-summary {
+    font-size: var(--agentary-font-size-sm);
+    font-weight: 400;
+    line-height: 1.4;
     margin-bottom: var(--agentary-spacing-xs);
+    opacity: 0.85;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1092,6 +1106,7 @@ const cssStyles = `
 
   .agentary-related-article-source {
     font-size: var(--agentary-font-size-sm);
+    font-weight: 600;
     opacity: 0.9;
     line-height: 1.3;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -1120,6 +1135,93 @@ const cssStyles = `
   .agentary-related-articles-dot.agentary-active,
   .agentary-related-articles-dot:hover {
     background-color: var(--agentary-primary-color);
+  }
+
+  /* Skeleton loading animation */
+  .agentary-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+  }
+
+  .agentary-skeleton-article {
+    flex: 0 0 100%;
+    height: 160px;
+    padding: 0 var(--agentary-spacing-sm);
+    box-sizing: border-box;
+    scroll-snap-align: start;
+  }
+
+  .agentary-skeleton-article-bg {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--agentary-border-radius);
+    overflow: hidden;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+  }
+
+  .agentary-skeleton-content {
+    position: absolute;
+    bottom: var(--agentary-spacing-lg);
+    left: var(--agentary-spacing-lg);
+    right: var(--agentary-spacing-lg);
+    z-index: 2;
+  }
+
+  .agentary-skeleton-title {
+    height: 16px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.8) 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+    border-radius: 4px;
+    margin-bottom: var(--agentary-spacing-xs);
+  }
+
+  .agentary-skeleton-title-short {
+    width: 75%;
+    height: 16px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.8) 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+    border-radius: 4px;
+    margin-bottom: var(--agentary-spacing-sm);
+  }
+
+  .agentary-skeleton-source {
+    width: 50%;
+    height: 12px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.7) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.7) 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes agentarySkeletonLoading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Fade-in animation for loaded articles */
+  .agentary-articles-fade-in {
+    animation: agentaryArticlesFadeIn 0.6s ease-out forwards;
+  }
+
+  @keyframes agentaryArticlesFadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   /* Streaming animations */
@@ -1264,9 +1366,20 @@ export const classNames = {
   relatedArticleOverlay: 'agentary-related-article-overlay',
   relatedArticleContent: 'agentary-related-article-content',
   relatedArticleTitle: 'agentary-related-article-title',
+  relatedArticleSummary: 'agentary-related-article-summary',
   relatedArticleSource: 'agentary-related-article-source',
   relatedArticlesNavigation: 'agentary-related-articles-navigation',
   relatedArticlesDots: 'agentary-related-articles-dots',
   relatedArticlesDot: 'agentary-related-articles-dot',
   active: 'agentary-active',
+  // Skeleton loading classes
+  skeleton: 'agentary-skeleton',
+  skeletonArticle: 'agentary-skeleton-article',
+  skeletonArticleBg: 'agentary-skeleton-article-bg',
+  skeletonContent: 'agentary-skeleton-content',
+  skeletonTitle: 'agentary-skeleton-title',
+  skeletonTitleShort: 'agentary-skeleton-title-short',
+  skeletonSource: 'agentary-skeleton-source',
+  // Fade-in animation class
+  articlesFadeIn: 'agentary-articles-fade-in',
 }; 

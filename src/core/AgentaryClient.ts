@@ -1,16 +1,12 @@
-// import { ApiClient } from './api/ApiClient.js';
+import { ApiClient } from './api/ApiClient';
 import { EventEmitter } from '../utils/EventEmitter';
 import { Logger } from '../utils/Logger';
 import { Analytics, setAnalytics } from '../utils/Analytics';
 import { isEnvironmentAllowed, getCurrentEnvironment } from '../utils/Environment';
 import { WebLLMClient } from './llm/WebLLMClient';
-import { summarizeContent } from '../summarize';
-import { explainText } from '../explain/index';
-import { generatePrompts } from '../prompts/index';
-import { postMessage } from '../chat/index';
-import { mountWidget, unmountWidget, unmountAllWidgets, getMountedWidgets } from '../ui';
 import { LLMClientFactory } from './llm/LLMClientFactory';
 import { LLMClient } from './llm/LLMClientInterface';
+import { WidgetService, ContentService, RelatedArticlesService } from './services';
 
 import type { 
   AgentaryClientConfig,
@@ -18,9 +14,12 @@ import type {
   GeneratePromptsOptions,
   ExplainTextOptions,
   PostMessageOptions,
+  GetRelatedArticlesOptions,
+  RelatedArticlesResponse,
+  SimilarPage,
+  RelatedArticlesStatistics,
 } from '../types/AgentaryClient';
 import { WidgetOptions } from '../types/index';
-import type { InitProgressReport } from '@mlc-ai/web-llm';
 
 /**
  * Main Agentary SDK class
@@ -30,6 +29,10 @@ export class AgentaryClient extends EventEmitter {
   private logger: Logger;
   private llmClient!: LLMClient;
   private analytics: Analytics;
+  private apiClient: ApiClient;
+  private widgetService: WidgetService;
+  private contentService: ContentService;
+  private relatedArticlesService: RelatedArticlesService;
 
   /**
    * Create an Agentary SDK instance
@@ -87,8 +90,21 @@ export class AgentaryClient extends EventEmitter {
     // Set global analytics instance
     setAnalytics(this.analytics);
 
-    // TODO: Add once API is implemented
-    // this.apiClient = new ApiClient(this.config, this.logger);
+    // Initialize API client for backend communication
+    const backendUrl = this.config.baseUrl || 'https://agentary-backend-667848593924.us-central1.run.app';
+    const apiKey = this.config.apiKey || '';
+    
+    this.apiClient = new ApiClient({
+      baseUrl: backendUrl,
+      apiKey: apiKey
+    }, this.logger);
+    
+    this.logger.info(`API client initialized with backend URL: ${backendUrl}`);
+    
+    // Initialize services
+    this.relatedArticlesService = new RelatedArticlesService(this.config, this.apiClient, this.logger);
+    this.widgetService = new WidgetService(this.config, this.logger, this.relatedArticlesService);
+    this.contentService = new ContentService(this.config, this.logger);
     
     // Initialize LLM client
     this.initializeLLMClient().then(() => {
@@ -107,10 +123,9 @@ export class AgentaryClient extends EventEmitter {
 
         this.logger.debug('Mounting widget', this.llmClient);
         
-        mountWidget(
+        this.widgetService.mountWidget(
           this.llmClient as WebLLMClient,
-          widgetOptions,
-          this.logger
+          widgetOptions
         );
 
         // Start loading the model **after** the widget has mounted so the
@@ -163,26 +178,7 @@ export class AgentaryClient extends EventEmitter {
    * @returns Object with unmount function and widget ID
    */
   mountWidget(options: WidgetOptions = {}): { unmount: () => void; widgetId: string } {
-    const widgetOptions: WidgetOptions = {
-      position: "bottom-right",
-      autoOpenOnLoad: false,
-      generatePagePrompts: this.config.generatePagePrompts || false,
-      maxPagePrompts: this.config.maxPagePrompts || 5,
-      ...options
-    };
-    
-    // Add contentSelector from config if not provided in options
-    if (this.config.contentSelector && !widgetOptions.contentSelector) {
-      widgetOptions.contentSelector = this.config.contentSelector;
-    }
-
-    this.logger.info('Mounting widget with options:', widgetOptions);
-    
-    return mountWidget(
-      this.llmClient as WebLLMClient,
-      widgetOptions,
-      this.logger
-    );
+    return this.widgetService.mountWidget(this.llmClient as WebLLMClient, options);
   }
 
   /**
@@ -191,8 +187,7 @@ export class AgentaryClient extends EventEmitter {
    * @returns boolean indicating success
    */
   unmountWidget(widgetId: string): boolean {
-    this.logger.info(`Unmounting widget: ${widgetId}`);
-    return unmountWidget(widgetId);
+    return this.widgetService.unmountWidget(widgetId);
   }
 
   /**
@@ -200,8 +195,7 @@ export class AgentaryClient extends EventEmitter {
    * @returns number of widgets unmounted
    */
   unmountAllWidgets(): number {
-    this.logger.info('Unmounting all widgets');
-    return unmountAllWidgets();
+    return this.widgetService.unmountAllWidgets();
   }
 
   /**
@@ -209,38 +203,60 @@ export class AgentaryClient extends EventEmitter {
    * @returns Array of widget information
    */
   getMountedWidgets(): Array<{ widgetId: string; hasButton: boolean; hasDialog: boolean }> {
-    return getMountedWidgets();
+    return this.widgetService.getMountedWidgets();
+  }
+
+  /**
+   * Get the API client for making backend requests
+   * @returns {ApiClient} The initialized API client
+   */
+  getApiClient(): ApiClient {
+    return this.apiClient;
+  }
+
+  /**
+   * Get related articles for the current page from the backend
+   * @param {GetRelatedArticlesOptions} options - Options for retrieving related articles
+   * @returns {Promise<RelatedArticlesResponse>} Related articles response from backend
+   */
+  async getRelatedArticles(options: GetRelatedArticlesOptions = {}): Promise<RelatedArticlesResponse> {
+    return this.relatedArticlesService.getRelatedArticles(options);
+  }
+
+  /**
+   * Get just the similar pages from related articles (convenience method)
+   * @param {GetRelatedArticlesOptions} options - Options for retrieving related articles
+   * @returns {Promise<SimilarPage[]>} Array of similar pages
+   */
+  async getSimilarPages(options: GetRelatedArticlesOptions = {}): Promise<SimilarPage[]> {
+    return this.relatedArticlesService.getSimilarPages(options);
+  }
+
+  /**
+   * Get related articles statistics (convenience method)
+   * @param {GetRelatedArticlesOptions} options - Options for retrieving related articles
+   * @returns {Promise<RelatedArticlesStatistics>} Statistics about the related articles
+   */
+  async getRelatedArticlesStats(options: GetRelatedArticlesOptions = {}): Promise<RelatedArticlesStatistics> {
+    return this.relatedArticlesService.getRelatedArticlesStats(options);
   }
 
   summarizeContent(options: SummarizeContentOptions = {}) {
-    return summarizeContent(this.llmClient as WebLLMClient, {
-      ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
-      ...options
-    }, this.logger);
+    return this.contentService.summarizeContent(this.llmClient as WebLLMClient, options);
   }
 
   explainSelectedText(options: ExplainTextOptions = {}) {
-    return explainText(this.llmClient as WebLLMClient, {
-      ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
-      selectedText: true,
-      ...options
-    }, this.logger);
+    return this.contentService.explainSelectedText(this.llmClient as WebLLMClient, options);
   }
 
   generatePagePrompts(options: GeneratePromptsOptions = {}) {
-    return generatePrompts(this.llmClient as WebLLMClient, {
-      ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
-      ...options
-    }, this.logger);
+    return this.contentService.generatePagePrompts(this.llmClient as WebLLMClient, options);
   }
 
   postMessage(
     message: string,
     options: PostMessageOptions = {}
   ) {
-    return postMessage(this.llmClient as WebLLMClient, message, {
-      ...(this.config.contentSelector && { contentSelector: this.config.contentSelector }),
-      ...options
-    }, this.logger);
+    return this.contentService.postMessage(this.llmClient as WebLLMClient, message, options);
   }
 }
