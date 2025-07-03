@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'preact/hooks';
 import { classNames } from '../styles';
 import { postMessage } from '../../chat/index';
 import { summarizeContent } from '../../summarize/index';
-import type { WebLLMClient } from '../../core/WebLLMClient';
+import type { WebLLMClient } from '../../core/llm/WebLLMClient';
 import type { Logger } from '../../utils/Logger';
 import { ChatCompletionMessageParam } from '@mlc-ai/web-llm';
 import { marked } from 'marked';

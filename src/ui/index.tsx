@@ -1,11 +1,12 @@
 import { render } from 'preact';
 import { h } from 'preact';
-import { WebLLMClient } from '../core/WebLLMClient';
+import { WebLLMClient } from '../core/llm/WebLLMClient';
 import { getAnalytics } from '../utils/Analytics';
 import type { WidgetOptions } from '../types/index';
 import { Logger } from '../utils/Logger';
 import { Popup } from './Popup';
 import { removeAgentaryStyles } from './styles';
+import type { RelatedArticlesService } from '../core/services/RelatedArticlesService';
 
 // Global widget state to track mounted widgets
 let mountedWidgets: Map<string, {
@@ -45,12 +46,14 @@ function generateWidgetId(): string {
  * @param webLLMClient - The Agentary client instance
  * @param widgetOptions - UI configuration options
  * @param logger - The logger instance
+ * @param relatedArticlesService - Optional service for fetching related articles
  * @returns Object with unmount function and widget ID
  */
 export function mountWidget(
   webLLMClient: WebLLMClient, 
   widgetOptions: WidgetOptions = {},
-  logger: Logger
+  logger: Logger,
+  relatedArticlesService?: RelatedArticlesService
 ): { unmount: () => void; widgetId: string } {
   const widgetId = generateWidgetId();
   const analytics = getAnalytics();
@@ -88,6 +91,7 @@ export function mountWidget(
       webLLMClient,
       widgetOptions,
       logger,
+      relatedArticlesService,
       onClose: () => {
         // Optional: handle popup close events here
         logger.info(`Popup closed for widget ${widgetId}`);

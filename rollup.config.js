@@ -44,7 +44,7 @@ const baseConfig = {
 // Web worker configuration
 const workerConfig = {
   ...baseConfig,
-  input: 'src/core/webllm-worker.ts',
+  input: 'src/core/workers/webllm-worker.ts',
   output: {
     file: 'dist/webllm-worker.js',
     format: 'es',
@@ -59,7 +59,7 @@ const workerConfig = {
 // Service worker configuration
 const serviceWorkerConfig = {
   ...baseConfig,
-  input: 'src/core/webllm-service-worker.ts',
+  input: 'src/core/workers/webllm-service-worker.ts',
   output: {
     file: 'dist/webllm-service-worker.js',
     format: 'es',

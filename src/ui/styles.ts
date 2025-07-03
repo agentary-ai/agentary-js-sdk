@@ -81,14 +81,8 @@ const cssStyles = `
   }
 
   @keyframes agentaryFadeOut {
-    0% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
 
   /* Base container */
@@ -148,7 +142,7 @@ const cssStyles = `
   }
 
   .agentary-fade-out {
-    animation: agentaryFadeOut 0.3s ease-in forwards;
+    animation: agentaryFadeOut 0.3s forwards;
   }
 
   /* Popup Dialog */
@@ -167,7 +161,8 @@ const cssStyles = `
     display: flex;
     flex-direction: column;
     z-index: var(--agentary-z-index);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     font-size: var(--agentary-font-size-md);
     line-height: 1.5;
@@ -226,12 +221,12 @@ const cssStyles = `
 
   /* Content */
   .agentary-content {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     padding: var(--agentary-spacing-3xl);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
+    align-items: stretch;
+    width: 100%;
     text-align: center;
     color: var(--agentary-text-muted);
     overflow-y: auto;
@@ -804,6 +799,19 @@ const cssStyles = `
     padding: 0 var(--agentary-spacing-2xl) var(--agentary-spacing-2xl) var(--agentary-spacing-2xl);
     background-color: var(--agentary-background);
     flex-shrink: 0;
+    position: relative;
+  }
+
+  .agentary-chat-input-container::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent 0%, var(--agentary-background) 100%);
+    pointer-events: none;
+    z-index: 1;
   }
 
   .agentary-chat-input-row {
@@ -979,6 +987,243 @@ const cssStyles = `
     font-weight: 600;
   }
 
+  /* Related Articles Carousel */
+  .agentary-related-articles {
+    max-width: 100%;
+  }
+
+  .agentary-related-articles-header {
+    display: flex;
+    align-items: center;
+    gap: var(--agentary-spacing-sm);
+    margin-bottom: var(--agentary-spacing-md);
+    font-weight: 600;
+    color: var(--agentary-text-color);
+    font-size: var(--agentary-font-size-md);
+  }
+
+  .agentary-related-articles-header i {
+    color: var(--agentary-primary-color);
+    font-size: var(--agentary-font-size-md);
+  }
+
+  .agentary-related-articles-carousel {
+  }
+
+  .agentary-related-articles-container {
+    display: flex;
+    padding-top: var(--agentary-spacing-md);
+    gap: 0;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    padding-bottom: var(--agentary-spacing-sm);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .agentary-related-articles-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .agentary-related-article-card {
+    flex: 0 0 100%;
+    height: 160px;
+    padding: 0 var(--agentary-spacing-sm);
+    box-sizing: border-box;
+    scroll-snap-align: start;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .agentary-related-article-card:hover {
+    opacity: 0.85;
+  }
+
+  .agentary-related-article-image-bg {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-image: url('./public/img/article-placeholder.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: flex-end;
+    border-radius: var(--agentary-border-radius);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .agentary-related-article-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.1) 0%,
+      rgba(0, 0, 0, 0.3) 50%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
+  }
+
+  .agentary-related-article-content {
+    position: relative;
+    z-index: 2;
+    padding: var(--agentary-spacing-lg);
+    color: white;
+    width: 100%;
+  }
+
+  .agentary-related-article-title {
+    font-weight: 500;
+    font-size: var(--agentary-font-size-lg);
+    line-height: 1.3;
+    margin-bottom: var(--agentary-spacing-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .agentary-related-article-summary {
+    font-size: var(--agentary-font-size-sm);
+    font-weight: 400;
+    line-height: 1.4;
+    margin-bottom: var(--agentary-spacing-xs);
+    opacity: 0.85;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .agentary-related-article-source {
+    font-size: var(--agentary-font-size-sm);
+    font-weight: 600;
+    opacity: 0.9;
+    line-height: 1.3;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .agentary-related-articles-navigation {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--agentary-spacing-md);
+  }
+
+  .agentary-related-articles-dots {
+    display: flex;
+    gap: var(--agentary-spacing-xs);
+  }
+
+  .agentary-related-articles-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--agentary-border-color);
+    cursor: pointer;
+    transition: background-color var(--agentary-transition-fast);
+  }
+
+  .agentary-related-articles-dot.agentary-active,
+  .agentary-related-articles-dot:hover {
+    background-color: var(--agentary-primary-color);
+  }
+
+  /* Skeleton loading animation */
+  .agentary-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+  }
+
+  .agentary-skeleton-article {
+    flex: 0 0 100%;
+    height: 160px;
+    padding: 0 var(--agentary-spacing-sm);
+    box-sizing: border-box;
+    scroll-snap-align: start;
+  }
+
+  .agentary-skeleton-article-bg {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--agentary-border-radius);
+    overflow: hidden;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+  }
+
+  .agentary-skeleton-content {
+    position: absolute;
+    bottom: var(--agentary-spacing-lg);
+    left: var(--agentary-spacing-lg);
+    right: var(--agentary-spacing-lg);
+    z-index: 2;
+  }
+
+  .agentary-skeleton-title {
+    height: 16px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.8) 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+    border-radius: 4px;
+    margin-bottom: var(--agentary-spacing-xs);
+  }
+
+  .agentary-skeleton-title-short {
+    width: 75%;
+    height: 16px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.8) 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+    border-radius: 4px;
+    margin-bottom: var(--agentary-spacing-sm);
+  }
+
+  .agentary-skeleton-source {
+    width: 50%;
+    height: 12px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.7) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.7) 75%);
+    background-size: 200% 100%;
+    animation: agentarySkeletonLoading 2.5s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes agentarySkeletonLoading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Fade-in animation for loaded articles */
+  .agentary-articles-fade-in {
+    animation: agentaryArticlesFadeIn 0.6s ease-out forwards;
+  }
+
+  @keyframes agentaryArticlesFadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   /* Streaming animations */
   .agentary-streaming-cursor {
     animation: agentaryBlinkCursor 1s infinite;
@@ -1111,4 +1356,30 @@ export const classNames = {
   chatSendButton: 'agentary-chat-send-button',
   // Streaming classes
   streamingCursor: 'agentary-streaming-cursor',
+  // Related articles classes
+  relatedArticles: 'agentary-related-articles',
+  relatedArticlesHeader: 'agentary-related-articles-header',
+  relatedArticlesCarousel: 'agentary-related-articles-carousel',
+  relatedArticlesContainer: 'agentary-related-articles-container',
+  relatedArticleCard: 'agentary-related-article-card',
+  relatedArticleImageBg: 'agentary-related-article-image-bg',
+  relatedArticleOverlay: 'agentary-related-article-overlay',
+  relatedArticleContent: 'agentary-related-article-content',
+  relatedArticleTitle: 'agentary-related-article-title',
+  relatedArticleSummary: 'agentary-related-article-summary',
+  relatedArticleSource: 'agentary-related-article-source',
+  relatedArticlesNavigation: 'agentary-related-articles-navigation',
+  relatedArticlesDots: 'agentary-related-articles-dots',
+  relatedArticlesDot: 'agentary-related-articles-dot',
+  active: 'agentary-active',
+  // Skeleton loading classes
+  skeleton: 'agentary-skeleton',
+  skeletonArticle: 'agentary-skeleton-article',
+  skeletonArticleBg: 'agentary-skeleton-article-bg',
+  skeletonContent: 'agentary-skeleton-content',
+  skeletonTitle: 'agentary-skeleton-title',
+  skeletonTitleShort: 'agentary-skeleton-title-short',
+  skeletonSource: 'agentary-skeleton-source',
+  // Fade-in animation class
+  articlesFadeIn: 'agentary-articles-fade-in',
 }; 

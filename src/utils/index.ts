@@ -14,3 +14,4 @@ export {
   type DeviceType,
   type BrowserType 
 } from './Environment';
+export { cleanUrl, isValidUrl } from './UrlUtils';

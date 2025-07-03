@@ -1,16 +1,11 @@
 import { CreateMLCEngine, CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import type { ChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam, InitProgressCallback, InitProgressReport, MLCEngine, ResponseFormat, WebWorkerMLCEngine } from "@mlc-ai/web-llm";
-import { Logger } from "../utils/Logger";
-import { getAnalytics } from "../utils/Analytics";
-import { isSafari, getBrowserName } from "../utils/BrowserDetection";
+import { Logger } from "../../utils/Logger";
+import { getAnalytics } from "../../utils/Analytics";
+import { isSafari, getBrowserName } from "../../utils/BrowserDetection";
+import { LLMClient, ChatCompletionOptions } from "./LLMClientInterface";
 
-interface ChatCompletionOptions {
-  stream: boolean;
-  responseFormat?: 'text' | 'json_object';
-  onStreamToken?: (token: string) => void;
-}
-
-export class WebLLMClient {
+export class WebLLMClient implements LLMClient {
   private logger: Logger;
   private modelPath: string;
   private initProgressCallback: InitProgressCallback;
@@ -20,7 +15,8 @@ export class WebLLMClient {
   private workerVerified?: boolean;
   private workerBlobUrl?: string | null;
   private isModelLoading?: boolean;
-  private onModelLoadingChange?: (isLoading: boolean) => void
+  private onModelLoadingChange?: (isLoading: boolean) => void;
+  private onModelReadyChange?: (isReady: boolean) => void;
 
   constructor(
     logger: Logger,
@@ -40,11 +36,15 @@ export class WebLLMClient {
     this.onModelLoadingChange = callback;
   }
 
-  /**
-   * Get the current model loading state
-   * @returns {boolean} True if the model is currently loading
-   */
-  get modelLoading(): boolean {
+  setOnModelReadyChange(callback: (isReady: boolean) => void) {
+    this.onModelReadyChange = callback;
+  }
+
+  get isReady(): boolean {
+    return !!this.engine && !this.isModelLoading;
+  }
+
+  get isLoading(): boolean {
     return this.isModelLoading || false;
   }
 
@@ -159,7 +159,7 @@ export class WebLLMClient {
     });
   }
 
-  async createEngine() {
+  async init() {
     if (!this.engine) {
       const analytics = getAnalytics();
       const modelLoadingStartTime = Date.now();
@@ -176,6 +176,9 @@ export class WebLLMClient {
       try {
         if (this.onModelLoadingChange) {
           this.onModelLoadingChange(true);
+        }
+        if (this.onModelReadyChange) {
+          this.onModelReadyChange(false);
         }
         this.isModelLoading = true;
         
@@ -230,6 +233,9 @@ export class WebLLMClient {
         if (this.onModelLoadingChange) {
           this.onModelLoadingChange(false);
         }
+        if (this.onModelReadyChange) {
+          this.onModelReadyChange(true);
+        }
 
         // Track successful model loading
         analytics?.track('model_loading_completed', {
@@ -245,6 +251,9 @@ export class WebLLMClient {
         this.isModelLoading = false;
         if (this.onModelLoadingChange) {
           this.onModelLoadingChange(false);
+        }
+        if (this.onModelReadyChange) {
+          this.onModelReadyChange(false);
         }
 
         // Track model loading failure
@@ -397,7 +406,7 @@ export class WebLLMClient {
       actuallyUsingWorker: !!this.worker,
       workerVerified: this.workerVerified,
       isMainThreadForSafari: this.isUsingMainThreadForSafari,
-      modelLoading: this.modelLoading
+      modelLoading: this.isLoading
     };
   }
 }

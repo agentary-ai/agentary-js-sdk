@@ -1,5 +1,5 @@
-import { WebLLMClient } from "@/core/WebLLMClient.js";
-import { extractPageContent, Logger } from "../utils/index.js";
+import { WebLLMClient } from "../core/llm/WebLLMClient";
+import { extractPageContent, Logger } from "../utils/index";
 import { GeneratePromptsOptions } from "../types/AgentaryClient";
 import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 
@@ -59,7 +59,7 @@ export async function generatePrompts(
     - Varied in type (comprehension, analysis, application, etc.)
     - Max 10 words per question
 
-    **IMPORTANT:** You must return your response as an array of strings containing the 
+    **IMPORTANT:** You must return your response as an JSON array of strings containing the 
     ${promptCount} questions. DO NOT return a response using any other format.
   `;
 
