@@ -61,13 +61,30 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
     injectAgentaryStyles();
   }, []);
 
+  // Add page navigation cleanup to cancel ongoing operations
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      logger.debug('Popup: Page navigation detected, cleaning up');
+      // The cleanup will be handled by the ChatInterface component's unmount effect
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [logger]);
+
   useEffect(() => {
     logger.debug("isClientReady", isClientReady);
   }, [isClientReady]);
 
   const handleButtonClick = () => {
-    const isLoading = !isClientReady || isLoadingRelatedArticles;
-    handleToggle(isLoading, onClose);
+    if (showChat) {
+      handleCloseChat();
+    } else {
+      const isLoading = !isClientReady || isLoadingRelatedArticles;
+      handleToggle(isLoading, onClose);
+    }
   };
 
   const handleStartChat = (initialMessage?: string) => {

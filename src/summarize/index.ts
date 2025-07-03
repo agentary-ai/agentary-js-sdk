@@ -49,6 +49,11 @@ export async function summarizeContent(
       - If content appears to be misinformation or conspiracy theories, note this in your summary rather than presenting it as fact
     `
     
+    // Check if operation was cancelled before starting
+    if (options.abortSignal?.aborted) {
+      throw new Error('Operation was cancelled');
+    }
+
     // Prepare messages for the model
     const messages = [
       { role: "system", content: systemPrompt },
@@ -62,7 +67,10 @@ export async function summarizeContent(
         messages,
         {
           stream: options.streamResponse || false,
-          ...(options.onStreamToken && { onStreamToken: options.onStreamToken })
+          ...(options.onStreamToken && { onStreamToken: options.onStreamToken }),
+          ...(options.abortSignal && {
+            abortSignal: options.abortSignal
+          })
         }
       );
 

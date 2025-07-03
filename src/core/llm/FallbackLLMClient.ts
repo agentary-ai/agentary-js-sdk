@@ -114,6 +114,19 @@ export class FallbackLLMClient implements LLMClient {
   }
 
   /**
+   * Cancel all ongoing operations on both clients
+   */
+  cancelAllOperations(): void {
+    this.logger.debug('FallbackLLMClient: Cancelling operations on both clients');
+    if (this.webLLMClient.cancelAllOperations) {
+      this.webLLMClient.cancelAllOperations();
+    }
+    if ('cancelAllOperations' in this.cloudLLMClient && typeof this.cloudLLMClient.cancelAllOperations === 'function') {
+      this.cloudLLMClient.cancelAllOperations();
+    }
+  }
+
+  /**
    * Get information about which client is currently active
    */
   getActiveClientInfo(): {

@@ -33,6 +33,7 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
   const [isSummarizing, setIsSummarizing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Add initial message if provided
   useEffect(() => {
@@ -74,8 +75,42 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
     }
   }, [isSummarizing]);
 
+  // Cancel ongoing operations when component is closing or unmounting
+  useEffect(() => {
+    if (isClosing && abortControllerRef.current) {
+      logger.debug('ChatInterface: Cancelling ongoing operations due to closing');
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      
+      // Also cancel operations directly on the WebLLM client
+      if (webLLMClient && typeof webLLMClient.cancelAllOperations === 'function') {
+        webLLMClient.cancelAllOperations();
+      }
+    }
+  }, [isClosing, logger, webLLMClient]);
+
+  // Cancel ongoing operations when component unmounts
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        logger.debug('ChatInterface: Cancelling ongoing operations due to unmount');
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+        
+        // Also cancel operations directly on the WebLLM client
+        if (webLLMClient && typeof webLLMClient.cancelAllOperations === 'function') {
+          webLLMClient.cancelAllOperations();
+        }
+      }
+    };
+  }, [logger, webLLMClient]);
+
   const handleSummarization = async () => {
     setIsLoading(true);
+    
+    // Create abort controller for this operation
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
     
     try {
       // Create placeholder message for streaming
@@ -96,6 +131,7 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
         webLLMClient,
         {
           streamResponse: true,
+          abortSignal: abortController.signal,
           onStreamToken: (token: string) => {
             setMessages(prev => prev.map(msg => {
               if (msg.id === aiMessageId && msg.isStreaming) {
@@ -125,28 +161,43 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
       }));
 
     } catch (error) {
-      logger.error('Error summarizing content:', error);
-      
-      // Add error message
-      const errorMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        content: 'Sorry, I encountered an error summarizing the page. Please try again.',
-        sender: 'assistant',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => {
-        // Remove the placeholder streaming message and add error message
-        const filteredMessages = prev.filter(msg => !(msg.isStreaming && msg.content === ''));
-        return [...filteredMessages, errorMessage];
-      });
+      // Check if this was a cancellation
+      if (error instanceof Error && error.message === 'Operation was cancelled') {
+        logger.debug('Summarization was cancelled');
+        // Remove the placeholder streaming message
+        setMessages(prev => prev.filter(msg => !(msg.isStreaming && msg.content === '')));
+      } else {
+        logger.error('Error summarizing content:', error);
+        
+        // Add error message
+        const errorMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          content: 'Sorry, I encountered an error summarizing the page. Please try again.',
+          sender: 'assistant',
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => {
+          // Remove the placeholder streaming message and add error message
+          const filteredMessages = prev.filter(msg => !(msg.isStreaming && msg.content === ''));
+          return [...filteredMessages, errorMessage];
+        });
+      }
     } finally {
       setIsLoading(false);
+      // Clear the abort controller since operation is complete
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
   const handleAIResponse = async (userMessage: string, previousMessages: ChatCompletionMessageParam[]) => {
     setIsLoading(true);
+    
+    // Create abort controller for this operation
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
     
     try {
       // Create placeholder message for streaming
@@ -169,6 +220,7 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
         {
           previousMessages,
           streamResponse: true,
+          abortSignal: abortController.signal,
           onStreamToken: (token: string) => {
             setMessages(prev => prev.map(msg => {
               if (msg.id === aiMessageId && msg.isStreaming) {
@@ -198,23 +250,34 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
       }));
 
     } catch (error) {
-      logger.error('Error processing message:', error);
-      
-      // Add error message
-      const errorMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        content: 'Sorry, I encountered an error processing your message. Please try again.',
-        sender: 'assistant',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => {
-        // Remove the placeholder streaming message and add error message
-        const filteredMessages = prev.filter(msg => !(msg.isStreaming && msg.content === ''));
-        return [...filteredMessages, errorMessage];
-      });
+      // Check if this was a cancellation
+      if (error instanceof Error && error.message === 'Operation was cancelled') {
+        logger.debug('Chat response was cancelled');
+        // Remove the placeholder streaming message
+        setMessages(prev => prev.filter(msg => !(msg.isStreaming && msg.content === '')));
+      } else {
+        logger.error('Error processing message:', error);
+        
+        // Add error message
+        const errorMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          content: 'Sorry, I encountered an error processing your message. Please try again.',
+          sender: 'assistant',
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => {
+          // Remove the placeholder streaming message and add error message
+          const filteredMessages = prev.filter(msg => !(msg.isStreaming && msg.content === ''));
+          return [...filteredMessages, errorMessage];
+        });
+      }
     } finally {
       setIsLoading(false);
+      // Clear the abort controller since operation is complete
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
     }
   };
 

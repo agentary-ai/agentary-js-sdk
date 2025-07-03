@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cancellation Test</title>
+    <script src="dist/agentary.umd.js"></script>
+</head>
+<body>
+    <h1>Cancellation Test</h1>
+    <button id="startChat">Start Chat</button>
+    <button id="cancelChat">Cancel Chat</button>
+    <div id="output"></div>
+
+    <script>
+        let currentAbortController = null;
+        
+        document.getElementById('startChat').addEventListener('click', async () => {
+            const output = document.getElementById('output');
+            output.innerHTML = 'Starting chat...';
+            
+            // Create abort controller
+            currentAbortController = new AbortController();
+            
+            try {
+                // This would normally use the actual SDK
+                console.log('Starting chat operation...');
+                
+                // Simulate a long-running operation
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        output.innerHTML = 'Chat completed normally';
+                        resolve();
+                    }, 5000);
+                    
+                    currentAbortController.signal.addEventListener('abort', () => {
+                        clearTimeout(timeout);
+                        output.innerHTML = 'Chat was cancelled!';
+                        reject(new Error('Operation was cancelled'));
+                    });
+                });
+                
+            } catch (error) {
+                if (error.message === 'Operation was cancelled') {
+                    output.innerHTML = 'Chat was cancelled!';
+                } else {
+                    output.innerHTML = 'Error: ' + error.message;
+                }
+            }
+        });
+        
+        document.getElementById('cancelChat').addEventListener('click', () => {
+            if (currentAbortController) {
+                console.log('Cancelling chat operation...');
+                currentAbortController.abort();
+                currentAbortController = null;
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -51,7 +51,7 @@ export class ProxyLLMClient implements LLMClient {
       }
 
       if (options.stream) {
-        return this.handleStreamingResponse(response, options.onStreamToken);
+        return this.handleStreamingResponse(response, options.onStreamToken, options.abortSignal);
       }
 
       const result = await response.json();
@@ -85,9 +85,17 @@ export class ProxyLLMClient implements LLMClient {
     return fetch(request);
   }
 
+  /**
+   * Cancel all ongoing operations (for proxy client, this is a no-op)
+   */
+  cancelAllOperations(): void {
+    this.logger.debug('ProxyLLMClient: cancelAllOperations called (no-op for proxy client)');
+  }
+
   private async handleStreamingResponse(
     response: Response,
-    onStreamToken?: (token: string) => void
+    onStreamToken?: (token: string) => void,
+    abortSignal?: AbortSignal
   ): Promise<ChatCompletion> {
     const reader = response.body?.getReader();
     if (!reader) {
@@ -100,6 +108,11 @@ export class ProxyLLMClient implements LLMClient {
 
     try {
       while (true) {
+        // Check if operation was cancelled
+        if (abortSignal?.aborted) {
+          throw new Error('Operation was cancelled');
+        }
+
         const { done, value } = await reader.read();
         if (done) break;
 

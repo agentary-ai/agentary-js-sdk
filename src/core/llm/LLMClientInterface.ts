@@ -13,6 +13,7 @@ export interface ChatCompletionOptions {
   stream: boolean;
   responseFormat?: 'text' | 'json_object';
   onStreamToken?: (token: string) => void;
+  abortSignal?: AbortSignal;
 }
 
 export interface LLMClient {
@@ -24,6 +25,7 @@ export interface LLMClient {
   // Optional lifecycle methods
   init?(): Promise<void>;
   cleanup?(): void;
+  cancelAllOperations?(): void;
   
   // Status properties
   readonly isReady: boolean;

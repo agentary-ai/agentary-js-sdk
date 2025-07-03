@@ -42,6 +42,7 @@ export interface SummarizeContentOptions {
   maxContentChars?: number;
   streamResponse?: boolean;
   onStreamToken?: (token: string) => void;
+  abortSignal?: AbortSignal;
 }
 
 export interface GeneratePromptsOptions {
@@ -68,6 +69,7 @@ export interface PostMessageOptions {
   maxContentChars?: number;
   streamResponse?: boolean;
   onStreamToken?: (token: string) => void;
+  abortSignal?: AbortSignal;
 }
 
 export interface GetRelatedArticlesOptions {

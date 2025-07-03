@@ -241,6 +241,9 @@ export class AgentaryClient extends EventEmitter {
       },
       cleanup: () => {
         // CloudLLMClient doesn't have cleanup method
+      },
+      cancelAllOperations: () => {
+        // CloudLLMClient doesn't have ongoing operations to cancel
       }
     } as WebLLMClient;
   }

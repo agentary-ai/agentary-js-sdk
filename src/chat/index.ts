@@ -111,6 +111,11 @@ export async function postMessage(
     }
     messages.push({ role: "user", content: message });
 
+    // Check if operation was cancelled before starting
+    if (options.abortSignal?.aborted) {
+      throw new Error('Operation was cancelled');
+    }
+
     // Stream response
     const response = await webLLMClient.chatCompletion(
       messages,
@@ -118,6 +123,9 @@ export async function postMessage(
         stream: options.streamResponse || false,
         ...(options.onStreamToken && { 
           onStreamToken: options.onStreamToken 
+        }),
+        ...(options.abortSignal && {
+          abortSignal: options.abortSignal
         })
       }
     );

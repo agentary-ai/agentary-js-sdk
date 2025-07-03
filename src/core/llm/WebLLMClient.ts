@@ -17,6 +17,7 @@ export class WebLLMClient implements LLMClient {
   private isModelLoading?: boolean;
   private onModelLoadingChange?: (isLoading: boolean) => void;
   private onModelReadyChange?: (isReady: boolean) => void;
+  private activeOperations: Set<string> = new Set();
 
   constructor(
     logger: Logger,
@@ -52,6 +53,9 @@ export class WebLLMClient implements LLMClient {
    * Clean up resources including blob URLs
    */
   cleanup() {
+    // Cancel all active operations
+    this.activeOperations.clear();
+    
     if (this.worker) {
       this.worker.terminate();
       this.worker = null;
@@ -63,6 +67,14 @@ export class WebLLMClient implements LLMClient {
     }
     
     this.workerVerified = false;
+  }
+
+  /**
+   * Cancel all ongoing operations
+   */
+  cancelAllOperations() {
+    this.logger.debug('WebLLMClient: Cancelling all operations');
+    this.activeOperations.clear();
   }
 
   /**
@@ -282,8 +294,12 @@ export class WebLLMClient implements LLMClient {
     const analytics = getAnalytics();
     const responseStartTime = Date.now();
     const isStreaming = options.stream;
+    const operationId = `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
+      // Track this operation
+      this.activeOperations.add(operationId);
+
       if (options.stream) {
         const chunks = await this.engine.chat.completions.create({
           messages,
@@ -296,6 +312,12 @@ export class WebLLMClient implements LLMClient {
 
         // Process the stream and accumulate the full response
         for await (const chunk of chunks) {
+          // Check if operation was cancelled
+          if (options.abortSignal?.aborted || !this.activeOperations.has(operationId)) {
+            this.logger.debug('WebLLMClient: Operation cancelled during streaming');
+            throw new Error('Operation was cancelled');
+          }
+
           lastChunk = chunk;
 
           if (chunk.choices && chunk.choices[0]?.delta?.content) {
@@ -360,6 +382,12 @@ export class WebLLMClient implements LLMClient {
           stream: false
         }) as ChatCompletion;
 
+        // Check if operation was cancelled after completion
+        if (options.abortSignal?.aborted || !this.activeOperations.has(operationId)) {
+          this.logger.debug('WebLLMClient: Operation cancelled after completion');
+          throw new Error('Operation was cancelled');
+        }
+
         // Track AI response
         analytics?.track('ai_response_received', {
           response_time_ms: Date.now() - responseStartTime,
@@ -383,6 +411,9 @@ export class WebLLMClient implements LLMClient {
       });
 
       throw error;
+    } finally {
+      // Clean up operation tracking
+      this.activeOperations.delete(operationId);
     }
   }
 
