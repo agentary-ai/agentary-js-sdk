@@ -54,7 +54,7 @@ export class RelatedArticlesService {
       // }
 
       // Call the backend API
-      const response = await this.apiClient.post('/api/v1/page/similar', {
+      const response = await this.apiClient.post('/v1/page/similar', {
         url
         // content
       });

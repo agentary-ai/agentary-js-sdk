@@ -1,57 +1,27 @@
 import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { classNames } from '../styles';
-import type { RelatedArticlesService } from '../../core/services/RelatedArticlesService';
 import type { WidgetOptions } from '../../types/index';
 import type { SimilarPage } from '../../types/AgentaryClient';
 
 interface RelatedArticlesCarouselProps {
-  relatedArticlesService?: RelatedArticlesService | undefined;
+  relatedArticles: SimilarPage[];
+  isLoading: boolean;
+  showFadeIn: boolean;
   widgetOptions: WidgetOptions;
 }
 
 export function RelatedArticlesCarousel({ 
-  relatedArticlesService, 
+  relatedArticles, 
+  isLoading,
+  showFadeIn,
   widgetOptions 
 }: RelatedArticlesCarouselProps) {
   const [activeArticleIndex, setActiveArticleIndex] = useState(0);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const [relatedArticles, setRelatedArticles] = useState<SimilarPage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showFadeIn, setShowFadeIn] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const autoScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const userInteractionTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Fetch related articles when component mounts
-  useEffect(() => {
-    if (relatedArticlesService) {
-      setIsLoading(true);
-      setShowFadeIn(false); // Reset fade-in state when starting new fetch
-      const fetchOptions: any = {};
-      if (widgetOptions.contentSelector) {
-        fetchOptions.contentSelector = widgetOptions.contentSelector;
-      }
-      
-      relatedArticlesService.getSimilarPages(fetchOptions)
-        .then(articles => {
-          setRelatedArticles(articles);
-          setIsLoading(false);
-          // Trigger fade-in animation after a short delay to ensure smooth transition
-          setTimeout(() => {
-            setShowFadeIn(true);
-          }, 50);
-        })
-        .catch(error => {
-          console.error('Failed to fetch related articles:', error);
-          setIsLoading(false);
-          // Trigger fade-in animation even on error to show the "no articles" message
-          setTimeout(() => {
-            setShowFadeIn(true);
-          }, 50);
-        });
-    }
-  }, [relatedArticlesService, widgetOptions.contentSelector]);
 
   // Handle scroll events to update active dot and implement looping
   useEffect(() => {

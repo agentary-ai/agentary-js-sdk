@@ -4,6 +4,7 @@ import { QuestionInput } from './QuestionInput';
 import { RelatedArticlesCarousel } from './RelatedArticlesCarousel';
 import type { RelatedArticlesService } from '../../core/services/RelatedArticlesService';
 import type { WidgetOptions } from '../../types/index';
+import type { SimilarPage } from '../../types/AgentaryClient';
 
 interface PopupDialogProps {
   isClosing: boolean;
@@ -14,6 +15,9 @@ interface PopupDialogProps {
   onStartChat: (initialMessage?: string) => void;
   relatedArticlesService?: RelatedArticlesService | undefined;
   widgetOptions: WidgetOptions;
+  relatedArticles: SimilarPage[];
+  isLoadingRelatedArticles: boolean;
+  showRelatedArticlesFadeIn: boolean;
 }
 
 export function PopupDialog({ 
@@ -24,7 +28,10 @@ export function PopupDialog({
   isFadingOut,
   onStartChat,
   relatedArticlesService,
-  widgetOptions
+  widgetOptions,
+  relatedArticles,
+  isLoadingRelatedArticles,
+  showRelatedArticlesFadeIn
 }: PopupDialogProps) {
 
 
@@ -64,7 +71,9 @@ export function PopupDialog({
 
         {/* Related Articles Carousel */}
         <RelatedArticlesCarousel 
-          relatedArticlesService={relatedArticlesService}
+          relatedArticles={relatedArticles}
+          isLoading={isLoadingRelatedArticles}
+          showFadeIn={showRelatedArticlesFadeIn}
           widgetOptions={widgetOptions}
         />
       </div>

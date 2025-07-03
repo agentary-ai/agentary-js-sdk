@@ -42,7 +42,7 @@ export class ProxyLLMClient implements LLMClient {
           messages,
           stream: options.stream,
           model: this.config.model,
-          response_format: options.responseFormat
+          response_format: { type: options.responseFormat || 'text' }
         })
       }));
 

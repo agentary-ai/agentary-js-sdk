@@ -7,6 +7,7 @@ export type BrowserLLMProvider =
   | 'webllm'           // Current - runs models in browser
   | 'proxy'            // User's own backend proxy
   | 'cloud'            // Agentary cloud service
+  | 'fallback'         // WebLLM with CloudLLM fallback
 
 export interface ChatCompletionOptions {
   stream: boolean;

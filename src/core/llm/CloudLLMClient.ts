@@ -3,7 +3,6 @@ import { ProxyLLMClient } from "./ProxyLLMClient";
 import { LLMClientConfig } from "./LLMClientInterface";
 
 // TODO: Move CloudLLMClient to a separate service
-const DEFAULT_CLOUD_URL = 'https://agentary-backend-667848593924.us-central1.run.app';
 const DEFAULT_RETRY_CONFIG = {
   maxRetries: 3,
   backoffMs: 1000
@@ -17,9 +16,13 @@ export class CloudLLMClient extends ProxyLLMClient {
       throw new Error('apiKey is required for cloud provider');
     }
 
+    if (!config.proxyUrl) {
+      throw new Error('proxyUrl is required for cloud provider');
+    }
+
     const cloudConfig: LLMClientConfig = {
       ...config,
-      proxyUrl: config.proxyUrl || DEFAULT_CLOUD_URL,
+      proxyUrl: `${config.proxyUrl}/v1/llm`,
       proxyHeaders: {
         'Authorization': `Bearer ${config.apiKey}`,
         ...(config.organizationId && { 'X-Organization-ID': config.organizationId }),

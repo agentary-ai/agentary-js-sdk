@@ -15,7 +15,8 @@ export class WebLLMClient implements LLMClient {
   private workerVerified?: boolean;
   private workerBlobUrl?: string | null;
   private isModelLoading?: boolean;
-  private onModelLoadingChange?: (isLoading: boolean) => void
+  private onModelLoadingChange?: (isLoading: boolean) => void;
+  private onModelReadyChange?: (isReady: boolean) => void;
 
   constructor(
     logger: Logger,
@@ -33,6 +34,10 @@ export class WebLLMClient implements LLMClient {
 
   setOnModelLoadingChange(callback: (isLoading: boolean) => void) {
     this.onModelLoadingChange = callback;
+  }
+
+  setOnModelReadyChange(callback: (isReady: boolean) => void) {
+    this.onModelReadyChange = callback;
   }
 
   get isReady(): boolean {
@@ -172,6 +177,9 @@ export class WebLLMClient implements LLMClient {
         if (this.onModelLoadingChange) {
           this.onModelLoadingChange(true);
         }
+        if (this.onModelReadyChange) {
+          this.onModelReadyChange(false);
+        }
         this.isModelLoading = true;
         
         if (this.useWorker) {
@@ -225,6 +233,9 @@ export class WebLLMClient implements LLMClient {
         if (this.onModelLoadingChange) {
           this.onModelLoadingChange(false);
         }
+        if (this.onModelReadyChange) {
+          this.onModelReadyChange(true);
+        }
 
         // Track successful model loading
         analytics?.track('model_loading_completed', {
@@ -240,6 +251,9 @@ export class WebLLMClient implements LLMClient {
         this.isModelLoading = false;
         if (this.onModelLoadingChange) {
           this.onModelLoadingChange(false);
+        }
+        if (this.onModelReadyChange) {
+          this.onModelReadyChange(false);
         }
 
         // Track model loading failure

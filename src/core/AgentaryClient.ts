@@ -4,6 +4,7 @@ import { Logger } from '../utils/Logger';
 import { Analytics, setAnalytics } from '../utils/Analytics';
 import { isEnvironmentAllowed, getCurrentEnvironment } from '../utils/Environment';
 import { WebLLMClient } from './llm/WebLLMClient';
+import { FallbackLLMClient } from './llm/FallbackLLMClient';
 import { LLMClientFactory } from './llm/LLMClientFactory';
 import { LLMClient } from './llm/LLMClientInterface';
 import { WidgetService, ContentService, RelatedArticlesService } from './services';
@@ -33,6 +34,9 @@ export class AgentaryClient extends EventEmitter {
   private widgetService: WidgetService;
   private contentService: ContentService;
   private relatedArticlesService: RelatedArticlesService;
+  
+  // Backend URL calculated from config
+  private readonly backendUrl: string;
 
   /**
    * Create an Agentary SDK instance
@@ -49,6 +53,9 @@ export class AgentaryClient extends EventEmitter {
     super();
     this.config = config;
     this.logger = new Logger(this.config.debug);
+    
+    // Calculate backend URL once from config
+    this.backendUrl = this.config.baseUrl || 'https://agentary-backend-667848593924.us-central1.run.app';
     
     // Check environment compatibility before initializing
     const currentEnv = getCurrentEnvironment();
@@ -91,15 +98,14 @@ export class AgentaryClient extends EventEmitter {
     setAnalytics(this.analytics);
 
     // Initialize API client for backend communication
-    const backendUrl = this.config.baseUrl || 'https://agentary-backend-667848593924.us-central1.run.app';
     const apiKey = this.config.apiKey || '';
     
     this.apiClient = new ApiClient({
-      baseUrl: backendUrl,
+      baseUrl: this.backendUrl,
       apiKey: apiKey
     }, this.logger);
     
-    this.logger.info(`API client initialized with backend URL: ${backendUrl}`);
+    this.logger.info(`API client initialized with backend URL: ${this.backendUrl}`);
     
     // Initialize services
     this.relatedArticlesService = new RelatedArticlesService(this.config, this.apiClient, this.logger);
@@ -124,7 +130,7 @@ export class AgentaryClient extends EventEmitter {
         this.logger.debug('Mounting widget', this.llmClient);
         
         this.widgetService.mountWidget(
-          this.llmClient as WebLLMClient,
+          this.getWebLLMCompatibleClient(),
           widgetOptions
         );
 
@@ -162,9 +168,10 @@ export class AgentaryClient extends EventEmitter {
     this.llmClient = await LLMClientFactory.create({
       provider: this.config.provider || 'webllm',
       model: this.config.model,
-      proxyUrl: this.config.proxyUrl,
+      proxyUrl: this.config.proxyUrl || this.backendUrl,
       proxyHeaders: this.config.proxyHeaders,
-      useWorker: this.config.useWorker
+      useWorker: this.config.useWorker,
+      apiKey: this.config.apiKey
     }, this.logger);
     
     // NOTE: We intentionally do NOT call llmClient.init() here anymore.
@@ -173,12 +180,33 @@ export class AgentaryClient extends EventEmitter {
   }
 
   /**
+   * Get a WebLLMClient-compatible interface from the current LLM client
+   * This handles both direct WebLLMClient instances and FallbackLLMClient instances
+   */
+  private getWebLLMCompatibleClient(): WebLLMClient {
+    if (this.llmClient instanceof WebLLMClient) {
+      this.logger.debug('WebLLMClient found, returning WebLLMClient');
+      return this.llmClient;
+    }
+    
+    if (this.llmClient instanceof FallbackLLMClient) {
+      this.logger.debug('FallbackLLMClient found, returning WebLLMClient');
+      // FallbackLLMClient implements WebLLMClient-compatible methods
+      return this.llmClient as unknown as WebLLMClient;
+    }
+    
+    // For other client types, we need to create an adapter
+    // This is a fallback case that shouldn't normally happen with proper configuration
+    throw new Error(`Unsupported client type for WebLLMClient operations: ${this.llmClient.constructor.name}`);
+  }
+
+  /**
    * Mount a new widget with the specified options
    * @param {WidgetOptions} options - Widget configuration options
    * @returns Object with unmount function and widget ID
    */
   mountWidget(options: WidgetOptions = {}): { unmount: () => void; widgetId: string } {
-    return this.widgetService.mountWidget(this.llmClient as WebLLMClient, options);
+    return this.widgetService.mountWidget(this.getWebLLMCompatibleClient(), options);
   }
 
   /**
@@ -242,21 +270,52 @@ export class AgentaryClient extends EventEmitter {
   }
 
   summarizeContent(options: SummarizeContentOptions = {}) {
-    return this.contentService.summarizeContent(this.llmClient as WebLLMClient, options);
+    return this.contentService.summarizeContent(this.getWebLLMCompatibleClient(), options);
   }
 
   explainSelectedText(options: ExplainTextOptions = {}) {
-    return this.contentService.explainSelectedText(this.llmClient as WebLLMClient, options);
+    return this.contentService.explainSelectedText(this.getWebLLMCompatibleClient(), options);
   }
 
   generatePagePrompts(options: GeneratePromptsOptions = {}) {
-    return this.contentService.generatePagePrompts(this.llmClient as WebLLMClient, options);
+    return this.contentService.generatePagePrompts(this.getWebLLMCompatibleClient(), options);
   }
 
   postMessage(
     message: string,
     options: PostMessageOptions = {}
   ) {
-    return this.contentService.postMessage(this.llmClient as WebLLMClient, message, options);
+    return this.contentService.postMessage(this.getWebLLMCompatibleClient(), message, options);
+  }
+
+  /**
+   * Get information about the current LLM client status
+   * Useful for debugging fallback behavior
+   */
+  getLLMClientInfo(): {
+    provider: string;
+    isReady: boolean;
+    isLoading: boolean;
+    activeClient?: 'webllm' | 'cloud';
+    webLLMReady?: boolean;
+    webLLMLoading?: boolean;
+    webLLMFailed?: boolean;
+  } {
+    const baseInfo = {
+      provider: this.config.provider || 'webllm',
+      isReady: this.llmClient.isReady,
+      isLoading: this.llmClient.isLoading || false
+    };
+
+    // Add fallback-specific information if using FallbackLLMClient
+    if (this.llmClient instanceof FallbackLLMClient) {
+      const fallbackInfo = this.llmClient.getActiveClientInfo();
+      return {
+        ...baseInfo,
+        ...fallbackInfo
+      };
+    }
+
+    return baseInfo;
   }
 }

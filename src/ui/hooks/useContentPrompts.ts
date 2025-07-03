@@ -16,14 +16,14 @@ interface UseContentPromptsOptions {
   webLLMClient: WebLLMClient;
   widgetOptions: WidgetOptions;
   isVisible: boolean;
-  isModelLoading: boolean;
+  isClientReady: boolean;
 }
 
 export function useContentPrompts({ 
   webLLMClient, 
   widgetOptions, 
   isVisible, 
-  isModelLoading 
+  isClientReady 
 }: UseContentPromptsOptions) {
   const [contentPrompts, setContentPrompts] = useState<string[]>([]);
   const [isGeneratingPrompts, setIsGeneratingPrompts] = useState(false);
@@ -41,13 +41,13 @@ export function useContentPrompts({
     if (isVisible && webLLMClient.isReady && contentPrompts.length === 0) {
       logger.info('Generating content prompts (model ready)', {
         isVisible,
-        isModelLoading,
+        isClientReady,
         isReady: webLLMClient.isReady,
         existingPromptCount: contentPrompts.length
       });
       generateContentPrompts();
     }
-  }, [isVisible, isModelLoading, webLLMClient]);
+  }, [isVisible, isClientReady, webLLMClient]);
 
   const generateContentPrompts = async () => {
     setIsGeneratingPrompts(true);

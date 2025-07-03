@@ -5,9 +5,10 @@ import type { WidgetOptions } from '../types/index';
 import type { Logger } from '../utils/Logger';
 import type { RelatedArticlesService } from '../core/services/RelatedArticlesService';
 import { classNames, injectAgentaryStyles } from './styles';
-import { useModelState } from './hooks/useModelState';
+import { useLLMClientState } from './hooks/useLLMClientState';
 import { usePopupState } from './hooks/usePopupState';
 import { useContentPrompts } from './hooks/useContentPrompts';
+import { useRelatedArticles } from './hooks/useRelatedArticles';
 import { FloatingActionButton } from './components/FloatingActionButton';
 import { PopupDialog } from './components/PopupDialog';
 import { ChatInterface } from './components/ChatInterface';
@@ -28,7 +29,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
   const [isDialogClosing, setIsDialogClosing] = useState(false);
 
   // Custom hooks for state management
-  const { isModelLoading } = useModelState(webLLMClient);
+  const { isClientReady } = useLLMClientState(webLLMClient);
   const { isVisible, isClosing, handleToggle } = usePopupState(widgetOptions.autoOpenOnLoad);
 
   const { 
@@ -40,7 +41,19 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
     webLLMClient, 
     widgetOptions, 
     isVisible, 
-    isModelLoading 
+    isClientReady 
+  });
+
+  const {
+    relatedArticles,
+    isLoading: isLoadingRelatedArticles,
+    showFadeIn: showRelatedArticlesFadeIn,
+    hasFetched: hasRelatedArticlesFetched
+  } = useRelatedArticles({
+    relatedArticlesService,
+    widgetOptions,
+    isVisible,
+    isClientReady
   });
 
   // Inject styles when component mounts
@@ -49,11 +62,11 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
   }, []);
 
   useEffect(() => {
-    logger.debug("isModelLoading", isModelLoading);
-  }, [isModelLoading]);
+    logger.debug("isClientReady", isClientReady);
+  }, [isClientReady]);
 
   const handleButtonClick = () => {
-    handleToggle(isModelLoading, onClose);
+    handleToggle(!isClientReady, onClose);
   };
 
   const handleStartChat = (initialMessage?: string) => {
@@ -77,7 +90,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
   return (
     <div className={classNames.container}>
       {/* Popup Dialog */}
-      {isVisible && !isModelLoading && !showChat && (
+      {isVisible && isClientReady && !showChat && (
         <PopupDialog
           isClosing={isClosing || isDialogClosing}
           contentPrompts={contentPrompts}
@@ -87,6 +100,9 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
           onStartChat={handleStartChat}
           relatedArticlesService={relatedArticlesService}
           widgetOptions={widgetOptions}
+          relatedArticles={relatedArticles}
+          isLoadingRelatedArticles={isLoadingRelatedArticles}
+          showRelatedArticlesFadeIn={showRelatedArticlesFadeIn}
         />
       )}
 
@@ -104,7 +120,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
       {/* Floating Action Button (rendered last to ensure it stays on top) */}
       <FloatingActionButton
         isVisible={isVisible}
-        isModelLoading={isModelLoading}
+        isModelLoading={!isClientReady}
         onClick={handleButtonClick}
       />
     </div>
