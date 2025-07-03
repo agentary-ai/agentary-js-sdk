@@ -5,6 +5,7 @@ import { Analytics, setAnalytics } from '../utils/Analytics';
 import { isEnvironmentAllowed, getCurrentEnvironment } from '../utils/Environment';
 import { WebLLMClient } from './llm/WebLLMClient';
 import { FallbackLLMClient } from './llm/FallbackLLMClient';
+import { CloudLLMClient } from './llm/CloudLLMClient';
 import { LLMClientFactory } from './llm/LLMClientFactory';
 import { LLMClient } from './llm/LLMClientInterface';
 import { WidgetService, ContentService, RelatedArticlesService } from './services';
@@ -62,9 +63,7 @@ export class AgentaryClient extends EventEmitter {
     this.logger.debug('Current environment:', currentEnv);
     
     // Apply default environment restrictions if none specified
-    const envConfig = this.config.environment || {
-      allowedBrowsers: ['chrome']
-    };
+    const envConfig = this.config.environment || {};
     
     const isAllowed = isEnvironmentAllowed(
       envConfig.allowedDevices,
@@ -181,7 +180,7 @@ export class AgentaryClient extends EventEmitter {
 
   /**
    * Get a WebLLMClient-compatible interface from the current LLM client
-   * This handles both direct WebLLMClient instances and FallbackLLMClient instances
+   * This handles WebLLMClient, FallbackLLMClient, and CloudLLMClient instances
    */
   private getWebLLMCompatibleClient(): WebLLMClient {
     if (this.llmClient instanceof WebLLMClient) {
@@ -195,9 +194,55 @@ export class AgentaryClient extends EventEmitter {
       return this.llmClient as unknown as WebLLMClient;
     }
     
+    if (this.llmClient instanceof CloudLLMClient) {
+      this.logger.debug('CloudLLMClient found, creating WebLLMClient adapter');
+      // Create an adapter that makes CloudLLMClient compatible with WebLLMClient interface
+      return this.createWebLLMAdapter(this.llmClient);
+    }
+    
     // For other client types, we need to create an adapter
     // This is a fallback case that shouldn't normally happen with proper configuration
     throw new Error(`Unsupported client type for WebLLMClient operations: ${this.llmClient.constructor.name}`);
+  }
+  
+  /**
+   * Creates a WebLLMClient-compatible adapter for CloudLLMClient
+   */
+  private createWebLLMAdapter(cloudClient: CloudLLMClient): WebLLMClient {
+    return {
+      // Core LLMClient interface methods
+      chatCompletion: cloudClient.chatCompletion.bind(cloudClient),
+      isReady: cloudClient.isReady,
+      isLoading: false, // CloudLLMClient is always ready, never loading
+      
+      // WebLLMClient-specific methods (stubs for compatibility)
+      setOnModelLoadingChange: (callback: (isLoading: boolean) => void) => {
+        // CloudLLMClient doesn't have loading states, so we immediately call with false
+        callback(false);
+      },
+      setOnModelReadyChange: (callback: (isReady: boolean) => void) => {
+        // CloudLLMClient is always ready, so we immediately call with true
+        callback(true);
+      },
+      getEngineInfo: () => ({
+        browserName: 'N/A',
+        isSafari: false,
+        useWorker: false,
+        actuallyUsingWorker: false,
+        workerVerified: false,
+        isMainThreadForSafari: false,
+        modelLoading: false
+      }),
+      isUsingMainThreadForSafari: false,
+      
+      // Optional lifecycle methods
+      init: async () => {
+        // CloudLLMClient doesn't need initialization
+      },
+      cleanup: () => {
+        // CloudLLMClient doesn't have cleanup method
+      }
+    } as WebLLMClient;
   }
 
   /**
