@@ -66,7 +66,8 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
   }, [isClientReady]);
 
   const handleButtonClick = () => {
-    handleToggle(!isClientReady, onClose);
+    const isLoading = !isClientReady || isLoadingRelatedArticles;
+    handleToggle(isLoading, onClose);
   };
 
   const handleStartChat = (initialMessage?: string) => {
@@ -90,7 +91,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
   return (
     <div className={classNames.container}>
       {/* Popup Dialog */}
-      {isVisible && isClientReady && !showChat && (
+      {isVisible && isClientReady && !isLoadingRelatedArticles && !showChat && (
         <PopupDialog
           isClosing={isClosing || isDialogClosing}
           contentPrompts={contentPrompts}
@@ -120,7 +121,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
       {/* Floating Action Button (rendered last to ensure it stays on top) */}
       <FloatingActionButton
         isVisible={isVisible}
-        isModelLoading={!isClientReady}
+        isModelLoading={!isClientReady || isLoadingRelatedArticles}
         onClick={handleButtonClick}
       />
     </div>

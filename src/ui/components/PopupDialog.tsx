@@ -68,14 +68,16 @@ export function PopupDialog({
             Summarize this page
           </div>
         </div> */}
-
-        {/* Related Articles Carousel */}
-        <RelatedArticlesCarousel 
-          relatedArticles={relatedArticles}
-          isLoading={isLoadingRelatedArticles}
-          showFadeIn={showRelatedArticlesFadeIn}
-          widgetOptions={widgetOptions}
-        />
+        {relatedArticles.length > 0 && (
+          <div className={classNames.relatedArticlesContainer}>
+            <RelatedArticlesCarousel 
+              relatedArticles={relatedArticles}
+              isLoading={isLoadingRelatedArticles}
+              showFadeIn={showRelatedArticlesFadeIn}
+              widgetOptions={widgetOptions}
+            />
+          </div>
+        )}
       </div>
 
       {/* Footer */}
