@@ -13,6 +13,7 @@ interface PopupDialogProps {
   showPrompts: boolean;
   isFadingOut: boolean;
   onStartChat: (initialMessage?: string) => void;
+  onRefreshPrompts?: () => void;
   relatedArticlesService?: RelatedArticlesService | undefined;
   widgetOptions: WidgetOptions;
   relatedArticles: SimilarPage[];
@@ -27,6 +28,7 @@ export function PopupDialog({
   showPrompts, 
   isFadingOut,
   onStartChat,
+  onRefreshPrompts,
   relatedArticlesService,
   widgetOptions,
   relatedArticles,
@@ -56,6 +58,7 @@ export function PopupDialog({
           showPrompts={showPrompts}
           isFadingOut={isFadingOut}
           onStartChat={onStartChat}
+          {...(onRefreshPrompts && { onRefreshPrompts })}
         />
         
         {/* General action prompts */}

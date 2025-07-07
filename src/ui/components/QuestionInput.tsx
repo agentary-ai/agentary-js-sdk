@@ -9,6 +9,7 @@ interface QuestionInputProps {
   showPrompts: boolean;
   isFadingOut: boolean;
   onStartChat: (initialMessage?: string) => void;
+  onRefreshPrompts?: () => void;
 }
 
 export function QuestionInput({ 
@@ -16,7 +17,8 @@ export function QuestionInput({
   isGeneratingPrompts, 
   showPrompts, 
   isFadingOut,
-  onStartChat
+  onStartChat,
+  onRefreshPrompts
 }: QuestionInputProps) {
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -74,6 +76,7 @@ export function QuestionInput({
         showPrompts={showPrompts}
         isFadingOut={isFadingOut}
         onPromptClick={handlePromptClick}
+        {...(onRefreshPrompts && { onRefresh: onRefreshPrompts })}
       />
     </div>
   );

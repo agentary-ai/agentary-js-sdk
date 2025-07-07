@@ -36,7 +36,8 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
     contentPrompts, 
     isGeneratingPrompts, 
     showPrompts, 
-    isFadingOut 
+    isFadingOut,
+    regeneratePrompts
   } = useContentPrompts({ 
     webLLMClient, 
     widgetOptions, 
@@ -119,6 +120,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
           showPrompts={showPrompts}
           isFadingOut={isFadingOut}
           onStartChat={handleStartChat}
+          onRefreshPrompts={regeneratePrompts}
           relatedArticlesService={relatedArticlesService}
           widgetOptions={widgetOptions}
           relatedArticles={relatedArticles}
