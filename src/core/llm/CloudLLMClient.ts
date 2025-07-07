@@ -38,12 +38,16 @@ export class CloudLLMClient extends ProxyLLMClient {
     };
   }
 
-  protected override async handleRequest(request: Request): Promise<Response> {
+  protected override async handleRequest(request: Request, signal?: AbortSignal): Promise<Response> {
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt < this.retryConfig.maxRetries; attempt++) {
       try {
-        const response = await fetch(request);
+        const requestInit: RequestInit = {};
+        if (signal) {
+          requestInit.signal = signal;
+        }
+        const response = await fetch(request, requestInit);
         
         // Don't retry on 4xx errors (client errors)
         if (response.status >= 400 && response.status < 500) {
@@ -63,6 +67,11 @@ export class CloudLLMClient extends ProxyLLMClient {
         return response;
       } catch (error) {
         lastError = error as Error;
+        
+        // If the request was aborted, don't retry
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw error;
+        }
         
         // Wait before retrying
         if (attempt < this.retryConfig.maxRetries - 1) {

@@ -30,6 +30,7 @@ export class RelatedArticlesService {
     try {
       // Get current page information
       const rawUrl = options.url || (typeof window !== 'undefined' ? window.location.href : '');
+      // const rawUrl = "https://variety.com/2025/music/news/50-cent-trolls-diddy-verdict-1236446139/"
       
       // Clean the URL before sending to API
       const url = cleanUrl(rawUrl);

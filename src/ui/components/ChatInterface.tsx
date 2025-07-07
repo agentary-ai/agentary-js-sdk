@@ -112,7 +112,7 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
         logger
       );
 
-      // Mark streaming as complete
+      // Mark streaming as complete (only if not interrupted)
       setMessages(prev => prev.map(msg => {
         if (msg.id === aiMessageId && msg.isStreaming) {
           return {
@@ -218,6 +218,29 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
     }
   };
 
+  const handleStopGeneration = async () => {
+    try {
+      await webLLMClient.interruptGenerate();
+      
+      // Clean up streaming state
+      setMessages(prev => prev.map(msg => {
+        if (msg.isStreaming) {
+          return {
+            ...msg,
+            content: (msg.streamedContent || ''),
+            isStreaming: false
+          };
+        }
+        return msg;
+      }));
+      
+      setIsLoading(false);
+    } catch (error) {
+      logger.error('Error stopping generation:', error);
+      setIsLoading(false);
+    }
+  };
+
   const handleSendMessage = () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -297,7 +320,10 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
       <div className={classNames.chatHeader}>
         <button
           className={classNames.chatBackButton}
-          onClick={onClose}
+          onClick={() => {
+            handleStopGeneration();
+            onClose();
+          }}
           title="Back to prompts"
         >
           <i className="fas fa-arrow-left"></i>
@@ -339,9 +365,9 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
       </div>
 
       {/* Chat Input */}
-      {!isSummarizing && (
-        <div className={classNames.chatInputContainer}>
-          <div className={classNames.chatInputRow}>
+      <div className={classNames.chatInputContainer}>
+        <div className={classNames.chatInputRow}>
+          {!isSummarizing && (
             <input
               ref={inputRef}
               type="text"
@@ -359,21 +385,21 @@ export function ChatInterface({ isClosing, initialMessage, onClose, webLLMClient
               className={classNames.chatInput}
               disabled={isLoading}
             />
-            <button
-              onClick={handleSendMessage}
-              disabled={submitDisabled || isLoading}
-              className={classNames.chatSendButton}
-              title="Send message"
-            >
-              {isLoading ? (
-                <i className={`fas fa-spinner ${classNames.spinner}`}></i>
-              ) : (
-                <i className="fas fa-paper-plane"></i>
-              )}
-            </button>
-          </div>
+          )}
+          <button
+            onClick={isLoading ? handleStopGeneration : handleSendMessage}
+            disabled={!isLoading && (submitDisabled || isLoading)}
+            className={classNames.chatSendButton}
+            title={isLoading ? "Stop generation" : "Send message"}
+          >
+            {isLoading ? (
+              <i className="fas fa-stop"></i>
+            ) : (
+              <i className="fas fa-paper-plane"></i>
+            )}
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Footer */}
       <div className={classNames.footer}>

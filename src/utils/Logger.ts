@@ -63,4 +63,8 @@ export class Logger {
   setDebug(enabled: boolean) {
     this.debugEnabled = enabled;
   }
+
+  isDebugEnabled(): boolean {
+    return this.debugEnabled;
+  }
 } 

@@ -11,6 +11,7 @@ import { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 export class ProxyLLMClient implements LLMClient {
   protected config: LLMClientConfig;
   private logger: Logger;
+  private currentAbortController: AbortController | null = null;
 
   constructor(config: LLMClientConfig, logger: Logger) {
     if (!config.proxyUrl) {
@@ -24,12 +25,26 @@ export class ProxyLLMClient implements LLMClient {
     return true; // Proxy is always "ready"
   }
 
+  /**
+   * Interrupt the current generation by aborting the request
+   */
+  async interruptGenerate(): Promise<void> {
+    if (this.currentAbortController) {
+      this.logger.debug('Interrupting proxy request');
+      this.currentAbortController.abort();
+      this.currentAbortController = null;
+    }
+  }
+
   async chatCompletion(
     messages: ChatCompletionMessageParam[],
     options: ChatCompletionOptions
   ): Promise<ChatCompletion> {
     const analytics = getAnalytics();
     const responseStartTime = Date.now();
+
+    // Create abort controller for this request
+    this.currentAbortController = new AbortController();
 
     try {
       const response = await this.handleRequest(new Request(`${this.config.proxyUrl}/chat/completions`, {
@@ -44,7 +59,7 @@ export class ProxyLLMClient implements LLMClient {
           model: this.config.model,
           response_format: { type: options.responseFormat || 'text' }
         })
-      }));
+      }), this.currentAbortController.signal);
 
       if (!response.ok) {
         throw new Error(`Proxy request failed: ${response.status} ${response.statusText}`);
@@ -68,6 +83,12 @@ export class ProxyLLMClient implements LLMClient {
 
       return result;
     } catch (error) {
+      // Handle abort errors gracefully
+      if (error instanceof Error && error.name === 'AbortError') {
+        this.logger.debug('Request was aborted');
+        throw new Error('Request was interrupted');
+      }
+
       // Track errors
       analytics?.track('error_occurred', {
         error_type: 'proxy_request_error',
@@ -78,11 +99,18 @@ export class ProxyLLMClient implements LLMClient {
       });
 
       throw error;
+    } finally {
+      // Clean up the abort controller
+      this.currentAbortController = null;
     }
   }
 
-  protected async handleRequest(request: Request): Promise<Response> {
-    return fetch(request);
+  protected async handleRequest(request: Request, signal?: AbortSignal): Promise<Response> {
+    const requestInit: RequestInit = {};
+    if (signal) {
+      requestInit.signal = signal;
+    }
+    return fetch(request, requestInit);
   }
 
   private async handleStreamingResponse(
