@@ -20,6 +20,9 @@ export interface LLMClient {
     messages: ChatCompletionMessageParam[],
     options: ChatCompletionOptions
   ): Promise<ChatCompletion>;
+
+  interruptGenerate?(): Promise<void>;
+  getMaxStorageBufferBindingSize?(): Promise<number>;
   
   // Optional lifecycle methods
   init?(): Promise<void>;

@@ -161,4 +161,34 @@ export class FallbackLLMClient implements LLMClient {
     }
     return null;
   }
+
+  /**
+   * Interrupt the current generation on the active client
+   */
+  async interruptGenerate(): Promise<void> {
+    const activeClient = this.getActiveClient();
+    
+    if ('interruptGenerate' in activeClient) {
+      await activeClient.interruptGenerate();
+    } else {
+      this.logger.warn('FallbackLLMClient: Active client does not support interruption');
+    }
+  }
+
+  /**
+   * Get the maximum storage buffer binding size from the active client
+   */
+  async getMaxStorageBufferBindingSize(): Promise<number> {
+    const activeClient = this.getActiveClient();
+    
+    if (activeClient === this.webLLMClient && 'getMaxStorageBufferBindingSize' in this.webLLMClient) {
+      return await this.webLLMClient.getMaxStorageBufferBindingSize();
+    } else if (activeClient === this.cloudLLMClient) {
+      // CloudLLMClient doesn't have this method, return a default value
+      this.logger.warn('FallbackLLMClient: CloudLLMClient does not support getMaxStorageBufferBindingSize');
+      return 0;
+    }
+    
+    return 0;
+  }
 } 

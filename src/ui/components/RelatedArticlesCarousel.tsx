@@ -12,7 +12,7 @@ interface RelatedArticlesCarouselProps {
 }
 
 export function RelatedArticlesCarousel({ 
-  relatedArticles, 
+  relatedArticles,
   isLoading,
   showFadeIn,
   widgetOptions 
@@ -25,104 +25,87 @@ export function RelatedArticlesCarousel({
 
   // Handle scroll events to update active dot and implement looping
   useEffect(() => {
+    // Attach the scroll listener once the carousel (and articles) are rendered
     const carouselElement = carouselRef.current;
-    if (!carouselElement) return;
+    if (isLoading || !carouselElement) return;
 
-    let isScrolling = false;
     let scrollTimeout: NodeJS.Timeout;
-    const totalArticles = Math.max(relatedArticles.length, 1); // Use actual number of articles, minimum 1
+    const totalArticles = Math.max(relatedArticles.length, 1);
 
     const handleScroll = () => {
       const scrollLeft = carouselElement.scrollLeft;
       const containerWidth = carouselElement.clientWidth;
       const maxScrollLeft = carouselElement.scrollWidth - containerWidth;
-      
-      // Calculate current index
+
+      // Calculate current index based on scroll position
       let currentIndex = Math.round(scrollLeft / containerWidth);
-      
-      // Ensure index is within bounds
       currentIndex = Math.max(0, Math.min(currentIndex, totalArticles - 1));
       setActiveArticleIndex(currentIndex);
 
-      // Mark as user interaction and pause auto-scroll
+      // Pause auto-scroll while the user is interacting
       setIsUserInteracting(true);
       clearTimeout(userInteractionTimerRef.current!);
-      
-      // Clear existing timeout
-      clearTimeout(scrollTimeout);
-      isScrolling = true;
 
-      // Set timeout to detect when scrolling has stopped
+      // Debounce to detect when scrolling has stopped
+      clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
-        isScrolling = false;
-        
-        // Resume auto-scroll after user stops interacting
+        // Resume auto-scroll 2 s after user stops
         userInteractionTimerRef.current = setTimeout(() => {
           setIsUserInteracting(false);
-        }, 2000); // Resume auto-scroll 2 seconds after user stops interacting
-        
-        // Only apply manual loop-back logic for user-initiated scrolls
-        // Skip loop-back logic if this was likely an auto-scroll operation
-        const tolerance = 10; // Small tolerance for floating point precision
+        }, 2000);
+
+        // Optional loop-back logic when user reaches the end
+        const tolerance = 10;
         const isAtExactEnd = Math.abs(scrollLeft - maxScrollLeft) <= tolerance;
-        const isAtExactBeginning = scrollLeft <= tolerance;
-        
-        // Only loop back if user manually scrolled beyond normal bounds
-        // Auto-scroll should handle its own looping through the interval
-        if (isAtExactEnd && isUserInteracting) {
+        if (isAtExactEnd) {
           setTimeout(() => {
-            carouselElement.scrollTo({
-              left: 0,
-              behavior: 'smooth'
-            });
-          }, 150); // Small delay to make the loop feel natural
+            carouselElement.scrollTo({ left: 0, behavior: 'smooth' });
+          }, 150);
         }
-      }, 150); // Wait 150ms after scrolling stops
+      }, 150);
     };
 
     carouselElement.addEventListener('scroll', handleScroll);
+
     return () => {
       carouselElement.removeEventListener('scroll', handleScroll);
       clearTimeout(scrollTimeout);
       clearTimeout(userInteractionTimerRef.current!);
     };
-  }, []);
+  }, [isLoading, relatedArticles.length]);
 
   // Auto-scroll functionality
   useEffect(() => {
+    // Don't start auto-scroll until loading completes and we have at least one article rendered
+    if (isLoading) return;
+
     const carouselElement = carouselRef.current;
     if (!carouselElement) return;
 
-    const startAutoScroll = () => {
-      autoScrollTimerRef.current = setInterval(() => {
-        // Only auto-scroll if user is not interacting
-        if (!isUserInteracting) {
-          const containerWidth = carouselElement.clientWidth;
-          const currentScrollLeft = carouselElement.scrollLeft;
-          const currentIndex = Math.round(currentScrollLeft / containerWidth);
-          
-          // Calculate next index (loop back to 0 after last article)
-          const nextIndex = (currentIndex + 1) % Math.max(relatedArticles.length, 1);
-          
-          // Same timing for all transitions - no special handling
-          carouselElement.scrollTo({
-            left: nextIndex * containerWidth,
-            behavior: 'smooth'
-          });
-        }
-      }, 1000); // Auto-scroll every 2.5 seconds
-    };
+    // Start or restart auto-scroll
+    autoScrollTimerRef.current = setInterval(() => {
+      // Only auto-scroll if user is not currently interacting
+      if (!isUserInteracting) {
+        const containerWidth = carouselElement.clientWidth;
+        const currentScrollLeft = carouselElement.scrollLeft;
+        const currentIndex = Math.round(currentScrollLeft / containerWidth);
 
-    // Start auto-scroll
-    startAutoScroll();
+        // Determine next index and scroll
+        const nextIndex = (currentIndex + 1) % Math.max(relatedArticles.length, 1);
+        carouselElement.scrollTo({ left: nextIndex * containerWidth, behavior: 'smooth' });
 
-    // Cleanup on unmount
+        // Keep the dot indicator in sync
+        setActiveArticleIndex(nextIndex);
+      }
+    }, 1500);
+
+    // Cleanup when deps change/unmount
     return () => {
       if (autoScrollTimerRef.current) {
         clearInterval(autoScrollTimerRef.current);
       }
     };
-  }, [isUserInteracting]); // Re-run when user interaction state changes
+  }, [isUserInteracting, isLoading, relatedArticles.length]);
 
   // Cleanup all timers on unmount
   useEffect(() => {
@@ -196,126 +179,83 @@ export function RelatedArticlesCarousel({
   };
 
   return (
-    <div className={classNames.relatedArticles}>
-      <div 
-        className={classNames.relatedArticlesCarousel}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div 
-          ref={carouselRef}
-          className={classNames.relatedArticlesContainer}
-        >
-          {isLoading ? (
-            <>
-              {/* Show 3 skeleton cards to mimic typical carousel */}
-              {[...Array(3)].map((_, index) => (
-                <div key={`skeleton-${index}`} className={classNames.skeletonArticle}>
-                  <div className={classNames.skeletonArticleBg}>
-                    <div className={classNames.skeletonContent}>
-                      <div className={classNames.skeletonTitle}></div>
-                      <div className={classNames.skeletonTitleShort}></div>
-                      <div className={classNames.skeletonSource}></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : relatedArticles.length > 0 ? (
-            <>
-              {relatedArticles.map((article, index) => (
-                <div 
-                  key={article.url || index} 
-                  className={`${classNames.relatedArticleCard} ${showFadeIn ? classNames.articlesFadeIn : ''}`}
-                  onClick={() => handleArticleClick(article)}
-                  style={{ cursor: 'pointer' }}
-                >
+    <>
+      {isLoading ? (
+        <>
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            gap: '10px'
+          }}>
+            <i className={`fas fa-spinner ${classNames.spinner}`}></i>
+            <div>Finding related content</div>
+          </div>
+        </>
+      ) : (
+        <div className={classNames.relatedArticles}>
+          <div 
+            className={classNames.relatedArticlesCarousel}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <div 
+              ref={carouselRef}
+              className={classNames.relatedArticlesContainer}
+            >
+              <>
+                {relatedArticles.map((article, index) => (
                   <div 
-                    className={classNames.relatedArticleImageBg}
-                    style={{
-                      backgroundImage: article.main_image_url ? `url(${article.main_image_url})` : undefined,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat'
-                    }}
+                    key={article.url || index} 
+                    className={`${classNames.relatedArticleCard} ${showFadeIn ? classNames.articlesFadeIn : ''}`}
+                    onClick={() => handleArticleClick(article)}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <div className={classNames.relatedArticleOverlay}></div>
-                    <div className={classNames.relatedArticleContent}>
-                      <div className={classNames.relatedArticleTitle}>
-                        {article.content_metadata.title || 'Untitled Article'}
-                      </div>
-                      {article.short_summary && (
-                        <div className={classNames.relatedArticleSummary}>
-                          {article.short_summary}
+                    <div 
+                      className={classNames.relatedArticleImageBg}
+                      style={{
+                        backgroundImage: article.main_image_url ? `url(${article.main_image_url})` : undefined,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                      }}
+                    >
+                      <div className={classNames.relatedArticleOverlay}></div>
+                      <div className={classNames.relatedArticleContent}>
+                        <div className={classNames.relatedArticleTitle}>
+                          {article.content_metadata.title || 'Untitled Article'}
                         </div>
-                      )}
-                      <div className={classNames.relatedArticleSource}>
-                        {article.site_name || article.domain || 'Unknown Source'}
+                        {article.short_summary && (
+                          <div className={classNames.relatedArticleSummary}>
+                            {article.short_summary}
+                          </div>
+                        )}
+                        <div className={classNames.relatedArticleSource}>
+                          {article.site_name || article.domain || 'Unknown Source'}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            <div className={`${classNames.relatedArticleCard} ${showFadeIn ? classNames.articlesFadeIn : ''}`}>
-              <div 
-                style={{
-                  position: 'relative',
-                  width: '100%',
-                  height: '100%',
-                  backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                  borderRadius: 'var(--agentary-border-radius)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <div 
-                  className={classNames.relatedArticleContent}
-                  style={{
-                    position: 'static',
-                    padding: '24px',
-                    textAlign: 'center',
-                    color: 'initial'
-                  }}
-                >
+                ))}
+              </>
+            </div>
+            <div className={classNames.relatedArticlesNavigation}>
+              <div className={classNames.relatedArticlesDots}>
+                {(!isLoading && relatedArticles.length > 1) && relatedArticles.map((_, index) => (
                   <div 
-                    className={classNames.relatedArticleTitle}
-                    style={{
-                      color: '#666',
-                      textShadow: 'none'
-                    }}
-                  >
-                    No related articles found
-                  </div>
-                  <div 
-                    className={classNames.relatedArticleSource}
-                    style={{
-                      color: '#666',
-                      fontWeight: 400,
-                      textShadow: 'none'
-                    }}
-                  >
-                    Try browsing other content
-                  </div>
-                </div>
+                    key={index}
+                    className={`${classNames.relatedArticlesDot} ${activeArticleIndex === index ? classNames.active : ''}`}
+                    onClick={() => handleDotClick(index)}
+                  ></div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
-        <div className={classNames.relatedArticlesNavigation}>
-          <div className={classNames.relatedArticlesDots}>
-            {(!isLoading && relatedArticles.length > 1) && relatedArticles.map((_, index) => (
-              <div 
-                key={index}
-                className={`${classNames.relatedArticlesDot} ${activeArticleIndex === index ? classNames.active : ''}`}
-                onClick={() => handleDotClick(index)}
-              ></div>
-            ))}
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
-} 
+}

@@ -66,6 +66,28 @@ export class WebLLMClient implements LLMClient {
   }
 
   /**
+   * Get the maximum storage buffer binding size
+   * @returns {Promise<number>} The maximum storage buffer binding size
+   */
+  async getMaxStorageBufferBindingSize(): Promise<number> {
+    if (!this.engine) {
+      throw new Error("Engine not created");
+    }
+    return this.engine.getMaxStorageBufferBindingSize();
+  }
+
+  /**
+   * Interrupt the current generation
+   */
+  async interruptGenerate(): Promise<void> {
+    this.logger.debug("Interrupting response generation");
+    if (!this.engine) {
+      throw new Error("Engine not created");
+    }
+    this.engine.interruptGenerate();
+  }
+
+  /**
    * Create a worker using blob URL strategy (CORS-safe)
    * @returns {Promise<Worker|null>} Created worker or null
    */
@@ -213,6 +235,9 @@ export class WebLLMClient implements LLMClient {
               }
             );
             this.logger.debug("Web worker engine created successfully");
+            if (this.logger.isDebugEnabled()) {
+              this.logger.debug("Max storage buffer binding size:", await this.getMaxStorageBufferBindingSize());
+            }
           } catch (workerError) {
             this.logger.warn("Failed to create web worker engine, falling back to main thread:", workerError);
             // Clean up any partially created worker
@@ -296,10 +321,12 @@ export class WebLLMClient implements LLMClient {
 
         // Process the stream and accumulate the full response
         for await (const chunk of chunks) {
+          // this.logger.debug("Streaming chunk:", chunk);
           lastChunk = chunk;
 
           if (chunk.choices && chunk.choices[0]?.delta?.content) {
             const token = chunk.choices[0].delta.content;
+
             fullContent += token;
             if (options.onStreamToken) {
               options.onStreamToken(token);

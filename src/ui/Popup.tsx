@@ -65,9 +65,29 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
     logger.debug("isClientReady", isClientReady);
   }, [isClientReady]);
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     const isLoading = !isClientReady || isLoadingRelatedArticles;
-    handleToggle(isLoading, onClose);
+    
+    // If chat is open, we need to stop generation and close chat first
+    if (showChat && isVisible) {
+      try {
+        // Stop any ongoing generation
+        await webLLMClient.interruptGenerate();
+      } catch (error) {
+        logger.error('Error stopping generation:', error);
+      }
+      
+      // Close the chat interface
+      handleCloseChat();
+      
+      // Then close the entire popup
+      setTimeout(() => {
+        handleToggle(isLoading, onClose);
+      }, 300); // Wait for chat close animation
+    } else {
+      // Normal toggle behavior when chat is not open
+      handleToggle(isLoading, onClose);
+    }
   };
 
   const handleStartChat = (initialMessage?: string) => {
@@ -91,7 +111,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
   return (
     <div className={classNames.container}>
       {/* Popup Dialog */}
-      {isVisible && isClientReady && !isLoadingRelatedArticles && !showChat && (
+      {isVisible && isClientReady && !showChat && (
         <PopupDialog
           isClosing={isClosing || isDialogClosing}
           contentPrompts={contentPrompts}
@@ -121,7 +141,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
       {/* Floating Action Button (rendered last to ensure it stays on top) */}
       <FloatingActionButton
         isVisible={isVisible}
-        isModelLoading={!isClientReady || isLoadingRelatedArticles}
+        isModelLoading={!isClientReady}
         onClick={handleButtonClick}
       />
     </div>

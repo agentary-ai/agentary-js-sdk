@@ -68,7 +68,7 @@ export function PopupDialog({
             Summarize this page
           </div>
         </div> */}
-        {relatedArticles.length > 0 && (
+        {(isLoadingRelatedArticles || relatedArticles.length > 0) && (
           <div className={classNames.relatedArticlesContainer}>
             <RelatedArticlesCarousel 
               relatedArticles={relatedArticles}
