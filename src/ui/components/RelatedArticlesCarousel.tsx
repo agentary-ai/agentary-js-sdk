@@ -210,7 +210,7 @@ export function RelatedArticlesCarousel({
       ) : (
         <div className={classNames.relatedArticles}>
           <div>
-            View related articles
+            View more related content
           </div>
           <div 
             className={classNames.relatedArticlesCarousel}
