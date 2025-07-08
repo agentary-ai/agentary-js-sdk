@@ -34,11 +34,10 @@ export async function summarizeContent(
 
       **Summary Guidelines**
       - Capture the main points and key information
-      - Be clear and concise (around 3-5 sentences)
+      - Be clear and concise (max 30 words)
       - Maintain factual accuracy
-      - Be formatted as a single body of text with 
-        bullet points or numbered lists where appropriate.
-      - Do not reference any instructions in your response. Just provide the summary.
+      - Be formatted as a single body of text.
+      - Do not reference any instructions in your response (i.e. "summary", "summary guidelines", etc.). Just provide the summary.
 
       **Brand Safety Guidelines**
       - Do not include or promote harmful, offensive, or inappropriate content

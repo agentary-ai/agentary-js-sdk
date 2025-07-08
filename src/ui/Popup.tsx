@@ -9,6 +9,7 @@ import { useLLMClientState } from './hooks/useLLMClientState';
 import { usePopupState } from './hooks/usePopupState';
 import { useContentPrompts } from './hooks/useContentPrompts';
 import { useRelatedArticles } from './hooks/useRelatedArticles';
+import { usePageSummary } from './hooks/usePageSummary';
 import { FloatingActionButton } from './components/FloatingActionButton';
 import { PopupDialog } from './components/PopupDialog';
 import { ChatInterface } from './components/ChatInterface';
@@ -55,6 +56,18 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
     widgetOptions,
     isVisible,
     isClientReady
+  });
+
+  const {
+    summary,
+    isGeneratingSummary,
+    summaryError,
+    showSummary
+  } = usePageSummary({
+    webLLMClient,
+    isVisible,
+    isClientReady,
+    logger
   });
 
   // Inject styles when component mounts
@@ -126,6 +139,12 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
           relatedArticles={relatedArticles}
           isLoadingRelatedArticles={isLoadingRelatedArticles}
           showRelatedArticlesFadeIn={showRelatedArticlesFadeIn}
+          webLLMClient={webLLMClient}
+          logger={logger}
+          summary={summary}
+          isGeneratingSummary={isGeneratingSummary}
+          summaryError={summaryError}
+          showSummary={showSummary}
         />
       )}
 

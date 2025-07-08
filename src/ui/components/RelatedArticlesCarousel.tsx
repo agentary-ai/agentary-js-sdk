@@ -195,8 +195,23 @@ export function RelatedArticlesCarousel({
             <div>Finding related content</div>
           </div>
         </>
+      ) : relatedArticles.length === 0 ? (
+        <div style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          gap: '10px'
+        }}>
+          <div>No related content found</div>
+        </div>
       ) : (
         <div className={classNames.relatedArticles}>
+          <div>
+            View related articles
+          </div>
           <div 
             className={classNames.relatedArticlesCarousel}
             onMouseEnter={handleMouseEnter}
