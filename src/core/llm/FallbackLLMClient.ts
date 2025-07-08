@@ -85,7 +85,12 @@ export class FallbackLLMClient implements LLMClient {
     messages: ChatCompletionMessageParam[],
     options: ChatCompletionOptions
   ): Promise<ChatCompletion> {
-    const activeClient = this.getActiveClient();
+    const engine = options.engine || 'fallback';
+    const activeClient = engine === 'webllm' 
+      ? this.webLLMClient 
+      : engine === 'cloud' 
+        ? this.cloudLLMClient 
+        : this.getActiveClient();
     
     try {
       return await activeClient.chatCompletion(messages, options);

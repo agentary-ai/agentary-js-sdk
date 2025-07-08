@@ -141,9 +141,7 @@ export class AgentaryClient extends EventEmitter {
             this.logger.error('Model initialization failed:', err);
           });
         }
-      }
-
-      if (!this.config.showWidgetOnInit) {
+      } else {
         // When the widget isn't shown automatically we still honour the
         // loadModel flag and begin loading immediately in the background.
         if (this.config.loadModel && this.llmClient.init) {
@@ -172,10 +170,6 @@ export class AgentaryClient extends EventEmitter {
       useWorker: this.config.useWorker,
       apiKey: this.config.apiKey
     }, this.logger);
-    
-    // NOTE: We intentionally do NOT call llmClient.init() here anymore.
-    // Model loading will be triggered after the UI widget is mounted so the
-    // spinner can be displayed while the model is initializing.
   }
 
   /**

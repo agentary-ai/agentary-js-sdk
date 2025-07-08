@@ -87,7 +87,8 @@ export async function generatePrompts(
     const startTime = performance.now();
     const response = await webLLMClient.chatCompletion(messages, {
       stream: false,
-      responseFormat: "json_object"
+      responseFormat: "json_object",
+      engine: 'cloud'
     });
     const endTime = performance.now();
     logger.debug(`Chat completion took ${endTime - startTime}ms`);

@@ -13,6 +13,7 @@ export interface ChatCompletionOptions {
   stream: boolean;
   responseFormat?: 'text' | 'json_object';
   onStreamToken?: (token: string) => void;
+  engine?: 'webllm' | 'cloud' | 'fallback'; // For FallbackLLMClient: explicit engine selection
 }
 
 export interface LLMClient {
