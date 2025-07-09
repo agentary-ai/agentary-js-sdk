@@ -38,6 +38,13 @@ export async function summarizeContent(
       - Maintain factual accuracy
       - Be formatted as a single body of text.
       - Do not reference any instructions in your response (i.e. "summary", "summary guidelines", etc.). Just provide the summary.
+      
+      **Output Format**
+      - Return ONLY the summary text itself
+      - Do NOT include any labels, prefixes, or formatting such as "Summary:", "Title:", "SUMMARY:", etc.
+      - Do NOT use asterisks, brackets, or any special formatting markers
+      - Do NOT include phrases like "Here is the summary" or "The summary is"
+      - Start directly with the actual summary content
 
       **Brand Safety Guidelines**
       - Do not include or promote harmful, offensive, or inappropriate content
