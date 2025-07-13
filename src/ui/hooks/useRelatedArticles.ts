@@ -21,14 +21,13 @@ export function useRelatedArticles({
   const [showFadeIn, setShowFadeIn] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
 
-  // Fetch related articles when popup becomes visible and client is ready
+  // Fetch related articles when client is ready
   useEffect(() => {
     // Only fetch articles when:
-    // 1. The popup is visible
-    // 2. The client is ready
-    // 3. We haven't already fetched articles
-    // 4. We have a related articles service
-    if (isVisible && isClientReady && !hasFetched && relatedArticlesService) {
+    // 1. The client is ready
+    // 2. We haven't already fetched articles
+    // 3. We have a related articles service
+    if (isClientReady && !hasFetched && relatedArticlesService) {
       setIsLoading(true);
       setShowFadeIn(false);
       
@@ -57,7 +56,7 @@ export function useRelatedArticles({
           }, 50);
         });
     }
-  }, [isVisible, isClientReady, hasFetched, relatedArticlesService, widgetOptions.contentSelector]);
+  }, [isClientReady, hasFetched, relatedArticlesService, widgetOptions.contentSelector]);
 
   // Keep articles persisted across widget open/close cycles
   // Articles will only be reset on page refresh/navigation

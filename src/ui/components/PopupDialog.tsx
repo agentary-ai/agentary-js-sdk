@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'preact/hooks';
 import { classNames } from '../styles';
 import { QuestionInput } from './QuestionInput';
 import { RelatedArticlesCarousel } from './RelatedArticlesCarousel';
+import { PageSummary } from './PageSummary';
 import type { RelatedArticlesService } from '../../core/services/RelatedArticlesService';
 import type { WidgetOptions } from '../../types/index';
 import type { SimilarPage } from '../../types/AgentaryClient';
@@ -120,34 +121,12 @@ export function PopupDialog({
       >
         
         {/* Page Summary Section */}
-        {(isGeneratingSummary || showSummary || summaryError) && (
-          <div className={`${classNames.questionInputContainer}`}>            
-            {isGeneratingSummary && !summary && (
-              <div className="agentary-summary-loading">
-                <i className={`fas fa-circle-notch ${classNames.spinner}`}></i>
-                <span style={{ marginLeft: '8px', fontSize: '14px', color: 'var(--agentary-text-muted)' }}>
-                  Generating summary...
-                </span>
-              </div>
-            )}
-            
-            {summary && (
-              <div className={`agentary-summary-content ${showSummary ? classNames.fadeIn : ''}`}>
-                {summary}
-                {isGeneratingSummary && (
-                  <span className={classNames.streamingCursor}>|</span>
-                )}
-              </div>
-            )}
-            
-            {summaryError && (
-              <div className="agentary-summary-error">
-                <i className="fas fa-exclamation-triangle" style={{ marginRight: '6px', color: '#dc3545' }}></i>
-                {summaryError}
-              </div>
-            )}
-          </div>
-        )}
+        <PageSummary 
+          summary={summary}
+          isGeneratingSummary={isGeneratingSummary}
+          summaryError={summaryError}
+          showSummary={showSummary}
+        />
 
         <QuestionInput
           contentPrompts={contentPrompts}

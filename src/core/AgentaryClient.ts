@@ -116,7 +116,7 @@ export class AgentaryClient extends EventEmitter {
       if (this.config.showWidgetOnInit) {
         const widgetOptions: WidgetOptions = {
           position: "bottom-right",
-          autoOpenOnLoad: true,
+          autoOpenOnLoad: false,
           generatePagePrompts: this.config.generatePagePrompts || false,
           maxPagePrompts: this.config.maxPagePrompts || 5,
         };

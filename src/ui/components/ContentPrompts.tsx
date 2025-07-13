@@ -28,7 +28,7 @@ export function ContentPrompts({
           className={isFadingOut ? classNames.fadeOut : ''}
           style={{ display: 'flex', justifyContent: 'center', padding: '5px' }}
         >
-          <i className={`fas fa-spinner ${classNames.spinner}`}></i>
+          <i className={`fas fa-circle-notch ${classNames.spinner}`}></i>
         </div>
       </div>
     );

@@ -181,20 +181,34 @@ export function RelatedArticlesCarousel({
   return (
     <>
       {isLoading ? (
-        <>
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-            gap: '10px'
-          }}>
-            <i className={`fas fa-spinner ${classNames.spinner}`}></i>
-            <div>Finding related content</div>
+        <div className={classNames.relatedArticles}>
+          <div className={classNames.relatedArticlesCarousel}>
+            <div className={classNames.relatedArticlesContainer}>
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className={classNames.relatedArticleCard}>
+                  <div className={`${classNames.relatedArticleImageBg} ${classNames.skeleton}`}>
+                    <div className={classNames.relatedArticleOverlay}></div>
+                    <div className={classNames.relatedArticleContent}>
+                      <div className={`${classNames.relatedArticleTitle} ${classNames.skeleton}`} style={{ height: '16px', marginBottom: '8px' }}></div>
+                      <div className={`${classNames.relatedArticleSummary} ${classNames.skeleton}`} style={{ height: '12px', marginBottom: '4px' }}></div>
+                      <div className={`${classNames.relatedArticleSource} ${classNames.skeleton}`} style={{ height: '12px', width: '60%' }}></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={classNames.relatedArticlesNavigation}>
+              <div className={classNames.relatedArticlesDots}>
+                {[...Array(3)].map((_, index) => (
+                  <div 
+                    key={index}
+                    className={`${classNames.relatedArticlesDot} ${classNames.skeleton}`}
+                  ></div>
+                ))}
+              </div>
+            </div>
           </div>
-        </>
+        </div>
       ) : relatedArticles.length === 0 ? (
         <div style={{
           width: '100%',
@@ -209,9 +223,6 @@ export function RelatedArticlesCarousel({
         </div>
       ) : (
         <div className={classNames.relatedArticles}>
-          <div>
-            View more related content
-          </div>
           <div 
             className={classNames.relatedArticlesCarousel}
             onMouseEnter={handleMouseEnter}

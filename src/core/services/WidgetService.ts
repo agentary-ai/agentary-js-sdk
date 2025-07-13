@@ -38,23 +38,6 @@ export class WidgetService {
       widgetOptions.contentSelector = this.config.contentSelector;
     }
 
-    this.logger.debug('Fetching related articles for widget');
-    
-    // Fetch related articles when mounting the widget
-    // if (this.relatedArticlesService) {
-    //   const relatedArticlesOptions: any = {};
-    //   if (widgetOptions.contentSelector) {
-    //     relatedArticlesOptions.contentSelector = widgetOptions.contentSelector;
-    //   }
-      
-    //   this.relatedArticlesService.getRelatedArticles(relatedArticlesOptions).then(relatedArticles => {
-    //     this.logger.debug('Related articles fetched for widget:', relatedArticles);
-    //     // Related articles will be passed to the UI via the updated mountWidget function
-    //   }).catch(error => {
-    //     this.logger.error('Failed to fetch related articles for widget:', error);
-    //   });
-    // }
-
     this.logger.debug('Mounting widget with options:', widgetOptions);
     
     return mountWidget(llmClient, widgetOptions, this.logger, this.relatedArticlesService);

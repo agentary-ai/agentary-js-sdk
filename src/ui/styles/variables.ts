@@ -1,0 +1,33 @@
+/**
+ * CSS Custom Properties for theming
+ */
+export const cssVariables = {
+  '--agentary-primary-color': '#007bff',
+  '--agentary-primary-hover': '#0056b3',
+  '--agentary-text-color': '#333',
+  '--agentary-text-muted': '#666',
+  '--agentary-background': '#ffffff',
+  '--agentary-background-muted': '#f8f9fa',
+  '--agentary-border-color': '#f2f2f2',
+  '--agentary-border-radius': '24px',
+  '--agentary-border-radius-small': '8px',
+  '--agentary-border-radius-button': '50%',
+  '--agentary-shadow-light': '0 4px 12px rgba(0, 123, 255, 0.3)',
+  '--agentary-shadow-dark': '0 8px 32px rgba(0, 0, 0, 0.1)',
+  '--agentary-spacing-xs': '4px',
+  '--agentary-spacing-sm': '8px',
+  '--agentary-spacing-md': '12px',
+  '--agentary-spacing-lg': '16px',
+  '--agentary-spacing-xl': '20px',
+  '--agentary-spacing-2xl': '24px',
+  '--agentary-spacing-3xl': '32px',
+  '--agentary-font-size-sm': '12px',
+  '--agentary-font-size-md': '14px',
+  '--agentary-font-size-lg': '18px',
+  '--agentary-font-size-xl': '24px',
+  '--agentary-z-index': '10000',
+  '--agentary-transition-fast': '0.2s ease',
+  '--agentary-transition-medium': '0.3s ease',
+  '--agentary-animation-bounce': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  '--agentary-animation-slide-out': 'cubic-bezier(0.36, 0, 0.66, -0.56)',
+}; 

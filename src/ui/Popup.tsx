@@ -122,10 +122,17 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
     }, 300); // Match animation duration
   };
 
+  // Calculate if everything is ready and loaded
+  const isContentReady = isClientReady && 
+    !isGeneratingPrompts && 
+    !isLoadingRelatedArticles && 
+    !isGeneratingSummary &&
+    (contentPrompts.length > 0 || showPrompts);
+
   return (
     <div className={classNames.container}>
       {/* Popup Dialog */}
-      {isVisible && isClientReady && !showChat && (
+      {isVisible && (isClientReady && !isLoadingRelatedArticles && !isGeneratingSummary && !isGeneratingPrompts) && !showChat && (
         <PopupDialog
           isClosing={isClosing || isDialogClosing}
           contentPrompts={contentPrompts}
@@ -162,7 +169,8 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
       {/* Floating Action Button (rendered last to ensure it stays on top) */}
       <FloatingActionButton
         isVisible={isVisible}
-        isModelLoading={!isClientReady}
+        isModelLoading={!isClientReady || isLoadingRelatedArticles || isGeneratingSummary || isGeneratingPrompts}
+        isReady={isContentReady}
         onClick={handleButtonClick}
       />
     </div>

@@ -32,13 +32,12 @@ export function useContentPrompts({
 
   const logger = new Logger(false);
 
-  // Generate prompts when popup becomes visible and model is loaded
+  // Generate prompts when model is loaded
   useEffect(() => {
     // Only generate prompts when:
-    // 1. The popup is visible
-    // 2. The model is **fully** ready (webLLMClient.isReady === true)
-    // 3. We don't already have prompts
-    if (isVisible && webLLMClient.isReady && contentPrompts.length === 0) {
+    // 1. The model is **fully** ready (webLLMClient.isReady === true)
+    // 2. We don't already have prompts
+    if (webLLMClient.isReady && contentPrompts.length === 0) {
       logger.info('Generating content prompts (model ready)', {
         isVisible,
         isClientReady,
@@ -47,7 +46,7 @@ export function useContentPrompts({
       });
       generateContentPrompts();
     }
-  }, [isVisible, isClientReady, webLLMClient]);
+  }, [isClientReady, webLLMClient]);
 
   const generateContentPrompts = async () => {
     setIsGeneratingPrompts(true);

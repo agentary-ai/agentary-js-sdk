@@ -64,13 +64,12 @@ export function usePageSummary({
     }
   }, [webLLMClient, logger, hasSummaryGenerated]);
 
-  // Generate summary when popup becomes visible and LLM client is ready
+  // Generate summary when LLM client is ready
   useEffect(() => {
     // Only generate summary when:
-    // 1. The popup is visible
-    // 2. The client is fully ready
-    // 3. We haven't already generated a summary
-    if (isVisible && webLLMClient?.isReady && !hasSummaryGenerated && !isGeneratingSummary && !summaryError) {
+    // 1. The client is fully ready
+    // 2. We haven't already generated a summary
+    if (webLLMClient?.isReady && !hasSummaryGenerated && !isGeneratingSummary && !summaryError) {
       logger.info('Generating page summary (model ready)', {
         isVisible,
         isClientReady,
@@ -79,7 +78,7 @@ export function usePageSummary({
       });
       generateSummary();
     }
-  }, [isVisible, isClientReady, webLLMClient?.isReady, hasSummaryGenerated, isGeneratingSummary, summaryError, generateSummary, logger]);
+  }, [isClientReady, webLLMClient?.isReady, hasSummaryGenerated, isGeneratingSummary, summaryError, generateSummary, logger]);
 
   // Handle visibility state changes
   useEffect(() => {
