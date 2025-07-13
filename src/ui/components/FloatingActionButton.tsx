@@ -34,7 +34,7 @@ export function FloatingActionButton({ isVisible, isModelLoading, isReady, onCli
         title={isModelLoading ? "Loading model..." : (isVisible ? "Close Agentary" : "Open Agentary")}
       >
         {isModelLoading ? (
-          <i className={`fas fa-spinner ${classNames.spinner}`}></i>
+          <i className={`fas fa-circle-notch ${classNames.spinner}`}></i>
         ) : isVisible ? (
           <i className="fas fa-times"></i>
         ) : (

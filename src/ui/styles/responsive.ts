@@ -6,8 +6,8 @@ export const responsiveStyles = `
   @media (max-width: 480px) {
     .agentary-popup {
       width: calc(100vw - 2 * var(--agentary-spacing-xl));
-      max-height: calc(100vh - 140px);
-      min-height: 200px;
+      max-height: calc(100vh - 180px);
+      min-height: 160px;
       bottom: calc(60px + var(--agentary-spacing-lg) + var(--agentary-spacing-lg));
       right: var(--agentary-spacing-xl);
     }
@@ -15,18 +15,18 @@ export const responsiveStyles = `
     /* Chat interface mobile adjustments */
     .agentary-chat-container {
       width: calc(100vw - 2 * var(--agentary-spacing-xl));
-      height: 400px;
-      max-height: calc(100vh - 140px);
+      height: 320px;
+      max-height: calc(100vh - 180px);
       bottom: calc(60px + var(--agentary-spacing-lg) + var(--agentary-spacing-lg));
       right: var(--agentary-spacing-xl);
     }
     
     .agentary-chat-messages {
-      padding: var(--agentary-spacing-xl) var(--agentary-spacing-2xl);
+      padding: var(--agentary-spacing-lg) var(--agentary-spacing-xl);
     }
     
     .agentary-chat-input-container {
-      padding: 0 var(--agentary-spacing-xl) var(--agentary-spacing-xl) var(--agentary-spacing-xl);
+      padding: 0 var(--agentary-spacing-lg) var(--agentary-spacing-lg) var(--agentary-spacing-lg);
     }
     
     .agentary-floating-button-container {
@@ -36,24 +36,29 @@ export const responsiveStyles = `
     
     /* Make content more compact on mobile */
     .agentary-content {
-      padding: var(--agentary-spacing-2xl) var(--agentary-spacing-xl);
+      padding: var(--agentary-spacing-xl) var(--agentary-spacing-lg);
     }
     
     .agentary-question-input-container {
-      margin-bottom: var(--agentary-spacing-2xl);
-      padding: var(--agentary-spacing-lg);
+      margin-bottom: var(--agentary-spacing-xl);
+      padding: var(--agentary-spacing-md);
     }
     
     .agentary-input-row {
-      margin-bottom: var(--agentary-spacing-2xl);
+      margin-bottom: var(--agentary-spacing-xl);
     }
     
     .agentary-summary-container {
-      margin-bottom: var(--agentary-spacing-lg);
+      margin-bottom: var(--agentary-spacing-md);
+    }
+    
+    .agentary-summary-content {
+      max-height: 80px;
+      padding: var(--agentary-spacing-sm);
     }
     
     .agentary-content-prompt-section {
-      margin-bottom: var(--agentary-spacing-md);
+      margin-bottom: var(--agentary-spacing-sm);
     }
     
     .agentary-prompt-pills-container {
@@ -69,11 +74,19 @@ export const responsiveStyles = `
       font-size: var(--agentary-font-size-sm);
       padding: var(--agentary-spacing-xs) var(--agentary-spacing-sm);
       border-radius: 16px;
-      margin-bottom: var(--agentary-spacing-lg);
+      margin-bottom: var(--agentary-spacing-md);
     }
     
     .agentary-footer {
-      padding: var(--agentary-spacing-md) var(--agentary-spacing-lg);
+      padding: var(--agentary-spacing-sm) var(--agentary-spacing-md);
+    }
+    
+    .agentary-related-articles-wrapper {
+      margin-bottom: var(--agentary-spacing-md);
+    }
+    
+    .agentary-related-article-card {
+      height: 140px;
     }
   }
 
