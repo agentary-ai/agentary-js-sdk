@@ -29,6 +29,20 @@ export const popupStyles = `
     line-height: 1.5;
   }
 
+  /* Mobile Safari viewport handling */
+  @supports (height: 100dvh) {
+    .agentary-popup {
+      max-height: calc(100dvh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
+    }
+  }
+
+  /* Fallback for older browsers */
+  @supports not (height: 100dvh) {
+    .agentary-popup {
+      max-height: calc(100vh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
+    }
+  }
+
   .agentary-popup.agentary-slide-in {
     animation: agentaryPopupSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
