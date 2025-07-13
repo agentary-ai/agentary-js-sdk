@@ -2,93 +2,58 @@
  * Responsive design and accessibility styles
  */
 export const responsiveStyles = `
-  /* JavaScript-based viewport height fallback */
-  .agentary-popup {
-    max-height: calc(var(--agentary-vh, 1vh) * 100 - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-  }
-  
-  .agentary-chat-container {
-    max-height: calc(var(--agentary-vh, 1vh) * 100 - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-  }
-
-  /* Mobile viewport handling for Safari */
-  @supports (height: 100dvh) {
-    @media (max-width: 480px) {
-      .agentary-popup {
-        max-height: calc(100dvh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      }
-      
-      .agentary-chat-container {
-        max-height: calc(100dvh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      }
-    }
-  }
-
-  /* iOS Safari specific handling */
-  @supports (-webkit-touch-callout: none) {
-    @media (max-width: 480px) {
-      .agentary-popup {
-        bottom: calc(60px + var(--agentary-spacing-lg) + env(safe-area-inset-bottom, 0px));
-        max-height: calc(100vh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg) - env(safe-area-inset-bottom, 0px));
-      }
-      
-      .agentary-chat-container {
-        bottom: calc(60px + var(--agentary-spacing-lg) + env(safe-area-inset-bottom, 0px));
-        max-height: calc(100vh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg) - env(safe-area-inset-bottom, 0px));
-      }
-      
-      .agentary-floating-button-container {
-        bottom: calc(var(--agentary-spacing-lg) + env(safe-area-inset-bottom, 0px));
-      }
-    }
-  }
-
-  /* Enhanced mobile viewport handling with dvh support */
-  @supports (height: 100dvh) and (-webkit-touch-callout: none) {
-    @media (max-width: 480px) {
-      .agentary-popup {
-        max-height: calc(100dvh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg) - env(safe-area-inset-bottom, 0px));
-      }
-      
-      .agentary-chat-container {
-        max-height: calc(100dvh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg) - env(safe-area-inset-bottom, 0px));
-      }
-    }
-  }
-
-  /* Fallback for older browsers using JavaScript-calculated viewport height */
-  @supports not (height: 100dvh) {
-    @media (max-width: 480px) {
-      .agentary-popup {
-        max-height: calc(var(--agentary-vh, 1vh) * 100 - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg) - env(safe-area-inset-bottom, 0px));
-      }
-      
-      .agentary-chat-container {
-        max-height: calc(var(--agentary-vh, 1vh) * 100 - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg) - env(safe-area-inset-bottom, 0px));
-      }
-    }
-  }
-
   /* Responsive design */
   @media (max-width: 480px) {
     .agentary-popup {
       width: calc(100vw - 2 * var(--agentary-spacing-xl));
-      max-height: calc(100vh - 60px - 2 * var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      min-height: 250px;
+      max-height: calc(100vh - 140px);
+      min-height: 200px;
       bottom: calc(60px + var(--agentary-spacing-lg) + var(--agentary-spacing-lg));
       right: var(--agentary-spacing-xl);
     }
     
+    /* Chat interface mobile adjustments */
     .agentary-chat-container {
       width: calc(100vw - 2 * var(--agentary-spacing-xl));
+      height: 400px;
+      max-height: calc(100vh - 140px);
+      bottom: calc(60px + var(--agentary-spacing-lg) + var(--agentary-spacing-lg));
       right: var(--agentary-spacing-xl);
-      height: auto;
-      min-height: 400px;
+    }
+    
+    .agentary-chat-messages {
+      padding: var(--agentary-spacing-xl) var(--agentary-spacing-2xl);
+    }
+    
+    .agentary-chat-input-container {
+      padding: 0 var(--agentary-spacing-xl) var(--agentary-spacing-xl) var(--agentary-spacing-xl);
     }
     
     .agentary-floating-button-container {
       bottom: var(--agentary-spacing-lg);
       right: var(--agentary-spacing-lg);
+    }
+    
+    /* Make content more compact on mobile */
+    .agentary-content {
+      padding: var(--agentary-spacing-2xl) var(--agentary-spacing-xl);
+    }
+    
+    .agentary-question-input-container {
+      margin-bottom: var(--agentary-spacing-2xl);
+      padding: var(--agentary-spacing-lg);
+    }
+    
+    .agentary-input-row {
+      margin-bottom: var(--agentary-spacing-2xl);
+    }
+    
+    .agentary-summary-container {
+      margin-bottom: var(--agentary-spacing-lg);
+    }
+    
+    .agentary-content-prompt-section {
+      margin-bottom: var(--agentary-spacing-md);
     }
     
     .agentary-prompt-pills-container {
@@ -104,119 +69,11 @@ export const responsiveStyles = `
       font-size: var(--agentary-font-size-sm);
       padding: var(--agentary-spacing-xs) var(--agentary-spacing-sm);
       border-radius: 16px;
-    }
-  }
-
-  /* Extra small screens (portrait phones) */
-  @media (max-width: 320px) {
-    .agentary-popup {
-      width: calc(100vw - 2 * var(--agentary-spacing-lg));
-      right: var(--agentary-spacing-lg);
-      bottom: calc(60px + var(--agentary-spacing-md) + var(--agentary-spacing-lg));
-      min-height: 200px;
+      margin-bottom: var(--agentary-spacing-lg);
     }
     
-    .agentary-chat-container {
-      width: calc(100vw - 2 * var(--agentary-spacing-lg));
-      right: var(--agentary-spacing-lg);
-      min-height: 350px;
-    }
-    
-    .agentary-floating-button-container {
-      bottom: var(--agentary-spacing-md);
-      right: var(--agentary-spacing-md);
-    }
-  }
-
-  /* Landscape orientation on mobile */
-  @media (max-width: 768px) and (orientation: landscape) {
-    .agentary-popup {
-      max-height: calc(100vh - 60px - var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      min-height: 200px;
-    }
-    
-    .agentary-chat-container {
-      max-height: calc(100vh - 60px - var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      min-height: 300px;
-    }
-  }
-
-  /* Enhanced landscape handling with dvh */
-  @supports (height: 100dvh) {
-    @media (max-width: 768px) and (orientation: landscape) {
-      .agentary-popup {
-        max-height: calc(100dvh - 60px - var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      }
-      
-      .agentary-chat-container {
-        max-height: calc(100dvh - 60px - var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      }
-    }
-  }
-
-  /* Fallback landscape handling with JavaScript-calculated viewport height */
-  @supports not (height: 100dvh) {
-    @media (max-width: 768px) and (orientation: landscape) {
-      .agentary-popup {
-        max-height: calc(var(--agentary-vh, 1vh) * 100 - 60px - var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      }
-      
-      .agentary-chat-container {
-        max-height: calc(var(--agentary-vh, 1vh) * 100 - 60px - var(--agentary-spacing-xl) - var(--agentary-spacing-lg));
-      }
-    }
-  }
-
-  /* Touch-specific improvements for mobile */
-  @media (pointer: coarse) {
-    /* Better touch targets */
-    .agentary-floating-button {
-      min-width: 44px;
-      min-height: 44px;
-    }
-    
-    .agentary-content-prompt-pill {
-      min-height: 44px;
-      padding: var(--agentary-spacing-sm) var(--agentary-spacing-md);
-    }
-    
-    .agentary-prompt-pill {
-      min-height: 40px;
-      padding: var(--agentary-spacing-sm) var(--agentary-spacing-md);
-    }
-    
-    /* Improve scrolling performance */
-    .agentary-content,
-    .agentary-chat-messages {
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-    }
-    
-    /* Better touch feedback */
-    .agentary-content-prompt-pill:active,
-    .agentary-prompt-pill:active {
-      transform: scale(0.95);
-      transition: transform 0.1s ease;
-    }
-    
-    /* Prevent text selection on touch elements */
-    .agentary-floating-button,
-    .agentary-content-prompt-pill,
-    .agentary-prompt-pill {
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      -khtml-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-  }
-
-  /* Hover capabilities (desktop) */
-  @media (hover: hover) {
-    .agentary-content-prompt-pill:hover,
-    .agentary-prompt-pill:hover {
-      transform: translateY(-1px);
+    .agentary-footer {
+      padding: var(--agentary-spacing-md) var(--agentary-spacing-lg);
     }
   }
 
@@ -272,12 +129,6 @@ export const responsiveStyles = `
     .agentary-popup *,
     .agentary-floating-button-container,
     .agentary-floating-button {
-      transition: none !important;
-    }
-    
-    .agentary-content-prompt-pill:active,
-    .agentary-prompt-pill:active {
-      transform: none !important;
       transition: none !important;
     }
   }
