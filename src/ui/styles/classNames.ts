@@ -3,6 +3,7 @@
  */
 export const classNames = {
   container: 'agentary-container',
+  overlay: 'agentary-overlay',
   floatingButton: 'agentary-floating-button',
   floatingButtonContainer: 'agentary-floating-button-container',
   floatingButtonReady: 'agentary-ready-pulse',

@@ -4,6 +4,12 @@
 export const responsiveStyles = `
   /* Responsive design */
   @media (max-width: 480px) {
+    /* Mobile font size increases for better readability */
+    .agentary-popup,
+    .agentary-chat-container {
+      font-size: 1.1em; /* Base font size increase for mobile */
+    }
+
     .agentary-popup {
       width: calc(100vw - 2 * var(--agentary-spacing-xl));
       max-height: calc(100vh - 180px);
@@ -56,6 +62,7 @@ export const responsiveStyles = `
     .agentary-summary-content {
       max-height: 80px;
       padding: var(--agentary-spacing-sm);
+      font-size: 1.1em; /* Larger font for mobile summary */
     }
     
     .agentary-content-prompt-section {
@@ -67,19 +74,68 @@ export const responsiveStyles = `
     }
     
     .agentary-prompt-pill {
-      font-size: 11px;
+      font-size: 1em; /* Increased from 11px to em unit */
       padding: 6px var(--agentary-spacing-sm);
     }
     
     .agentary-content-prompt-pill {
-      font-size: var(--agentary-font-size-sm);
+      font-size: 1em; /* Larger than the base sm size for mobile */
       padding: var(--agentary-spacing-xs) var(--agentary-spacing-sm);
       border-radius: 16px;
       margin-bottom: var(--agentary-spacing-md);
     }
+
+    /* Chat message font size increases for mobile */
+    .agentary-chat-message-content {
+      font-size: 1.1em; /* Larger chat text on mobile */
+    }
+
+    /* Input font size increases for mobile */
+    .agentary-question-input {
+      font-size: 1.15em; /* Larger input text for mobile */
+    }
+
+    .agentary-chat-input {
+      font-size: 1.15em; /* Larger chat input text for mobile */
+    }
+
+    /* Header and title font size increases for mobile */
+    .agentary-content-title {
+      font-size: 1.4em; /* Larger title for mobile */
+    }
+
+    .agentary-content-description {
+      font-size: 1.1em; /* Larger description for mobile */
+    }
+
+    .agentary-header-title {
+      font-size: 1.3em; /* Larger header title for mobile */
+    }
+
+    .agentary-chat-title {
+      font-size: 1.15em; /* Larger chat title for mobile */
+    }
+
+    /* Related articles font size increases for mobile */
+    .agentary-related-articles-header {
+      font-size: 1.2em; /* Larger articles header for mobile */
+    }
+
+    .agentary-related-article-title {
+      font-size: 1.3em; /* Larger article titles for mobile */
+    }
+
+    .agentary-related-article-summary {
+      font-size: 1em; /* Larger article summaries for mobile */
+    }
+
+    .agentary-related-article-source {
+      font-size: 1em; /* Larger article sources for mobile */
+    }
     
     .agentary-footer {
       padding: var(--agentary-spacing-sm) var(--agentary-spacing-md);
+      font-size: 1em; /* Larger footer text for mobile */
     }
     
     .agentary-related-articles-wrapper {

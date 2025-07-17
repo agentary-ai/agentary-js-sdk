@@ -7,6 +7,18 @@ export const popupStyles = `
     pointer-events: auto;
   }
 
+  /* Black Overlay */
+  .agentary-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: calc(var(--agentary-z-index) - 1);
+    pointer-events: auto;
+  }
+
   /* Popup Dialog */
   .agentary-popup {
     position: fixed;
