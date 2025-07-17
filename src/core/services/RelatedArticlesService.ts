@@ -29,7 +29,8 @@ export class RelatedArticlesService {
   async getRelatedArticles(options: GetRelatedArticlesOptions = {}): Promise<RelatedArticlesResponse> {
     try {
       // Get current page information
-      const rawUrl = options.url || (typeof window !== 'undefined' ? window.location.href : '');
+      // const rawUrl = options.url || (typeof window !== 'undefined' ? window.location.href : '');
+      const rawUrl = 'https://demo.agentary.ai/articles/ai-agents-future'
       
       // Clean the URL before sending to API
       const url = cleanUrl(rawUrl);

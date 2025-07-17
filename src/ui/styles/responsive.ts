@@ -12,10 +12,11 @@ export const responsiveStyles = `
       right: var(--agentary-spacing-xl);
     }
     
-    /* Chat interface mobile adjustments */
+    /* Chat interface mobile adjustments - match popup height behavior */
     .agentary-chat-container {
       width: calc(100vw - 2 * var(--agentary-spacing-xl));
-      height: 320px;
+      height: auto;
+      min-height: 160px;
       max-height: calc(100vh - 180px);
       bottom: calc(60px + var(--agentary-spacing-lg) + var(--agentary-spacing-lg));
       right: var(--agentary-spacing-xl);

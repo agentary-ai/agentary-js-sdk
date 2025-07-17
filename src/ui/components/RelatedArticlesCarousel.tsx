@@ -180,6 +180,9 @@ export function RelatedArticlesCarousel({
 
   return (
     <>
+      <div style={{ marginBottom: '12px' }}>
+        <p>View related content</p>
+      </div>
       {isLoading ? (
         <div className={classNames.relatedArticles}>
           <div className={classNames.relatedArticlesCarousel}>
