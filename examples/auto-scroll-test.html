@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentary Auto-Scroll Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .test-info h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .content {
+            margin-top: 30px;
+        }
+        .content p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Agentary Auto-Scroll Test Page</h1>
+        
+        <div class="test-info">
+            <h3>🚀 Auto-Scroll Feature Test</h3>
+            <p><strong>What's New:</strong> The page summary now includes an automatic slow scroll when the popup opens!</p>
+            <ul>
+                <li>✨ Slow, smooth auto-scrolling through the summary content</li>
+                <li>🖱️ Manual scrolling (mouse wheel or touch) disables auto-scroll</li>
+                <li>🔄 Auto-scroll resets when popup is closed and reopened</li>
+                <li>📍 Visual indicator shows when auto-scroll is active</li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h2>Test Article: The Future of AI Technology</h2>
+            
+            <p>Artificial Intelligence (AI) has rapidly evolved from a concept in science fiction to a transformative force in our daily lives. Today, AI powers everything from smartphone assistants to complex medical diagnostics, fundamentally changing how we work, communicate, and solve problems.</p>
+
+            <p>Machine learning algorithms have become increasingly sophisticated, enabling computers to recognize patterns and make decisions with minimal human intervention. Deep learning, a subset of machine learning inspired by the human brain's neural networks, has achieved remarkable breakthroughs in image recognition, natural language processing, and game playing.</p>
+
+            <p>The integration of AI into various industries has led to unprecedented efficiency gains. In healthcare, AI assists doctors in diagnosing diseases earlier and more accurately. In finance, it helps detect fraudulent transactions and optimize investment strategies. Manufacturing has seen revolutionary changes with AI-powered robotics and predictive maintenance systems.</p>
+
+            <p>However, the rapid advancement of AI also raises important ethical considerations. Questions about privacy, job displacement, and algorithmic bias require careful thought and regulation. As AI systems become more autonomous, ensuring they align with human values and operate transparently becomes increasingly crucial.</p>
+
+            <p>Looking ahead, the future of AI promises even more exciting developments. Researchers are working on artificial general intelligence (AGI) that could match or exceed human cognitive abilities across all domains. While this remains a long-term goal, incremental improvements continue to expand AI's capabilities and applications.</p>
+
+            <p>The convergence of AI with other emerging technologies like quantum computing, biotechnology, and robotics will likely accelerate innovation across all sectors. As we stand on the brink of this technological revolution, it's essential to harness AI's potential while addressing its challenges responsibly.</p>
+
+            <p>Education and adaptation will be key to thriving in an AI-driven future. Developing skills that complement AI, such as creativity, emotional intelligence, and complex problem-solving, will become increasingly valuable. The partnership between human intelligence and artificial intelligence holds the promise of solving some of humanity's greatest challenges.</p>
+        </div>
+    </div>
+
+    <!-- Include the Agentary SDK -->
+    <script src="/latest/agentary.js"></script>
+    <script>
+        // Initialize Agentary with widget enabled
+        window.addEventListener('load', function() {
+            if (window.Agentary) {
+                window.Agentary.init({
+                    accessToken: 'test_token',
+                    enableWidget: true,
+                    autoOpenOnLoad: false, // Set to true to test auto-scroll immediately
+                    contentSelector: '.content',
+                    debug: true
+                });
+                
+                console.log('✅ Agentary initialized with auto-scroll feature');
+                console.log('📌 Click the widget button to open the popup and see the auto-scroll in action!');
+            } else {
+                console.error('❌ Agentary SDK not loaded');
+            }
+        });
+    </script>
+</body>
+</html> 

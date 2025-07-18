@@ -122,7 +122,7 @@ export const contentStyles = `
     background-color: transparent;
     border: 1px solid var(--agentary-primary-color);
     border-radius: 20px;
-    font-size: var(--agentary-font-size-md);
+    font-size: var(--agentary-font-size-sm);
     color: var(--agentary-primary-color);
     cursor: pointer;
     transition: all var(--agentary-transition-fast);
@@ -201,7 +201,6 @@ export const contentStyles = `
 
   /* Page Summary Styles */
   .agentary-summary-container {
-    margin-bottom: var(--agentary-spacing-2xl);
   }
 
   .agentary-summary-loading {
@@ -212,14 +211,14 @@ export const contentStyles = `
   }
 
   .agentary-summary-content {
-    font-size: var(--agentary-font-size-md);
+    font-size: var(--agentary-font-size-sm);
     line-height: 1.6;
     color: var(--agentary-text-color);
     text-align: left;
     position: relative;
     max-height: 100px;
     overflow-y: auto;
-    padding: var(--agentary-spacing-md);
+    padding-x: var(--agentary-spacing-md);
   }
 
   .agentary-summary-error {
@@ -257,5 +256,42 @@ export const contentStyles = `
     51%, 100% {
       opacity: 0;
     }
+  }
+
+  /* Summary scroll indicator - discreet arrow for summary section */
+  .agentary-summary-scroll-indicator {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(var(--agentary-primary-color-rgb, 0, 123, 255), 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    transition: all var(--agentary-transition-fast);
+    opacity: 0.7;
+    z-index: 2;
+    font-size: 10px;
+  }
+
+  .agentary-summary-scroll-indicator:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    background-color: var(--agentary-primary-color);
+  }
+
+  .agentary-summary-scroll-indicator i {
+    font-size: 10px;
+    transition: transform var(--agentary-transition-fast);
+  }
+
+  .agentary-summary-scroll-indicator:hover i {
+    transform: translateY(1px);
   }
 `; 

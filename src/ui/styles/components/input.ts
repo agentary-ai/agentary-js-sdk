@@ -21,7 +21,7 @@ export const inputStyles = `
 
   .agentary-question-input {
     flex: 1;
-    font-size: var(--agentary-font-size-lg);
+    font-size: var(--agentary-font-size-md);
     font-family: inherit;
     color: var(--agentary-text-color);
     transition: all var(--agentary-transition-fast);

@@ -60,7 +60,7 @@ export const chatStyles = `
   .agentary-chat-message-content {
     padding: var(--agentary-spacing-sm) var(--agentary-spacing-md);
     border-radius: var(--agentary-spacing-lg);
-    font-size: var(--agentary-font-size-md);
+    font-size: var(--agentary-font-size-sm);
     line-height: 1.4;
     word-wrap: break-word;
   }
@@ -149,7 +149,7 @@ export const chatStyles = `
 
   .agentary-chat-input {
     flex: 1;
-    font-size: var(--agentary-font-size-md);
+    font-size: var(--agentary-font-size-sm);
     font-family: inherit;
     color: var(--agentary-text-color);
     background-color: transparent;

@@ -91,6 +91,7 @@ export const classNames = {
   articlesFadeIn: 'agentary-articles-fade-in',
   // Scroll indicator
   scrollIndicator: 'agentary-scroll-indicator',
+  summaryScrollIndicator: 'agentary-summary-scroll-indicator',
   // Footer gradient
   footerGradient: 'agentary-footer-gradient',
 }; 
