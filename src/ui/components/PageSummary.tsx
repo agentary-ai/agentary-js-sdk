@@ -221,7 +221,7 @@ export function PageSummary({
           </div>
           
           {/* Auto-scroll indicator */}
-          {isAutoScrolling && (
+          {/* {isAutoScrolling && (
             <div 
               style={{
                 position: 'absolute',
@@ -241,7 +241,7 @@ export function PageSummary({
               <i className="fas fa-chevron-down" style={{ fontSize: '10px' }}></i>
               <span>Auto-scrolling</span>
             </div>
-          )}
+          )} */}
           
           {/* Discreet scroll indicator for summary */}
           {showScrollIndicator && !isAutoScrolling && (

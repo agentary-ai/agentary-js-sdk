@@ -265,7 +265,7 @@ export const contentStyles = `
     right: 8px;
     width: 20px;
     height: 20px;
-    background-color: rgba(var(--agentary-primary-color-rgb, 0, 123, 255), 0.8);
+    background-color: rgba(var(--agentary-primary-color-rgb, 79, 70, 229), 0.8);
     border-radius: 50%;
     display: flex;
     align-items: center;
