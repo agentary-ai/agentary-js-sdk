@@ -2,8 +2,8 @@
  * CSS Custom Properties for theming
  */
 export const cssVariables = {
-  '--agentary-primary-color': '#007bff',
-  '--agentary-primary-hover': '#0056b3',
+  '--agentary-primary-color': '#4F46E5',
+  '--agentary-primary-hover': 'rgba(79, 70, 229, 0.9)', /* 90% opacity of #4F46E5 */
   '--agentary-text-color': '#333',
   '--agentary-text-muted': '#666',
   '--agentary-background': '#ffffff',
