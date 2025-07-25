@@ -9,6 +9,7 @@ export interface AgentaryClientConfig {
   loadModel?: boolean;
   contentSelector?: string;
   showWidgetOnInit?: boolean;
+  autoOpenWidgetOnLoad?: boolean;
   generatePagePrompts?: boolean;
   maxPagePrompts?: number;
   
