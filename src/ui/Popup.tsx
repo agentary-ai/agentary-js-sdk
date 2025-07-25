@@ -132,7 +132,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
   return (
     <div className={classNames.container}>
       {/* Black Overlay - single overlay for both popup dialog and chat interface */}
-      {(isVisible || showChat) && (
+      {(isVisible || showChat && (isClientReady && !isLoadingRelatedArticles && !isGeneratingSummary && !isGeneratingPrompts)) && (
         <div className={`${classNames.overlay} ${(isClosing || isChatClosing) ? classNames.fadeOut : classNames.fadeIn}`} />
       )}
 
