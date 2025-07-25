@@ -129,10 +129,13 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
     !isGeneratingSummary &&
     (contentPrompts.length > 0 || showPrompts);
 
+  // Check if model is loading
+  const isModelLoading = !isClientReady || isLoadingRelatedArticles || isGeneratingSummary || isGeneratingPrompts;
+
   return (
     <div className={classNames.container}>
       {/* Black Overlay - single overlay for both popup dialog and chat interface */}
-      {(isVisible || showChat && (isClientReady && !isLoadingRelatedArticles && !isGeneratingSummary && !isGeneratingPrompts)) && (
+      {(isVisible || showChat) && !isModelLoading && (
         <div className={`${classNames.overlay} ${(isClosing || isChatClosing) ? classNames.fadeOut : classNames.fadeIn}`} />
       )}
 
@@ -174,7 +177,7 @@ export function Popup({ webLLMClient, widgetOptions, logger, relatedArticlesServ
       {/* Floating Action Button (rendered last to ensure it stays on top) */}
       <FloatingActionButton
         isVisible={isVisible}
-        isModelLoading={!isClientReady || isLoadingRelatedArticles || isGeneratingSummary || isGeneratingPrompts}
+        isModelLoading={isModelLoading}
         isReady={isContentReady}
         onClick={handleButtonClick}
       />
